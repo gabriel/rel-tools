@@ -1,0 +1,10 @@
+[workspace]
+members = ["crates/rel-client", "crates/rel-cli"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.71"
+homepage = "https://rel.me"
+license = "MIT"
+repository = "https://github.com/gabriel/rel-tools"

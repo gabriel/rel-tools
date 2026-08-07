@@ -1,0 +1,49 @@
+---
+title: Rel documentation
+description: Use Rel from the CLI or MCP, connect through RPC v1, and work with the typed Rust client.
+editUrl: false
+lastUpdated: false
+prev: false
+next: false
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+Keep persistent Chromium sessions on your Mac and access them from MCP, the
+CLI, a local API, or the typed Rust client.
+
+## Start with one command
+
+The bundled `rel` CLI is the quickest way to capture a rendered page and the best place to learn Rel’s model.
+
+```sh
+rel capture https://example.com --output ./example.html
+```
+
+Rel keeps Chromium inside the installed macOS app. The CLI asks the local agent to use that browser, waits for the rendered result, and writes the HTML to disk.
+
+[Read the CLI guide →](/cli/)
+
+## Go deeper
+
+<CardGrid>
+  <Card title="Connect an MCP client">
+    Launch the bundled stdio adapter for focused status, capture, page automation, session-list, and proxy-list tools.
+
+    [Open the MCP guide →](/mcp/)
+  </Card>
+  <Card title="Control the browser with RPC v1">
+    Attach pages, perform actions, manage persistent sessions, and stream captures over Rel’s loopback-only HTTP API.
+
+    [Open the RPC reference →](/rpc/)
+  </Card>
+  <Card title="Use the typed Rust client">
+    Build directly on the same `rel-client` crate used by the bundled CLI, with typed requests, responses, errors, and capture events.
+
+    [Open the SDK guide →](/sdk/)
+  </Card>
+</CardGrid>
+
+## Supported runtime
+
+Rel has one supported path: the installed `/Applications/Rel.app` owns Chromium and supervises its bundled local agent. CLI, SDK, and MCP adapter calls connect to that agent; the agent routes browser work back into the visible app.

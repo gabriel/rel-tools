@@ -1,0 +1,9 @@
+/target/
+/docs/.astro/
+/docs/dist/
+/docs/node_modules/
+/docs/src/content/docs/cli.md
+/docs/src/content/docs/mcp.md
+/docs/src/content/docs/rpc.md
+/docs/src/content/docs/sdk.md
+.DS_Store

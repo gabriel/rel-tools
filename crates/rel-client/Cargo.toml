@@ -1,0 +1,18 @@
+[package]
+name = "rel-client"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Typed Rust client for the Rel local browser RPC API."
+homepage.workspace = true
+license.workspace = true
+readme = "README.md"
+repository.workspace = true
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ureq = { version = "=2.9.1", default-features = false }
+# Keep URL below its ICU-based implementation so the advertised Rust 1.71
+# minimum remains valid when consumers resolve without this workspace lockfile.
+url = "=2.4.1"
