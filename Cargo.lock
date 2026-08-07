@@ -100,7 +100,7 @@ dependencies = [
 
 [[package]]
 name = "rel-cli"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "rel-client",
  "serde",
@@ -112,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "rel-client"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "serde",
  "serde_json",

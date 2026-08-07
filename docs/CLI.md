@@ -189,7 +189,8 @@ supports current `2026-07-28` discovery and legacy initialization through
 Every tool forwards through `rel-client` and RPC v1. Capture aggregates its
 validated NDJSON stream into `{request_id, exit_code, events}`. Every tool
 execution result includes its complete JSON in both a text content block and
-`structuredContent`.
+`structuredContent`. Captured files use absolute `file:///` URIs at the MCP
+boundary and are also returned as standard MCP `resource_link` content blocks.
 
 ## Health and status
 

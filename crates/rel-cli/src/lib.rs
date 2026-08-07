@@ -16,6 +16,10 @@ mod app;
 mod mcp;
 
 pub fn main_exit_code(args: Vec<OsString>) -> i32 {
+    main_exit_code_with_version(args, env!("CARGO_PKG_VERSION"))
+}
+
+pub fn main_exit_code_with_version(args: Vec<OsString>, product_version: &str) -> i32 {
     let args = match utf8_args(args) {
         Ok(args) => args,
         Err(error) => return print_cli_error(error),
@@ -44,7 +48,7 @@ pub fn main_exit_code(args: Vec<OsString>) -> i32 {
         }
     }
 
-    match run_command(RelClient::local(), command) {
+    match run_command(RelClient::local(), command, product_version) {
         Ok(exit_code) => exit_code,
         Err(error) => print_cli_error(error),
     }
@@ -66,9 +70,13 @@ fn print_cli_error(error: CliError) -> i32 {
     1
 }
 
-fn run_command(client: RelClient, command: CliCommand) -> Result<i32, CliError> {
+fn run_command(
+    client: RelClient,
+    command: CliCommand,
+    product_version: &str,
+) -> Result<i32, CliError> {
     match command {
-        CliCommand::Mcp => mcp::serve_stdio(client)
+        CliCommand::Mcp => mcp::serve_stdio(client, product_version)
             .map(|()| 0)
             .map_err(CliError::Message),
         CliCommand::Health => {

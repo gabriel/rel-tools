@@ -79,7 +79,7 @@ In the Codex terminal UI, `/mcp` also shows configured servers and their tools.
 For an end-to-end browser test, use:
 
 ```text
-Use rel_capture to capture https://example.com and report the saved output path.
+Use rel_capture to capture https://example.com and report the saved output URI.
 ```
 
 Unlike the first check, this loads a website and saves rendered HTML. Omitting
@@ -135,9 +135,10 @@ after the client's protocol flow is established.
 Tool calls run independently so a long capture does not block `ping` or other
 stdio messages. `notifications/cancelled` suppresses the cancelled MCP result.
 The current adapter keeps that tool's RPC connection open until its worker
-finishes, so the notification alone does not stop browser work. Stopping the
-MCP process closes its outstanding RPC connections, which cancels the matching
-agent and Chromium operations.
+finishes, so the notification alone does not stop browser work. Closing the MCP
+client's stdin makes the adapter exit immediately. Process exit closes all
+outstanding RPC connections and cancels the matching agent and Chromium
+operations.
 
 ## Tools
 
@@ -158,31 +159,41 @@ operations:
 
 ### `rel_capture`
 
-`url` is required. Optional fields are `output`, `timeout`, `wait`, `actions`,
+`url` is required. Optional fields are `output_uri`, `timeout`, `wait`, `actions`,
 `session_id`, `proxy`, `retry`, and `retry_delay`. Omitting `session_id` creates
 a persistent session using the configured Session defaults. The action objects
 are the canonical `click`, `wait-for`, `wait`, and `click-link` shapes described
-in [the CLI guide](CLI.md#capture).
+in [the CLI guide](CLI.md#capture). `output_uri`, when present, must be an
+absolute local `file:///` URI.
 
 ### `rel_page_attach`
 
-`url` is required. Optional fields are `session_id`, `proxy`, `output`,
+`url` is required. Optional fields are `session_id`, `proxy`, `output_uri`,
 `timeout`, and `wait`. The result contains a process-local page ID for later
-`rel_page_action` calls. Omitting `session_id` creates a persistent session.
+`rel_page_action` calls. Omitting `session_id` creates a persistent session and
+navigates it to `url`. Providing `session_id` attaches its current page, whose
+normalized URL must match `url`. `output_uri`, when present, must be an absolute
+local `file:///` URI.
 
 ### `rel_page_action`
 
 `page_id` and one canonical `action` object are required. Optional fields are
-`output`, `timeout`, and `wait`. The attached page remains pinned to the URL,
+`output_uri`, `timeout`, and `wait`. The attached page remains pinned to the URL,
 session, and proxy selected by `rel_page_attach`; page IDs expire when the agent
-restarts.
+restarts. `output_uri`, when present, must be an absolute local `file:///` URI.
 
 ## Results and errors
 
-Every tool execution result contains its complete JSON value twice:
+Every tool execution result contains its complete JSON value in two forms:
 
 - `content` contains a text block whose text is the serialized JSON;
 - `structuredContent` contains the same value as structured JSON.
+
+When a result contains captured HTML, every RPC `output_path` is exposed at the
+MCP boundary as an absolute percent-encoded `output_uri`. `content` also includes
+one standard MCP `resource_link` block per unique file, with `mimeType` set to
+`text/html`. Rel deliberately keeps native filesystem paths inside RPC and uses
+file URIs for MCP.
 
 Status, page, session-list, and proxy-list tools preserve the ordinary RPC v1
 success envelope with `status`, `request_id`, and `data`.
@@ -198,14 +209,28 @@ Its structured result is:
     {
       "status": "ok",
       "request_id": "req_...",
-      "event": "capture.started",
-      "data": {}
+      "event": "capture.completed",
+      "data": {
+        "output_uri": "file:///private/tmp/rel/captures/example.html"
+      }
     }
   ]
 }
 ```
 
-The text block contains the serialization of this same object. `events`
+The text block contains the serialization of this same object. A second content
+block links the file directly:
+
+```json
+{
+  "type": "resource_link",
+  "uri": "file:///private/tmp/rel/captures/example.html",
+  "name": "example.html",
+  "mimeType": "text/html"
+}
+```
+
+`events`
 includes the terminal `capture.finished` event, and `exit_code` is taken from
 that event. A target website status such as 404 remains capture data and can
 produce exit code 1 and `isError:true`; it is not a Rel RPC or MCP protocol

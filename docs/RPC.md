@@ -275,7 +275,7 @@ explicit page IDs.
 | Field | Contract |
 | --- | --- |
 | `url` | Required HTTP(S) URL; scheme-less input is normalized by the agent. |
-| `output` | Optional nonempty path or null; generated when absent. |
+| `output` | Optional nonempty filesystem path or null; generated when absent. Relative input is resolved against the agent process directory. Responses always contain an absolute `output_path`. |
 | `timeout` | Finite seconds greater than zero; default 90. |
 | `wait` | Finite seconds at least zero; default 1. |
 | `actions` | Optional array of canonical action objects. |
@@ -331,10 +331,10 @@ Events, in normal order:
 9. `capture.finished`, containing `exit_code`
 
 `capture.failed` uses the standard nested error object. `capture.completed`
-contains output path, bytes, final URL, optional `target_http_status`, session ID,
-capture ID, and proxy traffic. A target status at least 400 is a completed
-capture with `outcome:"target_error"` and CLI exit code 1; it is not an API
-error.
+contains an absolute output path, bytes, final URL, optional
+`target_http_status`, session ID, capture ID, and proxy traffic. A target status
+at least 400 is a completed capture with `outcome:"target_error"` and CLI exit
+code 1; it is not an API error.
 
 ## Attached pages
 
@@ -351,8 +351,9 @@ error.
 }
 ```
 
-Omitting session creates one. The final normalized browser URL must equal the
-requested URL. Success data:
+Omitting `session_id` creates a session and navigates it to `url`. Providing an
+existing session attaches its current page without navigating; its final
+normalized browser URL must equal the requested URL. Success data:
 
 ```json
 {
@@ -362,7 +363,7 @@ requested URL. Success data:
     "url": "https://example.com/"
   },
   "capture": {
-    "output_path": "tmp/captures/...html",
+    "output_path": "/private/tmp/rel/captures/...html",
     "bytesize": 1234,
     "target_http_status": 200
   }

@@ -158,6 +158,11 @@ println!("exit code: {}", stream.exit_code().unwrap_or(1));
 only after a valid `capture.finished` event has been read; `exit_code()` is then
 available. The iterator rejects malformed JSON, invalid event envelopes,
 request-ID mismatches, and a terminal event without an integer exit code.
+Capture and attached-page responses always expose an absolute filesystem path
+in `output_path`, even when a request supplied a relative `output` path. The MCP
+adapter maps these paths to `file:///` URIs; the Rust SDK preserves the native
+RPC path contract.
+
 Dropping `CaptureStream` before `capture.finished` closes its HTTP connection
 and cancels the matching agent and Chromium operation. The persistent session
 and resident agent remain available.

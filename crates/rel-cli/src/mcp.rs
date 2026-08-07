@@ -4,8 +4,9 @@ use rel_client::{
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::{self, BufRead, BufReader, Write};
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
@@ -16,18 +17,19 @@ const LEGACY_PROTOCOL_VERSIONS: &[&str] = &["2025-11-25", "2025-06-18", "2025-03
 const MAX_MCP_MESSAGE_BYTES: usize = 16 * 1024 * 1024;
 const TOOL_LIST_TTL_MS: u64 = 3_600_000;
 
-pub(crate) fn serve_stdio(client: RelClient) -> Result<(), String> {
+pub(crate) fn serve_stdio(client: RelClient, server_version: &str) -> Result<(), String> {
     let stdin = io::stdin();
     let stdout = io::stdout();
-    serve(BufReader::new(stdin), stdout, client)
+    serve(BufReader::new(stdin), stdout, client, server_version)
 }
 
 fn serve<R: BufRead, W: Write + Send + 'static>(
     mut reader: R,
     writer: W,
     client: RelClient,
+    server_version: &str,
 ) -> Result<(), String> {
-    let mut state = ServerState::default();
+    let mut state = ServerState::new(server_version);
     let writer = Arc::new(Mutex::new(writer));
     let active_requests = Arc::new(Mutex::new(HashMap::new()));
     let mut workers = Vec::new();
@@ -39,7 +41,7 @@ fn serve<R: BufRead, W: Write + Send + 'static>(
             .map_err(|error| format!("Could not read MCP stdin: {error}"))?
         {
             MessageRead::Eof => {
-                join_workers(workers);
+                cancel_workers(workers);
                 return Ok(());
             }
             MessageRead::TooLarge => {
@@ -101,8 +103,14 @@ fn serve<R: BufRead, W: Write + Send + 'static>(
                 let worker_active_requests = active_requests.clone();
                 let worker_client = client.clone();
                 let worker_cancellation = cancellation.clone();
+                let worker_server_version = state.server_version.clone();
                 let handle = thread::spawn(move || {
-                    let result = match handle_tool_call(&worker_client, &params, era) {
+                    let result = match handle_tool_call(
+                        &worker_client,
+                        &params,
+                        era,
+                        &worker_server_version,
+                    ) {
                         Ok(result) => rpc_result(id.clone(), result),
                         Err(error) => with_rpc_id(id, error),
                     };
@@ -143,14 +151,9 @@ fn reap_workers(workers: &mut Vec<ToolWorker>) {
     }
 }
 
-fn join_workers(workers: Vec<ToolWorker>) {
+fn cancel_workers(workers: Vec<ToolWorker>) {
     for worker in workers {
-        if worker.cancellation.load(Ordering::Acquire) {
-            continue;
-        }
-        if worker.handle.join().is_err() {
-            eprintln!("rel MCP tool worker panicked");
-        }
+        worker.cancellation.store(true, Ordering::Release);
     }
 }
 
@@ -207,9 +210,18 @@ fn write_message<W: Write>(writer: &Arc<Mutex<W>>, message: &Value) -> Result<()
         .map_err(|error| format!("Could not write MCP stdout: {error}"))
 }
 
-#[derive(Default)]
 struct ServerState {
     legacy_protocol_version: Option<String>,
+    server_version: String,
+}
+
+impl ServerState {
+    fn new(server_version: &str) -> Self {
+        Self {
+            legacy_protocol_version: None,
+            server_version: server_version.to_string(),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -275,9 +287,11 @@ fn handle_message(
     };
 
     let result = match method {
-        "server/discover" if era == ProtocolEra::Modern => modern_discover_result(),
+        "server/discover" if era == ProtocolEra::Modern => {
+            modern_discover_result(&state.server_version)
+        }
         "ping" => json!({}),
-        "tools/list" => tools_list_result(era),
+        "tools/list" => tools_list_result(era, &state.server_version),
         "tools/call" => {
             return MessageAction::ToolCall {
                 id: response_id,
@@ -412,7 +426,7 @@ fn handle_legacy_initialize(state: &mut ServerState, id: Value, params: &Value) 
         json!({
             "protocolVersion": selected,
             "capabilities": {"tools": {"listChanged": false}},
-            "serverInfo": server_info(),
+            "serverInfo": server_info(&state.server_version),
             "instructions": server_instructions()
         }),
     )
@@ -435,37 +449,37 @@ fn supported_protocol_versions() -> Vec<&'static str> {
         .collect()
 }
 
-fn server_info() -> Value {
+fn server_info(server_version: &str) -> Value {
     json!({
         "name": "rel",
         "title": "Rel",
-        "version": env!("CARGO_PKG_VERSION"),
+        "version": server_version,
         "description": "Browser capture and automation through Rel's embedded Chromium runtime",
         "websiteUrl": "https://rel.me"
     })
 }
 
-fn response_metadata() -> Value {
-    json!({"io.modelcontextprotocol/serverInfo": server_info()})
+fn response_metadata(server_version: &str) -> Value {
+    json!({"io.modelcontextprotocol/serverInfo": server_info(server_version)})
 }
 
 fn server_instructions() -> &'static str {
     "Use Rel to capture rendered pages or attach an ephemeral page for follow-up actions. Reuse returned page and session IDs explicitly; all browser work runs through the installed Rel app."
 }
 
-fn modern_discover_result() -> Value {
+fn modern_discover_result(server_version: &str) -> Value {
     json!({
         "resultType": "complete",
         "supportedVersions": supported_protocol_versions(),
         "capabilities": {"tools": {"listChanged": false}},
-        "_meta": response_metadata(),
+        "_meta": response_metadata(server_version),
         "instructions": server_instructions(),
         "ttlMs": TOOL_LIST_TTL_MS,
         "cacheScope": "public"
     })
 }
 
-fn tools_list_result(era: ProtocolEra) -> Value {
+fn tools_list_result(era: ProtocolEra, server_version: &str) -> Value {
     let mut result = json!({"tools": tool_definitions()});
     if era == ProtocolEra::Modern {
         let object = result.as_object_mut().expect("tools result is an object");
@@ -478,7 +492,7 @@ fn tools_list_result(era: ProtocolEra) -> Value {
             "cacheScope".to_string(),
             Value::String("public".to_string()),
         );
-        object.insert("_meta".to_string(), response_metadata());
+        object.insert("_meta".to_string(), response_metadata(server_version));
     }
     result
 }
@@ -495,7 +509,7 @@ fn tool_definitions() -> Vec<Value> {
         tool_definition(
             "rel_capture",
             "Capture Rendered Page",
-            "Load a URL in Rel's embedded Chromium, optionally perform ordered actions, and save rendered HTML. Returns the complete validated capture event stream and output path.",
+            "Load a URL in Rel's embedded Chromium, optionally perform ordered actions, and save rendered HTML. Returns the complete validated capture event stream and an output file URI.",
             capture_schema(),
             json!({
                 "readOnlyHint": false,
@@ -507,7 +521,7 @@ fn tool_definitions() -> Vec<Value> {
         tool_definition(
             "rel_page_attach",
             "Attach Browser Page",
-            "Open an ephemeral Rel automation page and return its page ID for later rel_page_action calls.",
+            "Create or attach an ephemeral Rel automation page and return its page ID for later rel_page_action calls.",
             page_attach_schema(),
             json!({
                 "readOnlyHint": false,
@@ -519,7 +533,7 @@ fn tool_definitions() -> Vec<Value> {
         tool_definition(
             "rel_page_action",
             "Act on Browser Page",
-            "Perform one canonical action on an attached page and save the resulting rendered HTML.",
+            "Perform one canonical action on an attached page and return the rendered HTML as a file resource link.",
             page_action_schema(),
             json!({
                 "readOnlyHint": false,
@@ -632,7 +646,7 @@ fn capture_schema() -> Value {
         "type": "object",
         "properties": {
             "url": {"type": "string", "minLength": 1},
-            "output": {"type": "string", "minLength": 1},
+            "output_uri": {"type": "string", "format": "uri", "pattern": "^file:///"},
             "timeout": {"type": "number", "exclusiveMinimum": 0},
             "wait": {"type": "number", "minimum": 0},
             "actions": {"type": "array", "items": action_schema()},
@@ -653,7 +667,7 @@ fn page_attach_schema() -> Value {
             "url": {"type": "string", "minLength": 1},
             "session_id": {"type": "string", "minLength": 1},
             "proxy": {"type": "string", "minLength": 1},
-            "output": {"type": "string", "minLength": 1},
+            "output_uri": {"type": "string", "format": "uri", "pattern": "^file:///"},
             "timeout": {"type": "number", "exclusiveMinimum": 0},
             "wait": {"type": "number", "minimum": 0}
         },
@@ -668,7 +682,7 @@ fn page_action_schema() -> Value {
         "properties": {
             "page_id": {"type": "string", "minLength": 1},
             "action": action_schema(),
-            "output": {"type": "string", "minLength": 1},
+            "output_uri": {"type": "string", "format": "uri", "pattern": "^file:///"},
             "timeout": {"type": "number", "exclusiveMinimum": 0},
             "wait": {"type": "number", "minimum": 0}
         },
@@ -677,7 +691,12 @@ fn page_action_schema() -> Value {
     })
 }
 
-fn handle_tool_call(client: &RelClient, params: &Value, era: ProtocolEra) -> Result<Value, Value> {
+fn handle_tool_call(
+    client: &RelClient,
+    params: &Value,
+    era: ProtocolEra,
+    server_version: &str,
+) -> Result<Value, Value> {
     let Some(name) = params.get("name").and_then(Value::as_str) else {
         return Err(rpc_error_without_id(-32602, "Tool name is required", None));
     };
@@ -714,18 +733,19 @@ fn handle_tool_call(client: &RelClient, params: &Value, era: ProtocolEra) -> Res
             .and_then(|()| client.list_proxies().map_err(client_error_value))
             .and_then(to_json_value),
         "rel_page_attach" => decode_arguments::<PageAttachArguments>(arguments)
-            .map(PageAttachRequest::from)
+            .and_then(PageAttachRequest::try_from)
             .and_then(|request| client.attach_page(&request).map_err(client_error_value))
             .and_then(to_json_value),
-        "rel_page_action" => decode_arguments::<PageActionArguments>(arguments).and_then(|args| {
-            let (page_id, request) = args.into_request();
-            client
-                .perform_page_action(&page_id, &request)
-                .map_err(client_error_value)
-                .and_then(to_json_value)
-        }),
+        "rel_page_action" => decode_arguments::<PageActionArguments>(arguments)
+            .and_then(PageActionArguments::into_request)
+            .and_then(|(page_id, request)| {
+                client
+                    .perform_page_action(&page_id, &request)
+                    .map_err(client_error_value)
+                    .and_then(to_json_value)
+            }),
         "rel_capture" => decode_arguments::<CaptureArguments>(arguments)
-            .map(CaptureRequest::from)
+            .and_then(CaptureRequest::try_from)
             .and_then(|request| capture_tool(client, &request)),
         _ => unreachable!("tool name was validated"),
     }
@@ -738,7 +758,17 @@ fn handle_tool_call(client: &RelClient, params: &Value, era: ProtocolEra) -> Res
                 .get("exit_code")
                 .and_then(Value::as_i64)
                 .is_some_and(|exit_code| exit_code != 0));
-    Ok(tool_result(structured, is_error, era))
+    let (structured, resource_links, is_error) = match normalize_output_uris(structured) {
+        Ok((structured, resource_links)) => (structured, resource_links, is_error),
+        Err(error) => (error, Vec::new(), true),
+    };
+    Ok(tool_result(
+        structured,
+        resource_links,
+        is_error,
+        era,
+        server_version,
+    ))
 }
 
 fn to_json_value<T: serde::Serialize>(value: T) -> Result<Value, Value> {
@@ -820,11 +850,108 @@ fn tool_error_value(id: &str, message: &str) -> Value {
     json!({"status": "error", "error": {"id": id, "message": message}})
 }
 
-fn tool_result(structured: Value, is_error: bool, era: ProtocolEra) -> Value {
+fn output_path_from_uri(output_uri: Option<String>) -> Result<Option<String>, Value> {
+    output_uri
+        .map(|output_uri| {
+            let uri = url::Url::parse(&output_uri).map_err(|error| {
+                tool_error_value(
+                    "INVALID_OUTPUT_URI",
+                    &format!("Invalid output_uri {output_uri:?}: {error}"),
+                )
+            })?;
+            if uri.scheme() != "file" || !output_uri.starts_with("file:///") {
+                return Err(tool_error_value(
+                    "INVALID_OUTPUT_URI",
+                    "output_uri must be an absolute file:/// URI",
+                ));
+            }
+            let path = uri.to_file_path().map_err(|()| {
+                tool_error_value(
+                    "INVALID_OUTPUT_URI",
+                    &format!("output_uri is not a local file URI: {output_uri}"),
+                )
+            })?;
+            path.into_os_string().into_string().map_err(|_| {
+                tool_error_value("INVALID_OUTPUT_URI", "output_uri path must be valid UTF-8")
+            })
+        })
+        .transpose()
+}
+
+fn normalize_output_uris(mut structured: Value) -> Result<(Value, Vec<Value>), Value> {
+    let mut resource_links = Vec::new();
+    let mut seen_uris = HashSet::new();
+    normalize_output_uris_in_value(&mut structured, &mut resource_links, &mut seen_uris)?;
+    Ok((structured, resource_links))
+}
+
+fn normalize_output_uris_in_value(
+    value: &mut Value,
+    resource_links: &mut Vec<Value>,
+    seen_uris: &mut HashSet<String>,
+) -> Result<(), Value> {
+    match value {
+        Value::Object(object) => {
+            if let Some(output_path) = object.remove("output_path") {
+                let output_path = output_path.as_str().ok_or_else(|| {
+                    tool_error_value("INVALID_OUTPUT_PATH", "Rel output_path must be a string")
+                })?;
+                let path = Path::new(output_path);
+                if !path.is_absolute() {
+                    return Err(tool_error_value(
+                        "INVALID_OUTPUT_PATH",
+                        &format!("Rel returned a relative output path: {output_path}"),
+                    ));
+                }
+                let uri = url::Url::from_file_path(path).map_err(|()| {
+                    tool_error_value(
+                        "INVALID_OUTPUT_PATH",
+                        &format!("Could not convert Rel output path to a file URI: {output_path}"),
+                    )
+                })?;
+                let uri = uri.to_string();
+                object.insert("output_uri".to_string(), Value::String(uri.clone()));
+                if seen_uris.insert(uri.clone()) {
+                    let name = path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        .unwrap_or("capture.html");
+                    resource_links.push(json!({
+                        "type": "resource_link",
+                        "uri": uri,
+                        "name": name,
+                        "description": "Rendered HTML captured by Rel",
+                        "mimeType": "text/html"
+                    }));
+                }
+            }
+            for child in object.values_mut() {
+                normalize_output_uris_in_value(child, resource_links, seen_uris)?;
+            }
+        }
+        Value::Array(values) => {
+            for child in values {
+                normalize_output_uris_in_value(child, resource_links, seen_uris)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn tool_result(
+    structured: Value,
+    resource_links: Vec<Value>,
+    is_error: bool,
+    era: ProtocolEra,
+    server_version: &str,
+) -> Value {
     let text = serde_json::to_string_pretty(&structured)
         .unwrap_or_else(|_| "Could not encode Rel tool result".to_string());
+    let mut content = vec![json!({"type": "text", "text": text})];
+    content.extend(resource_links);
     let mut result = json!({
-        "content": [{"type": "text", "text": text}],
+        "content": content,
         "structuredContent": structured,
         "isError": is_error
     });
@@ -834,7 +961,7 @@ fn tool_result(structured: Value, is_error: bool, era: ProtocolEra) -> Value {
             "resultType".to_string(),
             Value::String("complete".to_string()),
         );
-        object.insert("_meta".to_string(), response_metadata());
+        object.insert("_meta".to_string(), response_metadata(server_version));
     }
     result
 }
@@ -878,7 +1005,7 @@ struct EmptyArguments {}
 #[serde(deny_unknown_fields)]
 struct CaptureArguments {
     url: String,
-    output: Option<String>,
+    output_uri: Option<String>,
     timeout: Option<f64>,
     wait: Option<f64>,
     #[serde(default)]
@@ -889,11 +1016,13 @@ struct CaptureArguments {
     retry_delay: Option<f64>,
 }
 
-impl From<CaptureArguments> for CaptureRequest {
-    fn from(value: CaptureArguments) -> Self {
-        Self {
+impl TryFrom<CaptureArguments> for CaptureRequest {
+    type Error = Value;
+
+    fn try_from(value: CaptureArguments) -> Result<Self, Self::Error> {
+        Ok(Self {
             url: value.url,
-            output: value.output,
+            output: output_path_from_uri(value.output_uri)?,
             timeout: value.timeout,
             wait: value.wait,
             actions: value.actions,
@@ -901,7 +1030,7 @@ impl From<CaptureArguments> for CaptureRequest {
             proxy: value.proxy,
             retry: value.retry,
             retry_delay: value.retry_delay,
-        }
+        })
     }
 }
 
@@ -911,21 +1040,23 @@ struct PageAttachArguments {
     url: String,
     session_id: Option<String>,
     proxy: Option<String>,
-    output: Option<String>,
+    output_uri: Option<String>,
     timeout: Option<f64>,
     wait: Option<f64>,
 }
 
-impl From<PageAttachArguments> for PageAttachRequest {
-    fn from(value: PageAttachArguments) -> Self {
-        Self {
+impl TryFrom<PageAttachArguments> for PageAttachRequest {
+    type Error = Value;
+
+    fn try_from(value: PageAttachArguments) -> Result<Self, Self::Error> {
+        Ok(Self {
             url: value.url,
             session_id: value.session_id,
             proxy: value.proxy,
-            output: value.output,
+            output: output_path_from_uri(value.output_uri)?,
             timeout: value.timeout,
             wait: value.wait,
-        }
+        })
     }
 }
 
@@ -934,22 +1065,22 @@ impl From<PageAttachArguments> for PageAttachRequest {
 struct PageActionArguments {
     page_id: String,
     action: Action,
-    output: Option<String>,
+    output_uri: Option<String>,
     timeout: Option<f64>,
     wait: Option<f64>,
 }
 
 impl PageActionArguments {
-    fn into_request(self) -> (String, PageActionRequest) {
-        (
+    fn into_request(self) -> Result<(String, PageActionRequest), Value> {
+        Ok((
             self.page_id,
             PageActionRequest {
                 action: self.action,
-                output: self.output,
+                output: output_path_from_uri(self.output_uri)?,
                 timeout: self.timeout,
                 wait: self.wait,
             },
-        )
+        ))
     }
 }
 
@@ -959,7 +1090,9 @@ mod tests {
     use std::io::{BufReader, Cursor, Read};
     use std::net::{TcpListener, TcpStream};
     use std::thread::{self, JoinHandle};
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
+
+    const TEST_SERVER_VERSION: &str = "9.8.7";
 
     #[derive(Clone, Default)]
     struct SharedWriter {
@@ -1002,8 +1135,23 @@ mod tests {
             .collect::<Vec<_>>()
             .join("\n")
             + "\n";
+        let listener = TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let address = listener.local_addr().unwrap();
+        let input_writer = thread::spawn(move || {
+            let mut stream = TcpStream::connect(address).unwrap();
+            stream.write_all(input.as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(200));
+        });
+        let (input, _) = listener.accept().unwrap();
         let output = SharedWriter::default();
-        serve(Cursor::new(input.into_bytes()), output.clone(), client).unwrap();
+        serve(
+            BufReader::new(input),
+            output.clone(),
+            client,
+            TEST_SERVER_VERSION,
+        )
+        .unwrap();
+        input_writer.join().unwrap();
         String::from_utf8(output.contents())
             .unwrap()
             .lines()
@@ -1082,6 +1230,10 @@ mod tests {
         assert_eq!(output[0]["id"], "discover");
         assert_eq!(output[0]["result"]["resultType"], "complete");
         assert_eq!(
+            output[0]["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]["version"],
+            TEST_SERVER_VERSION
+        );
+        assert_eq!(
             output[0]["result"]["supportedVersions"][0],
             CURRENT_PROTOCOL_VERSION
         );
@@ -1112,6 +1264,10 @@ mod tests {
 
         assert_eq!(output.len(), 3);
         assert_eq!(output[0]["result"]["protocolVersion"], "2025-11-25");
+        assert_eq!(
+            output[0]["result"]["serverInfo"]["version"],
+            TEST_SERVER_VERSION
+        );
         assert_eq!(output[1], json!({"jsonrpc": "2.0", "id": 2, "result": {}}));
         assert!(output[2]["result"].get("resultType").is_none());
     }
@@ -1123,6 +1279,7 @@ mod tests {
             Cursor::new(b"not-json\n".to_vec()),
             output.clone(),
             RelClient::new("http://127.0.0.1:1/v1"),
+            TEST_SERVER_VERSION,
         )
         .unwrap();
         let parse_error: Value = serde_json::from_slice(&output.contents()).unwrap();
@@ -1239,6 +1396,17 @@ mod tests {
             json!({
                 "status": "ok",
                 "request_id": "req_capture",
+                "event": "capture.completed",
+                "data": {
+                    "url": "https://example.com/",
+                    "output_path": "/tmp/rel capture.html",
+                    "bytesize": 42
+                }
+            })
+            .to_string(),
+            json!({
+                "status": "ok",
+                "request_id": "req_capture",
                 "event": "capture.finished",
                 "data": {"exit_code": 1}
             })
@@ -1256,7 +1424,11 @@ mod tests {
                 "params": {
                     "_meta": modern_metadata(),
                     "name": "rel_capture",
-                    "arguments": {"url": "https://example.com", "retry": 0}
+                    "arguments": {
+                        "url": "https://example.com",
+                        "output_uri": "file:///tmp/result%20page.html",
+                        "retry": 0
+                    }
                 }
             })],
             RelClient::new(base_url),
@@ -1268,7 +1440,11 @@ mod tests {
             serde_json::from_str(request.split_once("\r\n").unwrap().1).unwrap();
         assert_eq!(
             request_body,
-            json!({"url": "https://example.com", "retry": 0})
+            json!({
+                "url": "https://example.com",
+                "output": "/tmp/result page.html",
+                "retry": 0
+            })
         );
         assert_eq!(output[0]["result"]["isError"], true);
         assert_eq!(
@@ -1281,8 +1457,60 @@ mod tests {
                 .as_array()
                 .unwrap()
                 .len(),
-            2
+            3
         );
+        assert_eq!(
+            output[0]["result"]["structuredContent"]["events"][1]["data"]["output_uri"],
+            "file:///tmp/rel%20capture.html"
+        );
+        assert!(
+            output[0]["result"]["structuredContent"]["events"][1]["data"]
+                .get("output_path")
+                .is_none()
+        );
+        assert_eq!(output[0]["result"]["content"].as_array().unwrap().len(), 2);
+        assert_eq!(output[0]["result"]["content"][1]["type"], "resource_link");
+        assert_eq!(
+            output[0]["result"]["content"][1]["uri"],
+            "file:///tmp/rel%20capture.html"
+        );
+        assert_eq!(output[0]["result"]["content"][1]["mimeType"], "text/html");
+    }
+
+    #[test]
+    fn output_uri_requires_an_absolute_file_uri() {
+        for output_uri in ["https://example.com/result.html", "file:result.html"] {
+            let output = run_messages(&[
+                json!({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2025-11-25",
+                        "capabilities": {},
+                        "clientInfo": {"name": "test", "version": "1"}
+                    }
+                }),
+                json!({
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "rel_capture",
+                        "arguments": {
+                            "url": "https://example.com",
+                            "output_uri": output_uri
+                        }
+                    }
+                }),
+            ]);
+
+            assert_eq!(output[1]["result"]["isError"], true);
+            assert_eq!(
+                output[1]["result"]["structuredContent"]["error"]["id"],
+                "INVALID_OUTPUT_URI"
+            );
+        }
     }
 
     #[test]
@@ -1367,5 +1595,69 @@ mod tests {
         assert_eq!(output[1]["id"], "ping");
         assert_eq!(output[1]["result"], json!({}));
         assert!(output.iter().all(|response| response["id"] != "slow"));
+    }
+
+    #[test]
+    fn stdin_disconnect_returns_without_waiting_for_active_tool_calls() {
+        let body = json!({
+            "status": "ok",
+            "request_id": "req_slow_status",
+            "data": {
+                "overall_status": "ok",
+                "running_count": 4,
+                "total_count": 4,
+                "checks": []
+            }
+        })
+        .to_string();
+        let (base_url, server) = start_delayed_test_server(
+            http_response("application/json", "req_slow_status", &body),
+            Duration::from_millis(500),
+        );
+        let input = [
+            json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-11-25",
+                    "capabilities": {},
+                    "clientInfo": {"name": "test", "version": "1"}
+                }
+            }),
+            json!({
+                "jsonrpc": "2.0",
+                "id": "slow",
+                "method": "tools/call",
+                "params": {"name": "rel_status", "arguments": {}}
+            }),
+        ]
+        .iter()
+        .map(Value::to_string)
+        .collect::<Vec<_>>()
+        .join("\n")
+            + "\n";
+        let listener = TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let address = listener.local_addr().unwrap();
+        let input_writer = thread::spawn(move || {
+            let mut stream = TcpStream::connect(address).unwrap();
+            stream.write_all(input.as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(50));
+        });
+        let (input, _) = listener.accept().unwrap();
+        let output = SharedWriter::default();
+        let started = Instant::now();
+
+        serve(
+            BufReader::new(input),
+            output,
+            RelClient::new(base_url),
+            TEST_SERVER_VERSION,
+        )
+        .unwrap();
+
+        assert!(started.elapsed() < Duration::from_millis(250));
+        input_writer.join().unwrap();
+        server.join().unwrap();
     }
 }
