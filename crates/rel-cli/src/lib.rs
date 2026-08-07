@@ -12,6 +12,8 @@ use std::os::unix::fs::DirBuilderExt;
 use std::path::PathBuf;
 use uuid::Uuid;
 
+pub use rel_client::rpc_error_codes;
+
 mod app;
 mod mcp;
 

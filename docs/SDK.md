@@ -263,8 +263,11 @@ SDK failures use one `ClientError` type:
 | `Json` | JSON serialization or deserialization failed. |
 
 Use `ClientError::rpc_failure()` to inspect an optional `RpcFailure`, then
-branch on `failure.error.id`. `RpcError` preserves `message`, `retryable`, and
-optional object-valued `details`.
+branch on `failure.error.code` or `failure.error.id`. `RpcError` preserves the
+numeric `code`, string `id`, `message`, `retryable`, and optional object-valued
+`details`. The `rpc_error_codes` module exports constants for every standard
+code; all application codes are 10,000 or greater and are unrelated to HTTP
+statuses.
 
 The client validates `Content-Type`, requires `X-Request-Id`, and checks it
 against the envelope or every NDJSON event.

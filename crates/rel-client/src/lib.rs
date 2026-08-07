@@ -15,6 +15,80 @@ use std::time::Duration;
 const DEFAULT_AGENT_PORT: u16 = 17_319;
 const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 
+/// Stable application error codes for Rel RPC v1.
+///
+/// Codes begin at 10,000 so they cannot be mistaken for HTTP transport
+/// statuses. String error IDs remain available for readable diagnostics.
+pub mod rpc_error_codes {
+    pub const MINIMUM: u32 = 10_000;
+
+    pub const INVALID_REQUEST: u32 = 10_000;
+    pub const ROUTE_NOT_FOUND: u32 = 10_001;
+    pub const METHOD_NOT_ALLOWED: u32 = 10_002;
+    pub const PAYLOAD_TOO_LARGE: u32 = 10_003;
+    pub const UNSUPPORTED_MEDIA_TYPE: u32 = 10_004;
+    pub const VALIDATION_FAILED: u32 = 10_005;
+
+    pub const SESSION_NOT_FOUND: u32 = 10_100;
+    pub const PAGE_NOT_FOUND: u32 = 10_101;
+    pub const PAGE_MISMATCH: u32 = 10_102;
+    pub const PROXY_NOT_FOUND: u32 = 10_103;
+    pub const ACTIVE_PAGE_NOT_FOUND: u32 = 10_104;
+
+    pub const CONFLICT: u32 = 10_200;
+    pub const BROWSER_BUSY: u32 = 10_201;
+    pub const NETWORK_PAUSED: u32 = 10_202;
+    pub const ACTION_TARGET_NOT_FOUND: u32 = 10_203;
+    pub const REQUEST_CANCELLED: u32 = 10_204;
+    pub const RATE_LIMITED: u32 = 10_205;
+
+    pub const UPSTREAM_UNAVAILABLE: u32 = 10_300;
+    pub const BROWSER_UNAVAILABLE: u32 = 10_301;
+    pub const AGENT_UNHEALTHY: u32 = 10_302;
+    pub const TIMEOUT: u32 = 10_303;
+    pub const PROXY_CONFIGURATION_FAILED: u32 = 10_304;
+    pub const BROWSER_CREATION_FAILED: u32 = 10_305;
+
+    pub const INTERNAL_ERROR: u32 = 10_999;
+
+    pub fn for_id(id: &str) -> u32 {
+        match id {
+            "INVALID_REQUEST" => INVALID_REQUEST,
+            "ROUTE_NOT_FOUND" => ROUTE_NOT_FOUND,
+            "METHOD_NOT_ALLOWED" => METHOD_NOT_ALLOWED,
+            "PAYLOAD_TOO_LARGE" => PAYLOAD_TOO_LARGE,
+            "UNSUPPORTED_MEDIA_TYPE" => UNSUPPORTED_MEDIA_TYPE,
+            "VALIDATION_FAILED" => VALIDATION_FAILED,
+            "SESSION_NOT_FOUND" => SESSION_NOT_FOUND,
+            "PAGE_NOT_FOUND" => PAGE_NOT_FOUND,
+            "PAGE_MISMATCH" => PAGE_MISMATCH,
+            "PROXY_NOT_FOUND" => PROXY_NOT_FOUND,
+            "ACTIVE_PAGE_NOT_FOUND" => ACTIVE_PAGE_NOT_FOUND,
+            "CONFLICT" => CONFLICT,
+            "BROWSER_BUSY" => BROWSER_BUSY,
+            "NETWORK_PAUSED" => NETWORK_PAUSED,
+            "ACTION_TARGET_NOT_FOUND" => ACTION_TARGET_NOT_FOUND,
+            "REQUEST_CANCELLED" => REQUEST_CANCELLED,
+            "RATE_LIMITED" => RATE_LIMITED,
+            "UPSTREAM_UNAVAILABLE" => UPSTREAM_UNAVAILABLE,
+            "BROWSER_UNAVAILABLE" => BROWSER_UNAVAILABLE,
+            "AGENT_UNHEALTHY" => AGENT_UNHEALTHY,
+            "TIMEOUT" => TIMEOUT,
+            "PROXY_CONFIGURATION_FAILED" => PROXY_CONFIGURATION_FAILED,
+            "BROWSER_CREATION_FAILED" => BROWSER_CREATION_FAILED,
+            _ => INTERNAL_ERROR,
+        }
+    }
+
+    pub fn is_valid(id: &str, code: u32) -> bool {
+        if code < MINIMUM {
+            return false;
+        }
+        let expected = for_id(id);
+        (expected == INTERNAL_ERROR && id != "INTERNAL_ERROR") || code == expected
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct RelClient {
     base_url: String,
@@ -320,6 +394,7 @@ pub struct RpcFailure {
 #[serde(deny_unknown_fields)]
 pub struct RpcError {
     pub id: String,
+    pub code: u32,
     pub message: String,
     pub retryable: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -423,7 +498,10 @@ fn parse_rpc_failure(status: u16, response: ureq::Response) -> ClientError {
     if let Err(error) = validate_request_id(header_request_id.as_deref(), &failure.request_id) {
         return error;
     }
-    if failure.error.id.trim().is_empty() || failure.error.message.trim().is_empty() {
+    if failure.error.id.trim().is_empty()
+        || !rpc_error_codes::is_valid(&failure.error.id, failure.error.code)
+        || failure.error.message.trim().is_empty()
+    {
         return ClientError::Protocol(
             "Rel RPC error response has an incomplete error object".to_string(),
         );
@@ -549,7 +627,9 @@ impl Iterator for CaptureStream {
             "ok" if event.data.is_some() && event.error.is_none() => {}
             "error"
                 if event.error.as_ref().is_some_and(|error| {
-                    !error.id.trim().is_empty() && !error.message.trim().is_empty()
+                    !error.id.trim().is_empty()
+                        && rpc_error_codes::is_valid(&error.id, error.code)
+                        && !error.message.trim().is_empty()
                 }) => {}
             _ => {
                 return Some(Err(ClientError::Protocol(format!(
@@ -1070,6 +1150,49 @@ mod tests {
     use std::net::{TcpListener, TcpStream};
     use std::thread::{self, JoinHandle};
 
+    #[test]
+    fn rpc_error_codes_use_a_distinct_high_numeric_namespace() {
+        let codes = [
+            rpc_error_codes::INVALID_REQUEST,
+            rpc_error_codes::ROUTE_NOT_FOUND,
+            rpc_error_codes::METHOD_NOT_ALLOWED,
+            rpc_error_codes::PAYLOAD_TOO_LARGE,
+            rpc_error_codes::UNSUPPORTED_MEDIA_TYPE,
+            rpc_error_codes::VALIDATION_FAILED,
+            rpc_error_codes::SESSION_NOT_FOUND,
+            rpc_error_codes::PAGE_NOT_FOUND,
+            rpc_error_codes::PAGE_MISMATCH,
+            rpc_error_codes::PROXY_NOT_FOUND,
+            rpc_error_codes::ACTIVE_PAGE_NOT_FOUND,
+            rpc_error_codes::CONFLICT,
+            rpc_error_codes::BROWSER_BUSY,
+            rpc_error_codes::NETWORK_PAUSED,
+            rpc_error_codes::ACTION_TARGET_NOT_FOUND,
+            rpc_error_codes::REQUEST_CANCELLED,
+            rpc_error_codes::RATE_LIMITED,
+            rpc_error_codes::UPSTREAM_UNAVAILABLE,
+            rpc_error_codes::BROWSER_UNAVAILABLE,
+            rpc_error_codes::AGENT_UNHEALTHY,
+            rpc_error_codes::TIMEOUT,
+            rpc_error_codes::PROXY_CONFIGURATION_FAILED,
+            rpc_error_codes::BROWSER_CREATION_FAILED,
+            rpc_error_codes::INTERNAL_ERROR,
+        ];
+
+        assert!(codes.iter().all(|code| *code >= rpc_error_codes::MINIMUM));
+        let unique = codes
+            .iter()
+            .copied()
+            .collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(unique.len(), codes.len());
+        assert_eq!(
+            rpc_error_codes::for_id("UNKNOWN_ERROR"),
+            rpc_error_codes::INTERNAL_ERROR
+        );
+        assert!(rpc_error_codes::is_valid("FUTURE_ERROR", 11_000));
+        assert!(!rpc_error_codes::is_valid("SESSION_NOT_FOUND", 10_303));
+    }
+
     #[derive(Debug)]
     struct TestRequest {
         method: String,
@@ -1457,6 +1580,7 @@ mod tests {
                     "request_id":"req_missing",
                     "error":{
                         "id":"SESSION_NOT_FOUND",
+                        "code":10100,
                         "message":"Session machine-a.Session999 was not found.",
                         "retryable":false,
                         "details":{"id":"machine-a.Session999"}
@@ -1470,6 +1594,7 @@ mod tests {
         let failure = error.rpc_failure().unwrap();
         assert_eq!(failure.request_id, "req_missing");
         assert_eq!(failure.error.id, "SESSION_NOT_FOUND");
+        assert_eq!(failure.error.code, rpc_error_codes::SESSION_NOT_FOUND);
         assert_eq!(
             failure.error.details.as_ref().unwrap()["id"],
             "machine-a.Session999"
@@ -1495,6 +1620,50 @@ mod tests {
         assert!(matches!(
             RelClient::new(base_url).get_session("machine-a.Session999"),
             Err(ClientError::Protocol(message)) if message.contains("unknown field `http_code`")
+        ));
+        server.join().unwrap();
+
+        let (base_url, server) = start_test_server(1, |_index, _request| {
+            http_json(
+                404,
+                "req_http_like_code",
+                json!({
+                    "status":"error",
+                    "request_id":"req_http_like_code",
+                    "error":{
+                        "id":"SESSION_NOT_FOUND",
+                        "code":404,
+                        "message":"Session machine-a.Session999 was not found.",
+                        "retryable":false
+                    }
+                }),
+            )
+        });
+        assert!(matches!(
+            RelClient::new(base_url).get_session("machine-a.Session999"),
+            Err(ClientError::Protocol(message)) if message.contains("incomplete error object")
+        ));
+        server.join().unwrap();
+
+        let (base_url, server) = start_test_server(1, |_index, _request| {
+            http_json(
+                404,
+                "req_mismatched_code",
+                json!({
+                    "status":"error",
+                    "request_id":"req_mismatched_code",
+                    "error":{
+                        "id":"SESSION_NOT_FOUND",
+                        "code":10303,
+                        "message":"Session machine-a.Session999 was not found.",
+                        "retryable":false
+                    }
+                }),
+            )
+        });
+        assert!(matches!(
+            RelClient::new(base_url).get_session("machine-a.Session999"),
+            Err(ClientError::Protocol(message)) if message.contains("incomplete error object")
         ));
         server.join().unwrap();
 
@@ -1531,7 +1700,7 @@ mod tests {
         let (base_url, server) = start_test_server(1, |_index, _request| {
             let body = [
                 json!({"status":"ok","request_id":"req_capture","event":"capture.started","data":{"url":"https://example.com/"}}).to_string(),
-                json!({"status":"error","request_id":"req_capture","event":"capture.failed","error":{"id":"TIMEOUT","message":"Timed out.","retryable":true},"data":{}}).to_string(),
+                json!({"status":"error","request_id":"req_capture","event":"capture.failed","error":{"id":"TIMEOUT","code":10303,"message":"Timed out.","retryable":true},"data":{}}).to_string(),
                 json!({"status":"ok","request_id":"req_capture","event":"capture.finished","data":{"exit_code":1}}).to_string(),
             ]
             .join("\n")

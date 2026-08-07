@@ -50,6 +50,7 @@ Every failure is:
   "request_id": "req_01J...",
   "error": {
     "id": "SESSION_NOT_FOUND",
+    "code": 10100,
     "message": "Session machine-<uuid>.Session42 was not found.",
     "retryable": false,
     "details": {
@@ -59,40 +60,44 @@ Every failure is:
 }
 ```
 
-`id`, `message`, and `retryable` are required. `details` is an optional JSON
-object. Clients must branch on `id`, never parse `message` or infer meaning from
-the HTTP transport status. The same error object is used in ordinary responses
-and NDJSON streams.
+`id`, `code`, `message`, and `retryable` are required. `details` is an optional
+JSON object. Numeric RPC codes begin at 10,000 and are independent of HTTP
+transport statuses. Clients can branch on `code` or `id`, but must never parse
+`message` or infer application meaning from the HTTP status. The same error
+object is used in ordinary responses and NDJSON streams.
 
 `retryable:true` means retrying the same idempotent operation may succeed without
 user correction. It does not mean every mutation is automatically safe to
 repeat.
 
-### Standard error IDs
+### Standard error codes
 
-| ID | Retryable | Meaning |
-| --- | --- | --- |
-| `INVALID_REQUEST` | no | Malformed HTTP or JSON |
-| `ROUTE_NOT_FOUND` | no | No v1 route matches |
-| `METHOD_NOT_ALLOWED` | no | Resource exists but method is unsupported |
-| `PAYLOAD_TOO_LARGE` | no | Request body exceeds 16 MiB |
-| `UNSUPPORTED_MEDIA_TYPE` | no | JSON endpoint received unsupported content |
-| `VALIDATION_FAILED` | no | Parsed request violates field constraints |
-| `SESSION_NOT_FOUND` | no | Session ID does not exist |
-| `PAGE_NOT_FOUND` | no | Ephemeral attached page does not exist |
-| `PAGE_MISMATCH` | no | Attached page state no longer matches the request |
-| `PROXY_NOT_FOUND` | no | Proxy does not exist |
-| `CONFLICT` | no | Name/state/last-session conflict |
-| `BROWSER_BUSY` | yes | Chromium is servicing incompatible work |
-| `NETWORK_PAUSED` | no | Session networking is paused |
-| `ACTION_TARGET_NOT_FOUND` | no | Click target could not be found |
-| `REQUEST_CANCELLED` | yes | Browser work was cancelled |
-| `RATE_LIMITED` | yes | Rel itself is rate limiting the caller |
-| `UPSTREAM_UNAVAILABLE` | yes | Navigation received a target HTTP error or the browser/proxy received an invalid upstream result |
-| `BROWSER_UNAVAILABLE` | yes | Required Chromium service is unavailable |
-| `AGENT_UNHEALTHY` | yes | The serialized control worker missed its health deadline |
-| `TIMEOUT` | yes | Rel's operation deadline expired |
-| `INTERNAL_ERROR` | no | Unexpected internal failure |
+| Code | ID | Retryable | Meaning |
+| ---: | --- | --- | --- |
+| `10000` | `INVALID_REQUEST` | no | Malformed HTTP or JSON |
+| `10001` | `ROUTE_NOT_FOUND` | no | No v1 route matches |
+| `10002` | `METHOD_NOT_ALLOWED` | no | Resource exists but method is unsupported |
+| `10003` | `PAYLOAD_TOO_LARGE` | no | Request body exceeds 16 MiB |
+| `10004` | `UNSUPPORTED_MEDIA_TYPE` | no | JSON endpoint received unsupported content |
+| `10005` | `VALIDATION_FAILED` | no | Parsed request violates field constraints |
+| `10100` | `SESSION_NOT_FOUND` | no | Session ID does not exist |
+| `10101` | `PAGE_NOT_FOUND` | no | Ephemeral attached page does not exist |
+| `10102` | `PAGE_MISMATCH` | no | Attached page state no longer matches the request |
+| `10103` | `PROXY_NOT_FOUND` | no | Proxy does not exist |
+| `10104` | `ACTIVE_PAGE_NOT_FOUND` | no | The shorthand workflow has no current page |
+| `10200` | `CONFLICT` | no | Name/state/last-session conflict |
+| `10201` | `BROWSER_BUSY` | yes | Chromium is servicing incompatible work |
+| `10202` | `NETWORK_PAUSED` | no | Session networking is paused |
+| `10203` | `ACTION_TARGET_NOT_FOUND` | no | Click target could not be found |
+| `10204` | `REQUEST_CANCELLED` | yes | Browser work was cancelled |
+| `10205` | `RATE_LIMITED` | yes | Rel itself is rate limiting the caller |
+| `10300` | `UPSTREAM_UNAVAILABLE` | yes | Navigation received a target HTTP error or the browser/proxy received an invalid upstream result |
+| `10301` | `BROWSER_UNAVAILABLE` | yes | Required Chromium service is unavailable |
+| `10302` | `AGENT_UNHEALTHY` | yes | The serialized control worker missed its health deadline |
+| `10303` | `TIMEOUT` | yes | Rel's operation deadline expired |
+| `10304` | `PROXY_CONFIGURATION_FAILED` | no | Chromium could not apply the session proxy configuration |
+| `10305` | `BROWSER_CREATION_FAILED` | no | Chromium could not create the session browser |
+| `10999` | `INTERNAL_ERROR` | no | Unexpected internal failure |
 
 A target website returning 404 or 429 is not a Rel RPC error for capture
 operations. Its status is reported as `target_http_status` in capture data.

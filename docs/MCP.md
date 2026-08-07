@@ -240,9 +240,9 @@ Malformed JSON-RPC messages, unsupported methods, and unknown tools use
 JSON-RPC errors. Invalid arguments or another failure while executing a known
 tool produce a tool result with `isError:true`, with the same complete error
 JSON in its text and `structuredContent`. When the agent returned a structured
-RPC error, that value preserves its stable error ID, retryability,
-message, and optional details. Clients should branch on the stable ID rather
-than parse the message.
+RPC error, that value preserves its high numeric code, stable error ID,
+retryability, message, and optional details. Clients should branch on the code
+or stable ID rather than parse the message.
 
 ## Runtime and trust boundary
 

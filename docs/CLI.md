@@ -160,7 +160,8 @@ version negotiation, tool results, and errors.
 
 An RPC failure is printed to standard error as the complete structured error
 envelope. Argument, transport, and protocol failures are plain text on standard
-error. Clients should branch on `error.id`, not `error.message`.
+error. Clients should branch on the high numeric `error.code` or stable
+`error.id`, not `error.message` or the HTTP status.
 
 Exit status is:
 

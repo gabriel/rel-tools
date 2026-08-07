@@ -16,8 +16,9 @@ assert_eq!(capture.exit_code(), Some(0));
 ```
 
 Ordinary methods return a typed `RpcResponse<T>`. Server failures are preserved
-as `ClientError::Rpc(RpcFailure)` with the stable error ID, message,
-retryability, details, and request ID. Capture is a validated NDJSON iterator.
+as `ClientError::Rpc(RpcFailure)` with the stable numeric code and string ID,
+message, retryability, details, and request ID. Capture is a validated NDJSON
+iterator.
 
 See [`docs/SDK.md`](../../docs/SDK.md) and
 [`docs/RPC.md`](../../docs/RPC.md) for the complete API and wire contract.
