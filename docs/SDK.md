@@ -148,6 +148,9 @@ println!("exit code: {}", stream.exit_code().unwrap_or(1));
 only after a valid `capture.finished` event has been read; `exit_code()` is then
 available. The iterator rejects malformed JSON, invalid event envelopes,
 request-ID mismatches, and a terminal event without an integer exit code.
+Dropping `CaptureStream` before `capture.finished` closes its HTTP connection
+and cancels the matching agent and Chromium operation. The persistent session
+and resident agent remain available.
 
 ## Canonical actions
 

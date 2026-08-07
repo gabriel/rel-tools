@@ -18,6 +18,12 @@ Related documents: [CLI](CLI.md), [MCP](MCP.md), and [Rust SDK](SDK.md).
 Every parsed request receives an opaque ID. Ordinary responses include it in the
 `X-Request-Id` header and body. Every capture-stream line includes the same ID.
 
+Closing a browser operation's HTTP connection before its response finishes
+cancels that operation. The agent also sends cancellation through its private
+Chromium bridge, so navigation, waits, and actions stop instead of continuing
+in the background. Cancellation is request-scoped: the persistent browser
+session, Rel.app, and the resident agent remain running for other clients.
+
 ## Response envelope
 
 Every successful ordinary response is:

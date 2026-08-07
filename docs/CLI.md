@@ -142,6 +142,10 @@ rel https://example.com > example.html 2> capture.ndjson
 ```
 
 The CLI verifies response content types and request IDs through `rel-client`.
+Pressing Ctrl-C terminates the foreground CLI and closes its RPC connection.
+If a browser operation is still active, the resident agent cancels the matching
+Chromium work; Rel.app, the agent, and the persistent browser session remain
+available for later commands.
 
 `rel mcp` is a protocol process rather than an ordinary one-shot command. Its
 standard output contains only newline-delimited JSON-RPC 2.0 messages for the
@@ -158,6 +162,7 @@ Exit status is:
 | --- | --- |
 | `0` | Help/version or a successful RPC operation. `status` also requires `overall_status:"ok"`. |
 | `1` | Usage, transport, protocol, or RPC failure; unhealthy `status`; or the terminal exit code from an unsuccessful capture. |
+| `130` | The shell terminated the CLI with Ctrl-C (`SIGINT`). |
 
 For `rel mcp`, clean stdin closure exits successfully; startup or stdio failure
 exits unsuccessfully.

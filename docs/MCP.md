@@ -130,8 +130,10 @@ after the client's protocol flow is established.
 
 Tool calls run independently so a long capture does not block `ping` or other
 stdio messages. `notifications/cancelled` suppresses the cancelled MCP result.
-RPC v1 does not currently expose operation cancellation, so browser work that
-has already reached the agent may still finish or time out in the background.
+The current adapter keeps that tool's RPC connection open until its worker
+finishes, so the notification alone does not stop browser work. Stopping the
+MCP process closes its outstanding RPC connections, which cancels the matching
+agent and Chromium operations.
 
 ## Tools
 
