@@ -222,11 +222,15 @@ creating a session only when none exists. Later calls without a session ID reuse
 the current page and session. It accepts `--session-id`, `--proxy`, `--output`,
 `--timeout`, and `--wait`.
 
-If the main frame returns HTTP 4xx or 5xx, `navigate` exits unsuccessfully as
-soon as Chromium commits that response instead of waiting for all background
-loading to stop. The `UPSTREAM_UNAVAILABLE` error message and details include
-the exact target status and final URL. The rendered page remains selected in
-the session.
+If the main frame returns HTTP 4xx or 5xx, `navigate` normally exits
+unsuccessfully as soon as Chromium commits that response instead of waiting for
+all background loading to stop. By default, Rel first detects Cloudflare
+Turnstile and managed challenge pages and gives them up to 15 seconds to
+continue. A successful redirect completes normally; otherwise the original
+target error is returned. Turn off **Rel → Settings… → General → Wait for
+Cloudflare Turnstile** to restore immediate failure for every HTTP error. The
+`UPSTREAM_UNAVAILABLE` error message and details include the exact target status
+and final URL. The rendered page remains selected in the session.
 
 `perform` calls `POST /v1/perform` with one positional, non-empty JSON array of
 canonical action objects. Actions run in array order. It accepts `--session-id`,

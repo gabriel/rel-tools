@@ -117,9 +117,11 @@ println!("{}", capture.data.capture.output_path);
 # Ok::<(), rel_client::ClientError>(())
 ```
 
-`navigate` returns `ClientError::Rpc` with ID `UPSTREAM_UNAVAILABLE` as soon as
-the main frame commits an HTTP 4xx or 5xx response. Its details include the
-final `url` and exact `target_http_status`; the navigated session remains
+`navigate` returns `ClientError::Rpc` with ID `UPSTREAM_UNAVAILABLE` when the
+main frame commits an HTTP 4xx or 5xx response. By default, detected Cloudflare
+Turnstile and managed challenge pages first receive up to 15 seconds to
+continue; this can be disabled in Rel's General settings. Error details include
+the final `url` and exact `target_http_status`; the navigated session remains
 selected.
 
 The first navigation without a session ID reuses the first persisted session,
