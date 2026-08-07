@@ -1010,8 +1010,6 @@ pub struct SessionDefaultsUpdateRequest {
     pub image_blocking_mode: Option<ImageBlockingMode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub image_size_limit_kb: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_open_tabs: Option<i64>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
@@ -1036,8 +1034,6 @@ pub struct SessionData {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct SessionDefaultsData {
     pub session_defaults: SessionDefaults,
-    #[serde(default)]
-    pub closed_session_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -1046,7 +1042,6 @@ pub struct SessionDefaults {
     pub adblock_enabled: bool,
     pub image_blocking_mode: ImageBlockingMode,
     pub image_size_limit_kb: i64,
-    pub max_open_tabs: i64,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -1312,8 +1307,7 @@ mod tests {
             "proxy_alias": "office",
             "adblock_enabled": false,
             "image_blocking_mode": "all",
-            "image_size_limit_kb": 250,
-            "max_open_tabs": 8
+            "image_size_limit_kb": 250
         })
     }
 

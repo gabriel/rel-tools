@@ -459,8 +459,7 @@ A session resource is:
 - `GET /v1/sessions` returns `data.sessions`.
 - `GET /v1/sessions/{id}` returns `data.session`.
 - `POST /v1/sessions` accepts optional `name`, `proxy_alias`, `adblock_enabled`,
-  `image_blocking_mode`, and `image_size_limit_kb`; returns `data.session` and
-  `data.closed_session_ids`.
+  `image_blocking_mode`, and `image_size_limit_kb`; returns `data.session`.
 - `PATCH /v1/sessions/{id}` is partial and returns `data.session`.
 - `DELETE /v1/sessions/{id}` returns the opaque session ID as `data.deleted_id`
   and refuses to remove the last session.
@@ -472,34 +471,26 @@ only that ID; numeric database IDs are neither accepted nor returned.
 
 ## Session defaults
 
-A session-defaults resource controls values used for future sessions plus the
-global persistent-session limit. Proxy and filtering values are copied into new
-sessions and do not alter existing ones:
+A session-defaults resource controls values used for future sessions. Proxy and
+filtering values are copied into new sessions and do not alter existing ones:
 
 ```json
 {
   "proxy_alias": null,
   "adblock_enabled": true,
   "image_blocking_mode": "over_limit",
-  "image_size_limit_kb": 100,
-  "max_open_tabs": 8
+  "image_size_limit_kb": 100
 }
 ```
 
 - `GET /v1/session-defaults` returns `data.session_defaults`.
 - `PATCH /v1/session-defaults` accepts any non-empty subset of the fields above
-  and returns `data.session_defaults` plus `data.closed_session_ids`.
-  `proxy_alias:null` selects direct networking.
-
-`max_open_tabs` accepts integers from 1 through 100 and defaults to 8. Creating
-a session beyond the limit atomically closes the oldest session. Lowering the
-setting immediately closes the oldest excess sessions. Closed session IDs are
-invalidated, their browsing data is deleted, and their opaque IDs are returned
-in `closed_session_ids`.
+  and returns `data.session_defaults`. `proxy_alias:null` selects direct
+  networking.
 
 On `POST /v1/sessions`, every omitted session setting uses this resource. A
 present `proxy_alias:null` is an explicit direct override; a present non-null value
 must reference an existing proxy. Automatically created sessions for captures
 and attached pages follow the same defaults, except an explicit request proxy
 overrides the default proxy. Capture events and page responses include
-`closed_session_ids` when implicit creation removes older sessions.
+the effective session ID.

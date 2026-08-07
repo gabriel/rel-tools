@@ -290,9 +290,7 @@ machine-<installation UUID>.Session<ID>
 For a new session, `--proxy oxylabs` is shorthand for creating a persistent
 session assigned to `oxylabs`, then capturing with it. Its opaque ID is
 returned as `data.session_id` in the NDJSON capture events. Omitting `--proxy`
-uses Rel’s configured Session defaults. If creating the session exceeds the
-configured maximum open-tab count, Rel permanently closes the oldest sessions;
-their opaque IDs are returned as `data.closed_session_ids`.
+uses Rel’s configured Session defaults.
 For an existing session, omission preserves its current assignment; an explicit
 proxy updates the assignment.
 
@@ -433,10 +431,8 @@ connection instead of the default proxy. `--image-blocking-mode` is `all` or
 and a trailing newline instead of the JSON response envelope. Errors remain on
 standard error with the ordinary nonzero exit status.
 
-Rel keeps at most eight persistent sessions by default. The maximum is
-configurable from 1 through 100 in **Settings → Session**. Creating beyond the
-limit closes the oldest session and deletes its browsing data. The create
-response includes those opaque IDs in `data.closed_session_ids`.
+Rel does not impose a maximum session count. Sessions remain open until you
+explicitly delete them.
 
 Partially update a session:
 
