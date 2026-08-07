@@ -44,7 +44,6 @@ Every failure is:
   "request_id": "req_01J...",
   "error": {
     "id": "SESSION_NOT_FOUND",
-    "http_code": 404,
     "message": "Session machine-<uuid>.Session42 was not found.",
     "retryable": false,
     "details": {
@@ -54,10 +53,10 @@ Every failure is:
 }
 ```
 
-`id`, `http_code`, `message`, and `retryable` are required. `details` is an
-optional JSON object. Clients must branch on `id`, never parse `message`.
-`http_code` always equals the actual HTTP status for ordinary responses; it is
-also retained so the identical error object works in NDJSON streams.
+`id`, `message`, and `retryable` are required. `details` is an optional JSON
+object. Clients must branch on `id`, never parse `message` or infer meaning from
+the HTTP transport status. The same error object is used in ordinary responses
+and NDJSON streams.
 
 `retryable:true` means retrying the same idempotent operation may succeed without
 user correction. It does not mean every mutation is automatically safe to
@@ -65,29 +64,29 @@ repeat.
 
 ### Standard error IDs
 
-| ID | HTTP | Retryable | Meaning |
-| --- | ---: | --- | --- |
-| `INVALID_REQUEST` | 400 | no | Malformed HTTP or JSON |
-| `ROUTE_NOT_FOUND` | 404 | no | No v1 route matches |
-| `METHOD_NOT_ALLOWED` | 405 | no | Resource exists but method is unsupported |
-| `PAYLOAD_TOO_LARGE` | 413 | no | Request body exceeds 16 MiB |
-| `UNSUPPORTED_MEDIA_TYPE` | 415 | no | JSON endpoint received unsupported content |
-| `VALIDATION_FAILED` | 422 | no | Parsed request violates field constraints |
-| `SESSION_NOT_FOUND` | 404 | no | Session ID does not exist |
-| `PAGE_NOT_FOUND` | 404 | no | Ephemeral attached page does not exist |
-| `PAGE_MISMATCH` | 409 | no | Attached page state no longer matches the request |
-| `PROXY_NOT_FOUND` | 404 | no | Proxy does not exist |
-| `CONFLICT` | 409 | no | Name/state/last-session conflict |
-| `BROWSER_BUSY` | 409 | yes | Chromium is servicing incompatible work |
-| `NETWORK_PAUSED` | 409 | no | Session networking is paused |
-| `ACTION_TARGET_NOT_FOUND` | 422 | no | Click target could not be found |
-| `REQUEST_CANCELLED` | 409 | yes | Browser work was cancelled |
-| `RATE_LIMITED` | 429 | yes | Rel itself is rate limiting the caller |
-| `UPSTREAM_UNAVAILABLE` | 502 | yes | Navigation received an HTTP error or the browser/proxy received an invalid upstream result |
-| `BROWSER_UNAVAILABLE` | 503 | yes | Required Chromium service is unavailable |
-| `AGENT_UNHEALTHY` | 503 | yes | The serialized control worker missed its health deadline |
-| `TIMEOUT` | 504 | yes | Rel's operation deadline expired |
-| `INTERNAL_ERROR` | 500 | no | Unexpected internal failure |
+| ID | Retryable | Meaning |
+| --- | --- | --- |
+| `INVALID_REQUEST` | no | Malformed HTTP or JSON |
+| `ROUTE_NOT_FOUND` | no | No v1 route matches |
+| `METHOD_NOT_ALLOWED` | no | Resource exists but method is unsupported |
+| `PAYLOAD_TOO_LARGE` | no | Request body exceeds 16 MiB |
+| `UNSUPPORTED_MEDIA_TYPE` | no | JSON endpoint received unsupported content |
+| `VALIDATION_FAILED` | no | Parsed request violates field constraints |
+| `SESSION_NOT_FOUND` | no | Session ID does not exist |
+| `PAGE_NOT_FOUND` | no | Ephemeral attached page does not exist |
+| `PAGE_MISMATCH` | no | Attached page state no longer matches the request |
+| `PROXY_NOT_FOUND` | no | Proxy does not exist |
+| `CONFLICT` | no | Name/state/last-session conflict |
+| `BROWSER_BUSY` | yes | Chromium is servicing incompatible work |
+| `NETWORK_PAUSED` | no | Session networking is paused |
+| `ACTION_TARGET_NOT_FOUND` | no | Click target could not be found |
+| `REQUEST_CANCELLED` | yes | Browser work was cancelled |
+| `RATE_LIMITED` | yes | Rel itself is rate limiting the caller |
+| `UPSTREAM_UNAVAILABLE` | yes | Navigation received a target HTTP error or the browser/proxy received an invalid upstream result |
+| `BROWSER_UNAVAILABLE` | yes | Required Chromium service is unavailable |
+| `AGENT_UNHEALTHY` | yes | The serialized control worker missed its health deadline |
+| `TIMEOUT` | yes | Rel's operation deadline expired |
+| `INTERNAL_ERROR` | no | Unexpected internal failure |
 
 A target website returning 404 or 429 is not a Rel RPC error for capture
 operations. Its status is reported as `target_http_status` in capture data.
@@ -153,7 +152,7 @@ HTTP 200 while the worker is ready or operating within its deadline:
 ```
 
 Worker state is `starting`, `idle`, or `busy`. A startup/operation deadline
-violation or failed worker returns HTTP 503 `AGENT_UNHEALTHY`, with the worker
+violation or failed worker returns `AGENT_UNHEALTHY`, with the worker
 snapshot in `error.details.worker`. Health deadlines diagnose stalls; they do not
 cancel the active request.
 
@@ -246,9 +245,10 @@ to become idle. The error includes the exact `target_http_status`, and the page
 remains the session's current shorthand page.
 Without `session_id`, they use the most recently navigated shorthand page for
 compatibility. `perform` and singular `capture` return `ACTIVE_PAGE_NOT_FOUND`
-with HTTP 409 until a matching page has been selected by navigation. This
-registry is process-local and is cleared by an agent restart or when its session
-closes. Concurrent work within one session should use explicit page IDs.
+with `ACTIVE_PAGE_NOT_FOUND` until a matching page has been selected by
+navigation. This registry is process-local and is cleared by an agent restart
+or when its session closes. Concurrent work within one session should use
+explicit page IDs.
 
 ### `POST /v1/captures`
 

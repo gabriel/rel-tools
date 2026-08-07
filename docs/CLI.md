@@ -8,7 +8,7 @@ manually. The matching public client can also be installed from source:
 
 ```sh
 cargo install --git https://github.com/gabriel/rel-tools \
-  --tag v0.1.0 \
+  --tag v0.1.1 \
   --package rel-cli
 ```
 

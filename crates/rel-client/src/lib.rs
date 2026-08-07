@@ -317,9 +317,9 @@ pub struct RpcFailure {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct RpcError {
     pub id: String,
-    pub http_code: u16,
     pub message: String,
     pub retryable: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -422,12 +422,6 @@ fn parse_rpc_failure(status: u16, response: ureq::Response) -> ClientError {
     }
     if let Err(error) = validate_request_id(header_request_id.as_deref(), &failure.request_id) {
         return error;
-    }
-    if failure.error.http_code != status {
-        return ClientError::Protocol(format!(
-            "Rel RPC error http_code {} does not match HTTP status {status}",
-            failure.error.http_code
-        ));
     }
     if failure.error.id.trim().is_empty() || failure.error.message.trim().is_empty() {
         return ClientError::Protocol(
@@ -1463,7 +1457,6 @@ mod tests {
                     "request_id":"req_missing",
                     "error":{
                         "id":"SESSION_NOT_FOUND",
-                        "http_code":404,
                         "message":"Session machine-a.Session999 was not found.",
                         "retryable":false,
                         "details":{"id":"machine-a.Session999"}
@@ -1477,11 +1470,32 @@ mod tests {
         let failure = error.rpc_failure().unwrap();
         assert_eq!(failure.request_id, "req_missing");
         assert_eq!(failure.error.id, "SESSION_NOT_FOUND");
-        assert_eq!(failure.error.http_code, 404);
         assert_eq!(
             failure.error.details.as_ref().unwrap()["id"],
             "machine-a.Session999"
         );
+        server.join().unwrap();
+
+        let (base_url, server) = start_test_server(1, |_index, _request| {
+            http_json(
+                404,
+                "req_legacy",
+                json!({
+                    "status":"error",
+                    "request_id":"req_legacy",
+                    "error":{
+                        "id":"SESSION_NOT_FOUND",
+                        "http_code":404,
+                        "message":"Session machine-a.Session999 was not found.",
+                        "retryable":false
+                    }
+                }),
+            )
+        });
+        assert!(matches!(
+            RelClient::new(base_url).get_session("machine-a.Session999"),
+            Err(ClientError::Protocol(message)) if message.contains("unknown field `http_code`")
+        ));
         server.join().unwrap();
 
         let (base_url, server) = start_test_server(1, |_index, _request| {
@@ -1517,7 +1531,7 @@ mod tests {
         let (base_url, server) = start_test_server(1, |_index, _request| {
             let body = [
                 json!({"status":"ok","request_id":"req_capture","event":"capture.started","data":{"url":"https://example.com/"}}).to_string(),
-                json!({"status":"error","request_id":"req_capture","event":"capture.failed","error":{"id":"TIMEOUT","http_code":504,"message":"Timed out.","retryable":true},"data":{}}).to_string(),
+                json!({"status":"error","request_id":"req_capture","event":"capture.failed","error":{"id":"TIMEOUT","message":"Timed out.","retryable":true},"data":{}}).to_string(),
                 json!({"status":"ok","request_id":"req_capture","event":"capture.finished","data":{"exit_code":1}}).to_string(),
             ]
             .join("\n")

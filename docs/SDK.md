@@ -16,7 +16,7 @@ Until a crates.io release is announced, pin the public repository tag:
 
 ```toml
 [dependencies]
-rel-client = { git = "https://github.com/gabriel/rel-tools", tag = "v0.1.0" }
+rel-client = { git = "https://github.com/gabriel/rel-tools", tag = "v0.1.1" }
 ```
 
 ```rust
@@ -247,18 +247,17 @@ SDK failures use one `ClientError` type:
 | Variant | Meaning |
 | --- | --- |
 | `Transport` | The agent could not be reached or the HTTP exchange failed. |
-| `Protocol` | Content type, request ID, envelope, HTTP status, or event shape violated RPC v1. |
+| `Protocol` | Content type, request ID, envelope, or event shape violated RPC v1. |
 | `Rpc(RpcFailure)` | Rel returned the standard structured RPC error envelope. |
 | `Io` | Reading a response or capture stream failed. |
 | `Json` | JSON serialization or deserialization failed. |
 
 Use `ClientError::rpc_failure()` to inspect an optional `RpcFailure`, then
-branch on `failure.error.id`. `RpcError` preserves `http_code`, `message`,
-`retryable`, and optional object-valued `details`.
+branch on `failure.error.id`. `RpcError` preserves `message`, `retryable`, and
+optional object-valued `details`.
 
 The client validates `Content-Type`, requires `X-Request-Id`, and checks it
-against the envelope or every NDJSON event. For ordinary errors it also checks
-that the HTTP status equals `error.http_code`.
+against the envelope or every NDJSON event.
 
 ## Stability
 

@@ -26,7 +26,7 @@ public client independently:
 
 ```sh
 cargo install --git https://github.com/gabriel/rel-tools \
-  --tag v0.1.0 \
+  --tag v0.1.1 \
   --package rel-cli
 ```
 
@@ -44,7 +44,7 @@ Until a crates.io release is announced, pin the public repository tag:
 
 ```toml
 [dependencies]
-rel-client = { git = "https://github.com/gabriel/rel-tools", tag = "v0.1.0" }
+rel-client = { git = "https://github.com/gabriel/rel-tools", tag = "v0.1.1" }
 ```
 
 ```rust,no_run
