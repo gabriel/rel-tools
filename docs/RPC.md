@@ -51,10 +51,10 @@ Every failure is:
   "error": {
     "id": "SESSION_NOT_FOUND",
     "code": 10100,
-    "message": "Session machine-<uuid>.Session42 was not found.",
+    "message": "Browser session Session42 was not found.",
     "retryable": false,
     "details": {
-      "id": "machine-<uuid>.Session42"
+      "id": "Session42"
     }
   }
 }
@@ -210,7 +210,7 @@ page and session IDs. Navigate it with `POST /v1/navigate`:
 ```json
 {
   "url": "https://example.com",
-  "session_id": "machine-....Session12",
+  "session_id": "Session12",
   "proxy": "office",
   "output": "/optional/page.html",
   "timeout": 90,
@@ -231,7 +231,7 @@ Perform one or more canonical actions with `POST /v1/perform`:
     { "action": "click", "selector": "button.more" },
     { "action": "wait-for", "selector": "#results" }
   ],
-  "session_id": "machine-....Session12",
+  "session_id": "Session12",
   "output": "/optional/after-click.html",
   "timeout": 90,
   "wait": 1
@@ -244,7 +244,7 @@ Capture without another action with `POST /v1/capture`:
 
 ```json
 {
-  "session_id": "machine-....Session12",
+  "session_id": "Session12",
   "output": "/optional/current.html",
   "timeout": 90,
   "wait": 1
@@ -276,7 +276,7 @@ explicit page IDs.
   "timeout": 90,
   "wait": 1,
   "actions": [],
-  "session_id": "machine-....Session12",
+  "session_id": "Session12",
   "proxy": "office",
   "retry": 1,
   "retry_delay": 3
@@ -290,7 +290,7 @@ explicit page IDs.
 | `timeout` | Finite seconds greater than zero; default 90. |
 | `wait` | Finite seconds at least zero; default 1. |
 | `actions` | Optional array of canonical action objects. |
-| `session_id` | Optional existing federated ID. Omission creates a persistent session and returns its ID in capture events. |
+| `session_id` | Optional existing canonical `Session<number>` ID. Omission creates a persistent session and returns its ID in capture events. |
 | `proxy` | Optional unique proxy alias string, assigned to the created session or applied to the existing session. |
 | `retry` | Integer 0 through 100; default 1. |
 | `retry_delay` | Finite seconds 0 through 86400; default 3. |
@@ -324,7 +324,7 @@ is no encoded stdout/stderr layer:
   "event": "capture.started",
   "data": {
     "url": "https://example.com/",
-    "session_id": "machine-....Session12"
+    "session_id": "Session12"
   }
 }
 ```
@@ -354,7 +354,7 @@ code 1; it is not an API error.
 ```json
 {
   "url": "https://example.com",
-  "session_id": "machine-....Session12",
+  "session_id": "Session12",
   "proxy": "office",
   "output": "/optional/page.html",
   "timeout": 90,
@@ -370,7 +370,7 @@ normalized browser URL must equal the requested URL. Success data:
 {
   "page": {
     "id": "page_...",
-    "session_id": "machine-....Session12",
+    "session_id": "Session12",
     "url": "https://example.com/"
   },
   "capture": {
@@ -446,7 +446,7 @@ A session resource is:
 
 ```json
 {
-  "id": "machine-<uuid>.Session12",
+  "id": "Session12",
   "name": "Session12",
   "proxy_alias": null,
   "adblock_enabled": true,
@@ -461,12 +461,12 @@ A session resource is:
 - `POST /v1/sessions` accepts optional `name`, `proxy_alias`, `adblock_enabled`,
   `image_blocking_mode`, and `image_size_limit_kb`; returns `data.session`.
 - `PATCH /v1/sessions/{id}` is partial and returns `data.session`.
-- `DELETE /v1/sessions/{id}` returns the opaque session ID as `data.deleted_id`
-  and refuses to remove the last session.
+- `DELETE /v1/sessions/{id}` returns the canonical session ID as
+  `data.deleted_id` and refuses to remove the last session.
 
 `image_blocking_mode` is `all` or `over_limit`. The legacy `block_images` alias
 is rejected. Size is 1 through 1,048,576 kB. The visible name is editable and
-case-insensitively unique; the opaque `id` is immutable. Session routes accept
+case-insensitively unique; the canonical `id` is immutable. Session routes accept
 only that ID; numeric database IDs are neither accepted nor returned.
 
 ## Session defaults

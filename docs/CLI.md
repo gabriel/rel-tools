@@ -101,7 +101,8 @@ rel proxy create \
 ```
 
 By default, `session create` returns the ordinary JSON response envelope. Add
-`--id-only` to print just the opaque ID for shell command substitution, then
+`--id-only` to print just the canonical `Session<number>` ID for shell command
+substitution, then
 quote the variable when passing it to later commands:
 
 ```sh
@@ -269,7 +270,7 @@ actions, and writes the rendered HTML to stdout or an explicit output file.
 | `--wait SECONDS` | `wait` | Nonnegative finite delay after main-frame readiness; default `1`. |
 | `--action JSON` | `actions[]` | One canonical action object; repeat the option for multiple actions. |
 | `--actions JSON` | `actions` | A JSON array of canonical action objects, executed in order. |
-| `--session-id ID` | `session_id` | Reuse an existing immutable federated session ID. When omitted, use `REL_SESSION_ID` if set; otherwise create a persistent session. |
+| `--session-id ID` | `session_id` | Reuse an existing immutable `Session<number>` ID. When omitted, use `REL_SESSION_ID` if set; otherwise create a persistent session. |
 | `--proxy ALIAS` | `proxy` | Select a proxy by its unique alias for the created or reused session. |
 | `--retry COUNT` | `retry` | Retry count from 0 through 100; default `1`. |
 | `--retry-delay SECONDS` | `retry_delay` | Finite delay from 0 through 86400 seconds; default `3`. |
@@ -284,11 +285,11 @@ always wins. If neither is present, capture creates a persistent browser session
 Its default label is `Session<ID>` and its immutable identifier is:
 
 ```text
-machine-<installation UUID>.Session<ID>
+Session<ID>
 ```
 
 For a new session, `--proxy oxylabs` is shorthand for creating a persistent
-session assigned to `oxylabs`, then capturing with it. Its opaque ID is
+session assigned to `oxylabs`, then capturing with it. Its canonical ID is
 returned as `data.session_id` in the NDJSON capture events. Omitting `--proxy`
 uses Rel’s configured Session defaults.
 For an existing session, omission preserves its current assignment; an explicit
@@ -329,7 +330,7 @@ Example:
 ```sh
 rel https://example.com \
   --output /tmp/example.html \
-  --session-id machine-7b6063e7-f43b-447f-b3ea-9958c754fcec.Session12 \
+  --session-id Session12 \
   --action '{"action":"wait","seconds":0.5}'
 ```
 
@@ -339,7 +340,7 @@ Attach an ephemeral automation page:
 
 ```sh
 rel page attach https://example.com \
-  --session-id machine-7b6063e7-f43b-447f-b3ea-9958c754fcec.Session12 \
+  --session-id Session12 \
   --timeout 90 --wait 1
 ```
 
@@ -405,12 +406,12 @@ rel proxy rotate office
 
 ## Sessions
 
-Read and delete persistent browser sessions by their opaque session IDs:
+Read and delete persistent browser sessions by their canonical session IDs:
 
 ```sh
 rel session list
-rel session get machine-7b6063e7-f43b-447f-b3ea-9958c754fcec.Session12
-rel session delete machine-7b6063e7-f43b-447f-b3ea-9958c754fcec.Session12
+rel session get Session12
+rel session delete Session12
 ```
 
 Create a session:
@@ -427,9 +428,9 @@ rel session create \
 Every create option is optional. Omitted proxy and filtering options use the
 Session defaults configured in Rel.app. Use `--direct` to force a direct
 connection instead of the default proxy. `--image-blocking-mode` is `all` or
-`over_limit`. `--id-only` changes successful output to the new opaque session ID
-and a trailing newline instead of the JSON response envelope. Errors remain on
-standard error with the ordinary nonzero exit status.
+`over_limit`. `--id-only` changes successful output to the new canonical
+session ID and a trailing newline instead of the JSON response envelope. Errors
+remain on standard error with the ordinary nonzero exit status.
 
 Rel does not impose a maximum session count. Sessions remain open until you
 explicitly delete them.
@@ -437,11 +438,11 @@ explicitly delete them.
 Partially update a session:
 
 ```sh
-rel session update machine-7b6063e7-f43b-447f-b3ea-9958c754fcec.Session12 --name Research-2 --adblock-enabled false
-rel session update machine-7b6063e7-f43b-447f-b3ea-9958c754fcec.Session12 --direct
+rel session update Session12 --name Research-2 --adblock-enabled false
+rel session update Session12 --direct
 ```
 
 `--direct` sends `proxy_alias:null`, selecting direct networking during creation
 or clearing a proxy assignment during update. An update requires at least one
-mutable option. Session name and filtering policy are mutable; the opaque
+mutable option. Session name and filtering policy are mutable; the canonical
 session ID is immutable.

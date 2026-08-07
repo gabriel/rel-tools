@@ -545,7 +545,7 @@ fn tool_definitions() -> Vec<Value> {
         tool_definition(
             "rel_list_sessions",
             "List Browser Sessions",
-            "List persistent Rel browser sessions and their opaque IDs, proxy assignments, and filtering settings.",
+            "List persistent Rel browser sessions and their canonical Session<number> IDs, proxy assignments, and filtering settings.",
             empty_object_schema(),
             read_annotations(),
         ),

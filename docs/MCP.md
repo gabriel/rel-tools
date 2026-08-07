@@ -150,7 +150,7 @@ The server exposes exactly six tools:
 | `rel_capture` | `POST /v1/captures` | Load a page, perform optional actions, and save its rendered HTML. |
 | `rel_page_attach` | `POST /v1/pages` | Attach an ephemeral automation page to a persistent browser session. |
 | `rel_page_action` | `POST /v1/pages/{page_id}/actions` | Perform one action on an attached page. |
-| `rel_list_sessions` | `GET /v1/sessions` | List persistent browser sessions and their opaque IDs. |
+| `rel_list_sessions` | `GET /v1/sessions` | List persistent browser sessions and their canonical `Session<number>` IDs. |
 | `rel_list_proxies` | `GET /v1/proxies` | List configured proxy aliases and non-secret configuration. |
 
 `rel_status`, `rel_list_sessions`, and `rel_list_proxies` accept an empty object.
@@ -160,8 +160,9 @@ operations:
 ### `rel_capture`
 
 `url` is required. Optional fields are `output_uri`, `timeout`, `wait`, `actions`,
-`session_id`, `proxy`, `retry`, and `retry_delay`. Omitting `session_id` creates
-a persistent session using the configured Session defaults. The action objects
+`session_id`, `proxy`, `retry`, and `retry_delay`. A supplied `session_id` uses
+the canonical `Session<number>` format. Omitting it creates a persistent session
+using the configured Session defaults. The action objects
 are the canonical `click`, `wait-for`, `wait`, and `click-link` shapes described
 in [the CLI guide](CLI.md#capture). `output_uri`, when present, must be an
 absolute local `file:///` URI.

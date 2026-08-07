@@ -94,7 +94,7 @@ use rel_client::{
 };
 
 let client = RelClient::local();
-let session_id = "machine-a.Session1".to_string();
+let session_id = "Session1".to_string();
 let mut navigate = NavigateRequest::new("https://example.com");
 navigate.session_id = Some(session_id.clone());
 client.navigate(&navigate)?;
@@ -207,7 +207,7 @@ let request = SessionUpdateRequest {
     proxy_alias: Change::Clear,
     ..SessionUpdateRequest::default()
 };
-RelClient::local().update_session("machine-<uuid>.Session12", &request)?;
+RelClient::local().update_session("Session12", &request)?;
 # Ok::<(), rel_client::ClientError>(())
 ```
 
@@ -245,8 +245,8 @@ session count.
 methods and the capture/page `proxy` field accept only that alias; public proxy
 resources never expose or accept numeric IDs or UUIDs.
 
-Sessions similarly expose their immutable opaque `id` (for example,
-`machine-<uuid>.Session12`) as their sole public identifier. The typed session
+Sessions similarly expose their immutable canonical `id` (for example,
+`Session12`) as their sole public identifier. The typed session
 methods accept that string, and `Session` and session deletion responses do not
 expose numeric database IDs.
 
