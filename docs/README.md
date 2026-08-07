@@ -25,5 +25,6 @@ Validate the production build and internal links with:
 npm run check
 ```
 
-The `Deploy docs` workflow publishes changes from `main`. It requires the
-`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
+CI validates every documentation change. Production deployment is managed by
+the proprietary product repository so Cloudflare credentials remain private;
+it builds this repository's `main` branch as the canonical source.
