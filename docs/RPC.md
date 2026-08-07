@@ -83,14 +83,17 @@ repeat.
 | `ACTION_TARGET_NOT_FOUND` | 422 | no | Click target could not be found |
 | `REQUEST_CANCELLED` | 409 | yes | Browser work was cancelled |
 | `RATE_LIMITED` | 429 | yes | Rel itself is rate limiting the caller |
-| `UPSTREAM_UNAVAILABLE` | 502 | yes | Browser/proxy received an invalid upstream result |
+| `UPSTREAM_UNAVAILABLE` | 502 | yes | Navigation received an HTTP error or the browser/proxy received an invalid upstream result |
 | `BROWSER_UNAVAILABLE` | 503 | yes | Required Chromium service is unavailable |
 | `AGENT_UNHEALTHY` | 503 | yes | The serialized control worker missed its health deadline |
 | `TIMEOUT` | 504 | yes | Rel's operation deadline expired |
 | `INTERNAL_ERROR` | 500 | no | Unexpected internal failure |
 
-A target website returning 404 or 429 is not a Rel RPC error. Its status is
-reported as `target_http_status` in capture data.
+A target website returning 404 or 429 is not a Rel RPC error for capture
+operations. Its status is reported as `target_http_status` in capture data.
+`POST /v1/navigate` instead returns `UPSTREAM_UNAVAILABLE` as soon as its main
+frame commits an HTTP 4xx or 5xx response. The error details contain the final
+`url` and exact `target_http_status`; the navigated session remains selected.
 
 ## Routes
 
@@ -237,6 +240,10 @@ Capture without another action with `POST /v1/capture`:
 All three return the same page-operation envelope documented under attached
 pages. When `session_id` is supplied, `navigate` selects and updates that
 session's current shorthand page; `perform` and singular `capture` target it.
+If navigation commits an HTTP 4xx or 5xx main-frame response, it returns
+`UPSTREAM_UNAVAILABLE` immediately instead of waiting for background loading
+to become idle. The error includes the exact `target_http_status`, and the page
+remains the session's current shorthand page.
 Without `session_id`, they use the most recently navigated shorthand page for
 compatibility. `perform` and singular `capture` return `ACTIVE_PAGE_NOT_FOUND`
 with HTTP 409 until a matching page has been selected by navigation. This
