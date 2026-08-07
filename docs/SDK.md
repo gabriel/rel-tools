@@ -39,6 +39,11 @@ database, or tails log files. The caller is responsible for ensuring that the
 installed app and agent are running. The bundled CLI adds app-launch behavior
 for Chromium and mutation commands around this same client.
 
+SDK browser methods inherit the [RPC tab-selection behavior](RPC.md#transport):
+when Rel is inactive, the target tab is selected by default without activating
+the app. Users can disable this with the General setting **Follow browser
+commands**.
+
 ## API parity
 
 Each method maps to one public RPC route:

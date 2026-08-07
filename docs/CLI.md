@@ -57,6 +57,12 @@ starts Rel.app in the background when its agent is unavailable. `rel mcp`
 performs that startup check once, then serves its original stdio connection.
 `REL_AGENT_PORT` overrides the default local port, `17319`.
 
+When a browser command targets a tab while Rel is in the background, Rel selects
+that tab by default without activating the app. Turn off **Rel → Settings… →
+General → Follow browser commands** to keep the current tab selected instead.
+Internal session synchronization and read-only resource commands do not change
+the selection.
+
 Capture with a URL remains the default URL-first command: `rel URL [options]`.
 The explicit `rel capture URL [options]` form is equivalent. Argument-free
 `rel capture` instead captures the current shorthand page selected by

@@ -109,6 +109,10 @@ stdin/stdout connection until the MCP client closes stdin or the process is
 terminated. `REL_AGENT_PORT` changes the loopback RPC port from its default,
 `17319`.
 
+Browser tool calls also use the [RPC tab-selection behavior](RPC.md#transport):
+while Rel is inactive, their target tab is selected by default without bringing
+the app forward. The General setting **Follow browser commands** controls this.
+
 ## Transport and protocol versions
 
 The server uses the standard MCP stdio transport. Each input and output message
