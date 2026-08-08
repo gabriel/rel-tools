@@ -345,7 +345,8 @@ Events, in normal order:
 contains an absolute output path, bytes, final URL, optional
 `target_http_status`, session ID, capture ID, and proxy traffic. A target status
 at least 400 is a completed capture with `outcome:"target_error"` and CLI exit
-code 1; it is not an API error.
+code 1; it is not an API error. Redirects complete normally, and capture event
+URL fields identify the committed final page.
 
 ## Attached pages
 

@@ -322,7 +322,8 @@ A normal capture emits `capture.started`, `capture.browser_requested`,
 CLI exit code. When stdout is the destination, `capture.writing` and
 `capture.completed` report `output_path:"-"`; the CLI's private staging path is
 never exposed. A target website response such as HTTP 404 or 429 is reported
-as `target_http_status`; it is not a Rel RPC error.
+as `target_http_status`; it is not a Rel RPC error. Redirected captures complete
+normally, and their capture events report the committed final URL.
 
 Example:
 
