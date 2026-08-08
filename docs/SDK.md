@@ -1,11 +1,11 @@
-# Rel Rust SDK
+# REL Rust SDK
 
-`rel-client` is the typed Rust client for every public Rel RPC v1 operation.
+`rel-client` is the typed Rust client for every public REL RPC v1 operation.
 The `rel` CLI uses this crate rather than maintaining a separate transport or
 request model.
 
 The SDK source is available under the MIT license in
-[`gabriel/rel-tools`](https://github.com/gabriel/rel-tools). Rel's application
+[`gabriel/rel-tools`](https://github.com/gabriel/rel-tools). REL's application
 source and internal runtime implementation are not publicly distributed.
 
 Related documents: [CLI](CLI.md), [MCP](MCP.md), and [RPC](RPC.md).
@@ -34,13 +34,13 @@ URL. `with_request_timeout(Duration)` changes the ten-second timeout used by
 ordinary requests. Capture and page methods derive longer deadlines from their
 operation timeout, wait, retry count, and retry delay.
 
-The SDK is transport-only: it never launches Rel.app, reads Rel's SQLite
+The SDK is transport-only: it never launches the REL app, reads REL's SQLite
 database, or tails log files. The caller is responsible for ensuring that the
 installed app and agent are running. The bundled CLI adds app-launch behavior
 for Chromium and mutation commands around this same client.
 
 SDK browser methods inherit the [RPC tab-selection behavior](RPC.md#transport):
-when Rel is inactive, the target tab is selected by default without activating
+when REL is inactive, the target tab is selected by default without activating
 the app. Users can disable this with the General setting **Follow browser
 commands**.
 
@@ -120,7 +120,7 @@ println!("{}", capture.data.capture.output_path);
 `navigate` returns `ClientError::Rpc` with ID `UPSTREAM_UNAVAILABLE` when the
 main frame commits an HTTP 4xx or 5xx response. By default, detected Cloudflare
 Turnstile and managed challenge pages first receive up to 15 seconds to
-continue; this can be disabled in Rel's General settings. Error details include
+continue; this can be disabled in REL's General settings. Error details include
 the final `url` and exact `target_http_status`; the navigated session remains
 selected.
 
@@ -222,7 +222,7 @@ update.
 ## Session creation defaults
 
 `SessionCreateRequest::default()` serializes to `{}`, so the agent copies the
-Session defaults configured in Rel.app. Use `Change::Set("alias".into())` to override the
+Session defaults configured in the REL app. Use `Change::Set("alias".into())` to override the
 default proxy or `Change::Clear` to create a direct session:
 
 ```rust
@@ -238,7 +238,7 @@ RelClient::local().create_session(&request)?;
 
 The `SessionDefaults` resource contains `proxy_alias`, `adblock_enabled`,
 `image_blocking_mode`, and `image_size_limit_kb`. Proxy and filter updates
-affect only subsequently created sessions. Rel does not impose a maximum
+affect only subsequently created sessions. REL does not impose a maximum
 session count.
 
 `ProxyCreateRequest` requires an immutable, unique `alias`. The typed proxy
@@ -258,7 +258,7 @@ SDK failures use one `ClientError` type:
 | --- | --- |
 | `Transport` | The agent could not be reached or the HTTP exchange failed. |
 | `Protocol` | Content type, request ID, envelope, or event shape violated RPC v1. |
-| `Rpc(RpcFailure)` | Rel returned the standard structured RPC error envelope. |
+| `Rpc(RpcFailure)` | REL returned the standard structured RPC error envelope. |
 | `Io` | Reading a response or capture stream failed. |
 | `Json` | JSON serialization or deserialization failed. |
 
@@ -275,4 +275,4 @@ against the envelope or every NDJSON event.
 ## Stability
 
 The SDK targets RPC v1 only. Removing legacy CLI syntax does not change this
-wire contract. SDK versions are distributed alongside compatible Rel releases.
+wire contract. SDK versions are distributed alongside compatible REL releases.

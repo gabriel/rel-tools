@@ -1,6 +1,6 @@
 ---
-title: Rel documentation
-description: Use Rel from the CLI or MCP, connect through RPC v1, and work with the typed Rust client.
+title: REL documentation
+description: Use REL from the CLI or MCP, connect through RPC v1, and work with the typed Rust client.
 editUrl: false
 lastUpdated: false
 prev: false
@@ -14,13 +14,13 @@ CLI, a local API, or the typed Rust client.
 
 ## Start with one command
 
-The bundled `rel` CLI is the quickest way to capture a rendered page and the best place to learn Rel’s model.
+The bundled `rel` CLI is the quickest way to capture a rendered page and the best place to learn REL’s model.
 
 ```sh
 rel https://rel.me
 ```
 
-Rel keeps Chromium inside the installed macOS app. Like curl, the CLI writes
+REL keeps Chromium inside the installed macOS app. Like curl, the CLI writes
 page data to standard output and events to standard error, so either stream can
 be piped or redirected independently.
 
@@ -35,7 +35,7 @@ be piped or redirected independently.
     [Open the MCP guide →](/mcp/)
   </Card>
   <Card title="Control the browser with RPC v1">
-    Attach pages, perform actions, manage persistent sessions, and stream captures over Rel’s loopback-only HTTP API.
+    Attach pages, perform actions, manage persistent sessions, and stream captures over REL’s loopback-only HTTP API.
 
     [Open the RPC reference →](/rpc/)
   </Card>
@@ -48,4 +48,4 @@ be piped or redirected independently.
 
 ## Supported runtime
 
-Rel has one supported path: the installed `/Applications/Rel.app` owns Chromium and supervises its bundled local agent. CLI, SDK, and MCP adapter calls connect to that agent; the agent routes browser work back into the visible app.
+REL has one supported path: the installed `/Applications/Rel.app` owns Chromium and supervises its bundled local agent. CLI, SDK, and MCP adapter calls connect to that agent; the agent routes browser work back into the visible app.

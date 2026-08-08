@@ -6,7 +6,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "rel",
-      description: "Documentation for Rel, a persistent Chromium browser built for agents.",
+      description: "Documentation for REL, a persistent Chromium browser built for agents.",
       favicon: "/rel-mark.svg",
       logo: {
         src: "./public/rel-mark.svg",

@@ -1,4 +1,4 @@
-# Rel documentation website
+# REL documentation website
 
 The public guides in this directory are the canonical source for the repository
 and [docs.rel.me](https://docs.rel.me):

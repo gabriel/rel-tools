@@ -16,19 +16,19 @@ const pages = [
     source: "MCP.md",
     output: "mcp.md",
     title: "MCP server",
-    description: "Connect MCP clients to Rel's focused browser tools over the bundled stdio adapter.",
+    description: "Connect MCP clients to REL's focused browser tools over the bundled stdio adapter.",
   },
   {
     source: "RPC.md",
     output: "rpc.md",
     title: "RPC v1",
-    description: "The supported loopback HTTP contract for controlling Rel from agents and other local clients.",
+    description: "The supported loopback HTTP contract for controlling REL from agents and other local clients.",
   },
   {
     source: "SDK.md",
     output: "sdk.md",
     title: "Rust SDK",
-    description: "Use the typed rel-client Rust crate for every public Rel RPC v1 operation.",
+    description: "Use the typed rel-client Rust crate for every public REL RPC v1 operation.",
   },
 ];
 

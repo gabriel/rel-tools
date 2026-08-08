@@ -1,6 +1,6 @@
-# Rel MCP server
+# REL MCP server
 
-Rel includes a local Model Context Protocol server for agents that support MCP.
+REL includes a local Model Context Protocol server for agents that support MCP.
 Run `rel mcp` as a stdio subprocess; the adapter exposes a focused set of
 browser tools and forwards every tool call through the public
 [`rel-client`](SDK.md) crate and [RPC v1](RPC.md). It does not read SQLite,
@@ -57,7 +57,7 @@ command = "/Applications/Rel.app/Contents/Resources/rel"
 args = ["mcp"]
 ```
 
-Use `.codex/config.toml` in a trusted project instead when Rel should only be
+Use `.codex/config.toml` in a trusted project instead when REL should only be
 available in that project. If the `codex` command is installed in the shell's
 `PATH`, it can create and inspect the same configuration:
 
@@ -69,7 +69,7 @@ codex mcp list
 After restarting Codex, start with a read-only prompt:
 
 ```text
-Use the Rel MCP server. Call rel_status, then rel_list_sessions. Do not navigate anywhere.
+Use the REL MCP server. Call rel_status, then rel_list_sessions. Do not navigate anywhere.
 ```
 
 Codex should discover the six tools listed below, and `rel_status` should report
@@ -83,7 +83,7 @@ Use rel_capture to capture https://example.com and report the saved output URI.
 ```
 
 Unlike the first check, this loads a website and saves rendered HTML. Omitting
-`session_id` can also create a persistent Rel browser session.
+`session_id` can also create a persistent REL browser session.
 
 ### Direct protocol smoke test
 
@@ -104,13 +104,13 @@ tool list, and the status result. Protocol messages use standard output;
 diagnostics use standard error.
 
 `rel mcp` accepts no options. At startup it checks the local agent and launches
-Rel.app in the background once when needed. It then keeps serving its original
-stdin/stdout connection until the MCP client closes stdin or the process is
-terminated. `REL_AGENT_PORT` changes the loopback RPC port from its default,
-`17319`.
+the REL app in the background once when needed. It then keeps serving its
+original stdin/stdout connection until the MCP client closes stdin or the
+process is terminated. `REL_AGENT_PORT` changes the loopback RPC port from its
+default, `17319`.
 
 Browser tool calls also use the [RPC tab-selection behavior](RPC.md#transport):
-while Rel is inactive, their target tab is selected by default without bringing
+while REL is inactive, their target tab is selected by default without bringing
 the app forward. The General setting **Follow browser commands** controls this.
 
 ## Transport and protocol versions
@@ -120,14 +120,14 @@ is one UTF-8 JSON-RPC 2.0 object on one physical line. Standard output is
 reserved for protocol messages; diagnostics go to standard error. Notifications
 do not receive responses.
 
-Rel supports both MCP protocol eras used by current clients:
+REL supports both MCP protocol eras used by current clients:
 
 | Protocol revision | Connection flow |
 | --- | --- |
 | `2026-07-28` | The client calls `server/discover`; subsequent requests carry the current per-request MCP metadata. |
 | `2024-11-05`, `2025-03-26`, `2025-06-18`, or `2025-11-25` | The client sends `initialize`, receives the selected legacy revision, then sends `notifications/initialized`. |
 
-Discovery and initialization advertise only the `tools` capability. Rel does
+Discovery and initialization advertise only the `tools` capability. REL does
 not expose MCP resources or prompts, and its fixed tool list does not emit
 list-changed notifications. `ping`, `tools/list`, and `tools/call` are available
 after the client's protocol flow is established.
@@ -193,7 +193,7 @@ Every tool execution result contains its complete JSON value in two forms:
 When a result contains captured HTML, every RPC `output_path` is exposed at the
 MCP boundary as an absolute percent-encoded `output_uri`. `content` also includes
 one standard MCP `resource_link` block per unique file, with `mimeType` set to
-`text/html`. Rel deliberately keeps native filesystem paths inside RPC and uses
+`text/html`. REL deliberately keeps native filesystem paths inside RPC and uses
 file URIs for MCP.
 
 Status, page, session-list, and proxy-list tools preserve the ordinary RPC v1
@@ -234,9 +234,9 @@ block links the file directly:
 `events`
 includes the terminal `capture.finished` event, and `exit_code` is taken from
 that event. A target website status such as 404 remains capture data and can
-produce exit code 1 and `isError:true`; it is not a Rel RPC or MCP protocol
-error. With **Rel → Settings… → General → Wait for Cloudflare Turnstile** on by
-default, Rel detects Turnstile and managed Cloudflare challenge pages and gives
+produce exit code 1 and `isError:true`; it is not a REL RPC or MCP protocol
+error. With **REL → Settings… → General → Wait for Cloudflare Turnstile** on by
+default, REL detects Turnstile and managed Cloudflare challenge pages and gives
 them up to 15 seconds to continue before returning their target error.
 
 Malformed JSON-RPC messages, unsupported methods, and unknown tools use
@@ -251,7 +251,7 @@ or stable ID rather than parse the message.
 
 The MCP process is a transient adapter owned by the MCP client. It is separate
 from the app-supervised `rel --agent` process and from the private framed stdio
-bridge between that agent and Rel.app. There is no MCP HTTP route and no second
+bridge between that agent and the REL app. There is no MCP HTTP route and no second
 browser backend.
 
 The stdio connection is private to the launching MCP client, but forwarded RPC
