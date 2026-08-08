@@ -1,6 +1,6 @@
 [package]
 name = "rel-client"
-version = "0.1.4"
+version = "0.1.5"
 edition.workspace = true
 rust-version.workspace = true
 description = "Typed Rust client for the Rel local browser RPC API."

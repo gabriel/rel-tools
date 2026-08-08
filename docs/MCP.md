@@ -72,7 +72,7 @@ After restarting Codex, start with a read-only prompt:
 Use the REL MCP server. Call rel_status, then rel_list_sessions. Do not navigate anywhere.
 ```
 
-Codex should discover the six tools listed below, and `rel_status` should report
+Codex should discover the seven tools listed below, and `rel_status` should report
 the installed app, local agent, Browser Proxy, and embedded Chromium bridge.
 In the Codex terminal UI, `/mcp` also shows configured servers and their tools.
 
@@ -84,6 +84,12 @@ Use rel_capture to capture https://example.com and report the saved output URI.
 
 Unlike the first check, this loads a website and saves rendered HTML. Omitting
 `session_id` can also create a persistent REL browser session.
+
+After a page is attached or selected, verify visual output with:
+
+```text
+Use rel_take_screenshot to take a full-page WebP screenshot and describe the image.
+```
 
 ### Direct protocol smoke test
 
@@ -142,7 +148,7 @@ operations.
 
 ## Tools
 
-The server exposes exactly six tools:
+The server exposes exactly seven tools:
 
 | Tool | RPC operation | Purpose |
 | --- | --- | --- |
@@ -150,6 +156,7 @@ The server exposes exactly six tools:
 | `rel_capture` | `POST /v1/captures` | Load a page, perform optional actions, and save its rendered HTML. |
 | `rel_page_attach` | `POST /v1/pages` | Attach an ephemeral automation page to a persistent browser session. |
 | `rel_page_action` | `POST /v1/pages/{page_id}/actions` | Perform one action on an attached page. |
+| `rel_take_screenshot` | `POST /v1/screenshot` or `POST /v1/pages/{page_id}/screenshot` | Capture a viewport or full-page PNG, JPEG, or WebP image. |
 | `rel_list_sessions` | `GET /v1/sessions` | List persistent browser sessions and their canonical `Session<number>` IDs. |
 | `rel_list_proxies` | `GET /v1/proxies` | List configured proxy aliases and non-secret configuration. |
 
@@ -183,6 +190,48 @@ local `file:///` URI.
 session, and proxy selected by `rel_page_attach`; page IDs expire when the agent
 restarts. `output_uri`, when present, must be an absolute local `file:///` URI.
 
+### `rel_take_screenshot`
+
+All fields are optional. `page_id` targets an explicit attached page;
+`session_id` targets that session's current shorthand page; omitting both uses
+the current shorthand page. The two identifiers cannot be combined.
+
+`format` is `png` (the default), `jpeg`, or `webp`. `quality` is an integer from
+0 through 100 and applies to JPEG and WebP; PNG ignores it. `full_page` defaults
+to false and captures the visible viewport; true captures beyond the viewport.
+`timeout` and `wait` use the ordinary page-operation rules.
+
+When `output_uri` is omitted, the result includes standard MCP `image` content
+so a multimodal agent can inspect the pixels directly. Supplying an absolute
+local `file:///` `output_uri` saves the file and returns only its resource link,
+which avoids embedding a large image in model context.
+
+## Chrome DevTools MCP comparison
+
+REL's screenshot contract matches the official Chrome DevTools MCP's essential
+`take_screenshot` behavior: viewport or full-page capture, PNG/JPEG/WebP,
+JPEG/WebP quality, optional file output, and inline MCP image content. REL uses
+`output_uri` instead of `filePath` and persistent REL page/session identity
+instead of Chrome's selected-target model.
+
+The broader servers are not feature-identical. The
+[official Chrome DevTools MCP tool reference](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/tool-reference.md)
+currently includes these additional DevTools-oriented categories:
+
+| Capability | REL MCP |
+| --- | --- |
+| Navigation and persistent browser identity | Available through capture, page attachment, sessions, and proxies. |
+| Click and wait automation | Available through canonical page actions; drag, hover, keyboard, form fill, upload, and dialog tools are not yet exposed. |
+| Visual screenshots | Available with inline image content and file resources. |
+| Accessibility text snapshots and element UIDs | Not exposed; rendered HTML capture is available instead. |
+| Script evaluation, console, and network inspection | Not exposed. |
+| Emulation, Lighthouse, performance traces, and heap snapshots | Not exposed. |
+| Extensions, screencast, third-party tools, and WebMCP | Not exposed. |
+
+REL intentionally keeps its current MCP surface focused on its supported
+embedded-session architecture. New capabilities must flow through RPC v1 and
+the installed app rather than introducing a second Chrome or CDP backend.
+
 ## Results and errors
 
 Every tool execution result contains its complete JSON value in two forms:
@@ -190,11 +239,21 @@ Every tool execution result contains its complete JSON value in two forms:
 - `content` contains a text block whose text is the serialized JSON;
 - `structuredContent` contains the same value as structured JSON.
 
-When a result contains captured HTML, every RPC `output_path` is exposed at the
+When a result contains a captured file, every RPC `output_path` is exposed at the
 MCP boundary as an absolute percent-encoded `output_uri`. `content` also includes
-one standard MCP `resource_link` block per unique file, with `mimeType` set to
-`text/html`. REL deliberately keeps native filesystem paths inside RPC and uses
-file URIs for MCP.
+one standard MCP `resource_link` block per unique file, with the matching HTML
+or image MIME type. REL deliberately keeps native filesystem paths inside RPC
+and uses file URIs for MCP.
+
+Screenshot calls without `output_uri` additionally include an MCP image block:
+
+```json
+{
+  "type": "image",
+  "data": "<base64 image bytes>",
+  "mimeType": "image/webp"
+}
+```
 
 Status, page, session-list, and proxy-list tools preserve the ordinary RPC v1
 success envelope with `status`, `request_id`, and `data`.

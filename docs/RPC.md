@@ -118,9 +118,11 @@ navigation. The error details contain the final `url` and exact
 | `POST` | `/v1/navigate` | Navigate and select the current shorthand page |
 | `POST` | `/v1/perform` | Perform actions on the current shorthand page |
 | `POST` | `/v1/capture` | Capture the current shorthand page |
+| `POST` | `/v1/screenshot` | Capture an image of the current shorthand page |
 | `POST` | `/v1/captures` | Capture rendered HTML as an NDJSON operation |
 | `POST` | `/v1/pages` | Attach an ephemeral automation page |
 | `POST` | `/v1/pages/{page_id}/actions` | Perform one action on an attached page |
+| `POST` | `/v1/pages/{page_id}/screenshot` | Capture an image of an attached page |
 | `GET` | `/v1/proxies` | List proxies |
 | `POST` | `/v1/proxies` | Create a proxy |
 | `GET` | `/v1/proxies/{alias}` | Read one proxy |
@@ -143,9 +145,10 @@ such as `rel capture`, `rel page`, `rel proxy`, and `rel session`; it has no
 direct database or log-file command path.
 
 The bundled `rel mcp` adapter also calls this API only through `rel-client`. It
-maps six MCP tools to status, capture, page attachment and action, and session
-and proxy listing. MCP does not add an HTTP `/mcp` route or another response
-shape to RPC v1. See [MCP](MCP.md) for its stdio lifecycle and result wrapping.
+maps seven MCP tools to status, HTML and image capture, page attachment and
+action, and session and proxy listing. MCP does not add an HTTP `/mcp` route or
+another response shape to RPC v1. See [MCP](MCP.md) for its stdio lifecycle and
+result wrapping.
 
 ## Health
 
@@ -240,7 +243,7 @@ Perform one or more canonical actions with `POST /v1/perform`:
 
 `actions` must be a non-empty array. REL runs the actions in array order.
 
-Capture without another action with `POST /v1/capture`:
+Capture HTML without another action with `POST /v1/capture`:
 
 ```json
 {
@@ -266,6 +269,55 @@ with `ACTIVE_PAGE_NOT_FOUND` until a matching page has been selected by
 navigation. This registry is process-local and is cleared by an agent restart
 or when its session closes. Concurrent work within one session should use
 explicit page IDs.
+
+### Screenshots
+
+Capture the visible viewport of the current shorthand page with
+`POST /v1/screenshot`, or use `POST /v1/pages/{page_id}/screenshot` for an
+explicit attached page:
+
+```json
+{
+  "session_id": "Session12",
+  "output": "/optional/page.webp",
+  "format": "webp",
+  "quality": 80,
+  "full_page": true,
+  "timeout": 90,
+  "wait": 0
+}
+```
+
+`session_id` is accepted only by the current-page route. `format` is `png`
+(default), `jpeg`, or `webp`. `quality` is an integer from 0 through 100 and is
+ignored for PNG. `full_page` defaults to false; true captures content beyond
+the visible viewport. `output` follows the same absolute-response-path contract
+as HTML capture. When omitted, REL writes under its temporary `screenshots`
+directory.
+
+Success uses the ordinary RPC envelope:
+
+```json
+{
+  "page": {
+    "id": "page_...",
+    "session_id": "Session12",
+    "url": "https://example.com/"
+  },
+  "screenshot": {
+    "output_path": "/private/tmp/rel/screenshots/example.webp",
+    "bytesize": 48231,
+    "format": "webp",
+    "mime_type": "image/webp",
+    "width": 1280,
+    "height": 2400
+  }
+}
+```
+
+The image bytes remain in the file rather than the JSON response. The MCP
+adapter reads that validated file and emits standard image content when its
+caller did not request a specific output URI.
 
 ### `POST /v1/captures`
 

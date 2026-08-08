@@ -1,10 +1,13 @@
+use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use rel_client::{
-    self as client, Action, CaptureRequest, PageActionRequest, PageAttachRequest, RelClient,
+    self as client, Action, CaptureRequest, PageActionRequest, PageAttachRequest,
+    PageScreenshotRequest, RelClient, ScreenshotFormat, ScreenshotRequest,
 };
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
+use std::fs;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -464,7 +467,7 @@ fn response_metadata(server_version: &str) -> Value {
 }
 
 fn server_instructions() -> &'static str {
-    "Use Rel to capture rendered pages or attach an ephemeral page for follow-up actions. Reuse returned page and session IDs explicitly; all browser work runs through the installed Rel app."
+    "Use Rel to capture rendered pages, attach an ephemeral page for follow-up actions, and take visual screenshots. Reuse returned page and session IDs explicitly; all browser work runs through the installed Rel app."
 }
 
 fn modern_discover_result(server_version: &str) -> Value {
@@ -541,6 +544,13 @@ fn tool_definitions() -> Vec<Value> {
                 "idempotentHint": false,
                 "openWorldHint": true
             }),
+        ),
+        tool_definition(
+            "rel_take_screenshot",
+            "Take Page Screenshot",
+            "Take a PNG, JPEG, or WebP screenshot of an attached or current Rel page. Returns an MCP image when output_uri is omitted; set output_uri to save only a file resource.",
+            screenshot_schema(),
+            read_annotations(),
         ),
         tool_definition(
             "rel_list_sessions",
@@ -691,6 +701,23 @@ fn page_action_schema() -> Value {
     })
 }
 
+fn screenshot_schema() -> Value {
+    json!({
+        "type": "object",
+        "properties": {
+            "page_id": {"type": "string", "minLength": 1},
+            "session_id": {"type": "string", "minLength": 1},
+            "output_uri": {"type": "string", "format": "uri", "pattern": "^file:///"},
+            "format": {"type": "string", "enum": ["png", "jpeg", "webp"], "default": "png"},
+            "quality": {"type": "integer", "minimum": 0, "maximum": 100},
+            "full_page": {"type": "boolean", "default": false},
+            "timeout": {"type": "number", "exclusiveMinimum": 0},
+            "wait": {"type": "number", "minimum": 0}
+        },
+        "additionalProperties": false
+    })
+}
+
 fn handle_tool_call(
     client: &RelClient,
     params: &Value,
@@ -721,6 +748,10 @@ fn handle_tool_call(
             None,
         ));
     }
+    let attaches_screenshot = name == "rel_take_screenshot"
+        && arguments
+            .get("output_uri")
+            .map_or(true, |value| value.is_null());
 
     let (structured, is_error) = match name {
         "rel_status" => decode_empty_arguments(arguments)
@@ -744,6 +775,8 @@ fn handle_tool_call(
                     .map_err(client_error_value)
                     .and_then(to_json_value)
             }),
+        "rel_take_screenshot" => decode_arguments::<ScreenshotArguments>(arguments)
+            .and_then(|arguments| arguments.execute(client)),
         "rel_capture" => decode_arguments::<CaptureArguments>(arguments)
             .and_then(CaptureRequest::try_from)
             .and_then(|request| capture_tool(client, &request)),
@@ -758,12 +791,31 @@ fn handle_tool_call(
                 .get("exit_code")
                 .and_then(Value::as_i64)
                 .is_some_and(|exit_code| exit_code != 0));
+    let image_content = if attaches_screenshot && !is_error {
+        match screenshot_image_content(&structured) {
+            Ok(content) => Some(content),
+            Err(error) => {
+                return Ok(tool_result(
+                    error,
+                    Vec::new(),
+                    Vec::new(),
+                    true,
+                    era,
+                    server_version,
+                ));
+            }
+        }
+    } else {
+        None
+    };
     let (structured, resource_links, is_error) = match normalize_output_uris(structured) {
         Ok((structured, resource_links)) => (structured, resource_links, is_error),
         Err(error) => (error, Vec::new(), true),
     };
+    let additional_content = image_content.into_iter().collect();
     Ok(tool_result(
         structured,
+        additional_content,
         resource_links,
         is_error,
         era,
@@ -885,6 +937,68 @@ fn normalize_output_uris(mut structured: Value) -> Result<(Value, Vec<Value>), V
     Ok((structured, resource_links))
 }
 
+fn screenshot_image_content(structured: &Value) -> Result<Value, Value> {
+    let screenshot = structured
+        .get("data")
+        .and_then(|data| data.get("screenshot"))
+        .and_then(Value::as_object)
+        .ok_or_else(|| {
+            tool_error_value(
+                "INVALID_SCREENSHOT_RESULT",
+                "Rel screenshot response is missing screenshot metadata",
+            )
+        })?;
+    let output_path = screenshot
+        .get("output_path")
+        .and_then(Value::as_str)
+        .ok_or_else(|| {
+            tool_error_value(
+                "INVALID_SCREENSHOT_RESULT",
+                "Rel screenshot response is missing output_path",
+            )
+        })?;
+    let path = Path::new(output_path);
+    if !path.is_absolute() {
+        return Err(tool_error_value(
+            "INVALID_SCREENSHOT_RESULT",
+            "Rel screenshot output_path must be absolute",
+        ));
+    }
+    let mime_type = screenshot
+        .get("mime_type")
+        .and_then(Value::as_str)
+        .filter(|value| matches!(*value, "image/png" | "image/jpeg" | "image/webp"))
+        .ok_or_else(|| {
+            tool_error_value(
+                "INVALID_SCREENSHOT_RESULT",
+                "Rel screenshot response has an unsupported MIME type",
+            )
+        })?;
+    let bytes = fs::read(path).map_err(|error| {
+        tool_error_value(
+            "SCREENSHOT_READ_ERROR",
+            &format!("Could not read Rel screenshot {output_path:?}: {error}"),
+        )
+    })?;
+    if bytes.is_empty() {
+        return Err(tool_error_value(
+            "INVALID_SCREENSHOT_RESULT",
+            "Rel screenshot file is empty",
+        ));
+    }
+    if screenshot.get("bytesize").and_then(Value::as_u64) != Some(bytes.len() as u64) {
+        return Err(tool_error_value(
+            "INVALID_SCREENSHOT_RESULT",
+            "Rel screenshot file size does not match its metadata",
+        ));
+    }
+    Ok(json!({
+        "type": "image",
+        "data": BASE64_STANDARD.encode(bytes),
+        "mimeType": mime_type
+    }))
+}
+
 fn normalize_output_uris_in_value(
     value: &mut Value,
     resource_links: &mut Vec<Value>,
@@ -915,13 +1029,22 @@ fn normalize_output_uris_in_value(
                     let name = path
                         .file_name()
                         .and_then(|name| name.to_str())
-                        .unwrap_or("capture.html");
+                        .unwrap_or("capture");
+                    let mime_type = object
+                        .get("mime_type")
+                        .and_then(Value::as_str)
+                        .unwrap_or("text/html");
+                    let description = if mime_type.starts_with("image/") {
+                        "Page screenshot captured by Rel"
+                    } else {
+                        "Rendered HTML captured by Rel"
+                    };
                     resource_links.push(json!({
                         "type": "resource_link",
                         "uri": uri,
                         "name": name,
-                        "description": "Rendered HTML captured by Rel",
-                        "mimeType": "text/html"
+                        "description": description,
+                        "mimeType": mime_type
                     }));
                 }
             }
@@ -941,6 +1064,7 @@ fn normalize_output_uris_in_value(
 
 fn tool_result(
     structured: Value,
+    additional_content: Vec<Value>,
     resource_links: Vec<Value>,
     is_error: bool,
     era: ProtocolEra,
@@ -949,6 +1073,7 @@ fn tool_result(
     let text = serde_json::to_string_pretty(&structured)
         .unwrap_or_else(|_| "Could not encode Rel tool result".to_string());
     let mut content = vec![json!({"type": "text", "text": text})];
+    content.extend(additional_content);
     content.extend(resource_links);
     let mut result = json!({
         "content": content,
@@ -1081,6 +1206,62 @@ impl PageActionArguments {
                 wait: self.wait,
             },
         ))
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ScreenshotArguments {
+    page_id: Option<String>,
+    session_id: Option<String>,
+    output_uri: Option<String>,
+    format: Option<ScreenshotFormat>,
+    quality: Option<u8>,
+    #[serde(default)]
+    full_page: bool,
+    timeout: Option<f64>,
+    wait: Option<f64>,
+}
+
+impl ScreenshotArguments {
+    fn execute(self, client: &RelClient) -> Result<Value, Value> {
+        let output = output_path_from_uri(self.output_uri)?;
+        match self.page_id {
+            Some(page_id) => {
+                if self.session_id.is_some() {
+                    return Err(tool_error_value(
+                        "INVALID_ARGUMENTS",
+                        "session_id cannot be combined with page_id",
+                    ));
+                }
+                client
+                    .take_page_screenshot(
+                        &page_id,
+                        &PageScreenshotRequest {
+                            output,
+                            format: self.format,
+                            quality: self.quality,
+                            full_page: self.full_page,
+                            timeout: self.timeout,
+                            wait: self.wait,
+                        },
+                    )
+                    .map_err(client_error_value)
+                    .and_then(to_json_value)
+            }
+            None => client
+                .screenshot_current_page(&ScreenshotRequest {
+                    session_id: self.session_id,
+                    output,
+                    format: self.format,
+                    quality: self.quality,
+                    full_page: self.full_page,
+                    timeout: self.timeout,
+                    wait: self.wait,
+                })
+                .map_err(client_error_value)
+                .and_then(to_json_value),
+        }
     }
 }
 
@@ -1238,9 +1419,10 @@ mod tests {
             CURRENT_PROTOCOL_VERSION
         );
         let tools = output[1]["result"]["tools"].as_array().unwrap();
-        assert_eq!(tools.len(), 6);
+        assert_eq!(tools.len(), 7);
         assert_eq!(tools[0]["name"], "rel_status");
-        assert_eq!(tools[5]["name"], "rel_list_proxies");
+        assert_eq!(tools[4]["name"], "rel_take_screenshot");
+        assert_eq!(tools[6]["name"], "rel_list_proxies");
         assert_eq!(output[1]["result"]["resultType"], "complete");
     }
 
@@ -1475,6 +1657,71 @@ mod tests {
             "file:///tmp/rel%20capture.html"
         );
         assert_eq!(output[0]["result"]["content"][1]["mimeType"], "text/html");
+    }
+
+    #[test]
+    fn screenshot_tool_returns_standard_mcp_image_content() {
+        let path = std::env::temp_dir().join(format!("rel-mcp-{}.png", uuid::Uuid::new_v4()));
+        let image_bytes = b"test png bytes";
+        fs::write(&path, image_bytes).unwrap();
+        let body = json!({
+            "status": "ok",
+            "request_id": "req_screenshot",
+            "data": {
+                "page": {
+                    "id": "page_1",
+                    "session_id": "Session1",
+                    "url": "https://example.com/"
+                },
+                "screenshot": {
+                    "output_path": path.display().to_string(),
+                    "bytesize": image_bytes.len(),
+                    "format": "png",
+                    "mime_type": "image/png",
+                    "width": 1200,
+                    "height": 800
+                }
+            }
+        })
+        .to_string();
+        let (base_url, server) =
+            start_test_server(http_response("application/json", "req_screenshot", &body));
+        let output = run_messages_with_client(
+            &[json!({
+                "jsonrpc": "2.0",
+                "id": "screenshot",
+                "method": "tools/call",
+                "params": {
+                    "_meta": modern_metadata(),
+                    "name": "rel_take_screenshot",
+                    "arguments": {"format": "png", "full_page": true}
+                }
+            })],
+            RelClient::new(base_url),
+        );
+        let request = server.join().unwrap();
+        fs::remove_file(&path).unwrap();
+
+        assert!(request.starts_with("POST /v1/screenshot HTTP/1.1"));
+        assert!(request.contains("\"full_page\":true"));
+        let result = &output[0]["result"];
+        assert_eq!(result["isError"], false);
+        assert_eq!(result["content"][1]["type"], "image");
+        assert_eq!(result["content"][1]["mimeType"], "image/png");
+        assert_eq!(
+            result["content"][1]["data"],
+            BASE64_STANDARD.encode(image_bytes)
+        );
+        assert_eq!(result["content"][2]["type"], "resource_link");
+        assert!(result["structuredContent"]["data"]["screenshot"]
+            .get("output_path")
+            .is_none());
+        assert!(
+            result["structuredContent"]["data"]["screenshot"]["output_uri"]
+                .as_str()
+                .unwrap()
+                .starts_with("file:///")
+        );
     }
 
     #[test]
