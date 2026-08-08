@@ -105,9 +105,10 @@ operations. Its status is reported as `target_http_status` in capture data.
 commits an HTTP 4xx or 5xx response. With the default **Rel → Settings… →
 General → Wait for Cloudflare Turnstile** setting, detected Turnstile and
 managed Cloudflare challenge pages receive up to 15 seconds to continue before
-that error is returned. This also applies to browser capture and page-creation
-navigation. The error details contain the final `url` and exact
-`target_http_status`; the navigated session remains selected.
+that error is returned. This also applies to page-creation navigation. URL
+capture instead completes as soon as the target HTTP error is known. The error
+details contain the final `url` and exact `target_http_status`; the navigated
+session remains selected.
 
 ## Routes
 
@@ -345,7 +346,12 @@ Events, in normal order:
 contains an absolute output path, bytes, final URL, optional
 `target_http_status`, session ID, capture ID, and proxy traffic. A target status
 at least 400 is a completed capture with `outcome:"target_error"` and CLI exit
-code 1; it is not an API error.
+code 1; it is not an API error. Once a main-frame HTTP error is known, URL
+capture does not wait for Chromium's internal error document to finish loading
+or apply the navigation-only Turnstile continuation window. The output contains
+whatever source is available at that point and may be empty; clients should use
+`target_http_status` as the authoritative result. The configured capture retry
+policy still applies.
 
 ## Attached pages
 

@@ -235,9 +235,10 @@ block links the file directly:
 includes the terminal `capture.finished` event, and `exit_code` is taken from
 that event. A target website status such as 404 remains capture data and can
 produce exit code 1 and `isError:true`; it is not a Rel RPC or MCP protocol
-error. With **Rel → Settings… → General → Wait for Cloudflare Turnstile** on by
-default, Rel detects Turnstile and managed Cloudflare challenge pages and gives
-them up to 15 seconds to continue before returning their target error.
+error. `rel_capture` completes as soon as the target HTTP error is known and
+does not apply the navigation-only Cloudflare Turnstile continuation window.
+The linked output can be empty when Chromium has not committed an error
+document yet.
 
 Malformed JSON-RPC messages, unsupported methods, and unknown tools use
 JSON-RPC errors. Invalid arguments or another failure while executing a known

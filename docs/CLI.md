@@ -323,7 +323,12 @@ A normal capture emits `capture.started`, `capture.browser_requested`,
 CLI exit code. When stdout is the destination, `capture.writing` and
 `capture.completed` report `output_path:"-"`; the CLI's private staging path is
 never exposed. A target website response such as HTTP 404 or 429 is reported
-as `target_http_status`; it is not a Rel RPC error.
+as `target_http_status`; it is not a Rel RPC error. URL capture treats a target
+HTTP error as ready without waiting for Chromium's internal error document to
+finish loading. Rel writes any source available at that point, completes with
+`outcome:"target_error"`, and applies the configured
+capture retry policy. URL capture does not apply the Turnstile continuation
+window; `rel navigate` retains the configurable behavior described above.
 
 Example:
 
