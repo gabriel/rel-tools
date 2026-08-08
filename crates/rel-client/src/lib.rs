@@ -1101,6 +1101,7 @@ pub struct SessionDefaultsUpdateRequest {
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum ImageBlockingMode {
+    None,
     All,
     OverLimit,
 }
@@ -1423,6 +1424,14 @@ mod tests {
             })
             .unwrap(),
             json!({"proxy_alias":null})
+        );
+        assert_eq!(
+            serde_json::to_value(SessionCreateRequest {
+                image_blocking_mode: Some(ImageBlockingMode::None),
+                ..SessionCreateRequest::default()
+            })
+            .unwrap(),
+            json!({"image_blocking_mode":"none"})
         );
     }
 

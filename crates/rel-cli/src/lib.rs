@@ -883,10 +883,11 @@ fn parse_proxy_selector(value: &str) -> String {
 
 fn parse_image_mode(value: &str) -> Result<ImageBlockingMode, CliError> {
     match value {
+        "none" => Ok(ImageBlockingMode::None),
         "all" => Ok(ImageBlockingMode::All),
         "over_limit" => Ok(ImageBlockingMode::OverLimit),
         _ => Err(CliError::Message(
-            "--image-blocking-mode must be all or over_limit".to_string(),
+            "--image-blocking-mode must be none, all, or over_limit".to_string(),
         )),
     }
 }
@@ -1147,7 +1148,7 @@ rel session update SESSION_ID [options]\n  \
 rel session delete SESSION_ID\n\n\
 Options:\n  \
 --name NAME --proxy ALIAS --adblock-enabled true|false\n  \
---image-blocking-mode all|over_limit --image-size-limit-kb KB\n  \
+--image-blocking-mode none|all|over_limit --image-size-limit-kb KB\n  \
 --direct                       Use a direct connection instead of the default proxy\n  \
 --id-only                     For create, print only the new session ID\n\n\
 `rel tab` is an alias for `rel session`."
@@ -1518,6 +1519,19 @@ mod tests {
             ])
             .unwrap()
         );
+        let CliCommand::SessionCreate { request, .. } = parse(&[
+            "session",
+            "create",
+            "--adblock-enabled",
+            "true",
+            "--image-blocking-mode",
+            "none",
+        ])
+        .unwrap() else {
+            panic!("expected session create");
+        };
+        assert_eq!(request.adblock_enabled, Some(true));
+        assert_eq!(request.image_blocking_mode, Some(ImageBlockingMode::None));
     }
 
     #[test]

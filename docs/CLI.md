@@ -415,8 +415,9 @@ rel session create \
 
 Every create option is optional. Omitted proxy and filtering options use the
 Session defaults configured in the REL app. Use `--direct` to force a direct
-connection instead of the default proxy. `--image-blocking-mode` is `all` or
-`over_limit`. `--id-only` changes successful output to the new canonical
+connection instead of the default proxy. `--image-blocking-mode` is `none`,
+`all`, or `over_limit`; `none` allows every image without changing AdBlock.
+`--id-only` changes successful output to the new canonical
 session ID and a trailing newline instead of the JSON response envelope. Errors
 remain on standard error with the ordinary nonzero exit status.
 

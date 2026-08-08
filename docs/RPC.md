@@ -516,8 +516,9 @@ A session resource is:
 - `DELETE /v1/sessions/{id}` returns the canonical session ID as
   `data.deleted_id` and refuses to remove the last session.
 
-`image_blocking_mode` is `all` or `over_limit`. The legacy `block_images` alias
-is rejected. Size is 1 through 1,048,576 kB. The visible name is editable and
+`image_blocking_mode` is `none`, `all`, or `over_limit`. `none` allows every
+image while leaving `adblock_enabled` independent. The legacy `block_images`
+alias is rejected. Size is 1 through 1,048,576 kB. The visible name is editable and
 case-insensitively unique; the canonical `id` is immutable. Session routes accept
 only that ID; numeric database IDs are neither accepted nor returned.
 
