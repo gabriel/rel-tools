@@ -184,15 +184,17 @@ exits unsuccessfully.
 The command accepts no options. MCP clients normally launch it and own its
 stdin/stdout pipes rather than running it in an interactive terminal. It
 supports current `2026-07-28` discovery and legacy initialization through
-`2025-11-25`, and exposes exactly six tools: `rel_status`, `rel_capture`,
-`rel_page_attach`, `rel_page_action`, `rel_list_sessions`, and
-`rel_list_proxies`.
+`2025-11-25`, and exposes exactly seven tools: `rel_status`, `rel_capture`,
+`rel_page_attach`, `rel_page_action`, `rel_take_screenshot`,
+`rel_list_sessions`, and `rel_list_proxies`.
 
 Every tool forwards through `rel-client` and RPC v1. Capture aggregates its
 validated NDJSON stream into `{request_id, exit_code, events}`. Every tool
 execution result includes its complete JSON in both a text content block and
 `structuredContent`. Captured files use absolute `file:///` URIs at the MCP
 boundary and are also returned as standard MCP `resource_link` content blocks.
+Screenshot calls without an explicit output URI additionally return standard
+MCP `image` content for multimodal agents.
 
 ## Health and status
 

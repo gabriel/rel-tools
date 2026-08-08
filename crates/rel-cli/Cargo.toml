@@ -1,6 +1,6 @@
 [package]
 name = "rel-cli"
-version = "0.1.4"
+version = "0.1.5"
 edition.workspace = true
 rust-version.workspace = true
 description = "Command-line and MCP clients for the Rel local browser API."
@@ -14,7 +14,8 @@ name = "rel"
 path = "src/main.rs"
 
 [dependencies]
-rel-client = { path = "../rel-client", version = "0.1.4" }
+base64 = "0.21"
+rel-client = { path = "../rel-client", version = "0.1.5" }
 serde = "1.0"
 serde_json = "1.0"
 ureq = { version = "=2.9.1", default-features = false }

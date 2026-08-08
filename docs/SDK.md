@@ -55,9 +55,11 @@ Each method maps to one public RPC route:
 | `navigate(&NavigateRequest)` | `POST /v1/navigate` |
 | `perform(&PerformRequest)` | `POST /v1/perform` |
 | `capture_current_page(&PageCaptureRequest)` | `POST /v1/capture` |
+| `screenshot_current_page(&ScreenshotRequest)` | `POST /v1/screenshot` |
 | `capture(&CaptureRequest)` | `POST /v1/captures` |
 | `attach_page(&PageAttachRequest)` | `POST /v1/pages` |
 | `perform_page_action(page_id, &PageActionRequest)` | `POST /v1/pages/{page_id}/actions` |
+| `take_page_screenshot(page_id, &PageScreenshotRequest)` | `POST /v1/pages/{page_id}/screenshot` |
 | `list_proxies()` | `GET /v1/proxies` |
 | `get_proxy(alias)` | `GET /v1/proxies/{alias}` |
 | `create_proxy(&ProxyCreateRequest)` | `POST /v1/proxies` |
@@ -77,11 +79,11 @@ and the typed `data` resource. Resources include `Health`, `StatusReport`,
 `PageOperationData`, `Proxy`, and `Session`, with list/data wrapper types that
 match RPC v1.
 
-The bundled [MCP adapter](MCP.md) uses this same client for all six tools. It
-calls `status`, `capture`, `attach_page`, `perform_page_action`, `list_sessions`,
-and `list_proxies`; it does not maintain alternate request types or bypass the
-RPC transport. For capture, it exhausts and validates `CaptureStream` before
-returning one aggregated MCP result.
+The bundled [MCP adapter](MCP.md) uses this same client for all seven tools. It
+calls `status`, `capture`, `attach_page`, `perform_page_action`, both screenshot
+methods, `list_sessions`, and `list_proxies`; it does not maintain alternate
+request types or bypass the RPC transport. For capture, it exhausts and
+validates `CaptureStream` before returning one aggregated MCP result.
 
 ## Shorthand page workflow
 
@@ -114,6 +116,24 @@ let capture = client.capture_current_page(&PageCaptureRequest {
     ..PageCaptureRequest::default()
 })?;
 println!("{}", capture.data.capture.output_path);
+# Ok::<(), rel_client::ClientError>(())
+```
+
+Take a visual capture from the same current page with `ScreenshotRequest`, or
+use `PageScreenshotRequest` with an explicit attached page ID:
+
+```rust
+use rel_client::{RelClient, ScreenshotFormat, ScreenshotRequest};
+
+let client = RelClient::local();
+let screenshot = client.screenshot_current_page(&ScreenshotRequest {
+    session_id: Some("Session1".into()),
+    format: Some(ScreenshotFormat::Webp),
+    quality: Some(80),
+    full_page: true,
+    ..ScreenshotRequest::default()
+})?;
+println!("{}", screenshot.data.screenshot.output_path);
 # Ok::<(), rel_client::ClientError>(())
 ```
 
