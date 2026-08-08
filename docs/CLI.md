@@ -43,6 +43,7 @@ rel session get SESSION_ID
 rel session create [options]
 rel session update SESSION_ID [options]
 rel session delete SESSION_ID
+rel tab <list|get|create|update|delete> ...
 rel mcp
 rel --help | -h
 rel --version
@@ -66,7 +67,8 @@ the selection.
 Capture with a URL remains the default URL-first command: `rel URL [options]`.
 The explicit `rel capture URL [options]` form is equivalent. Argument-free
 `rel capture` instead captures the current shorthand page selected by
-`rel navigate`. The removed `ping`, `logs`, and
+`rel navigate`. `rel tab` is an alias for the complete `rel session` command
+family. The removed `ping`, `logs`, and
 `--rotate-proxy-session` interfaces have no compatibility aliases; use
 `status`, the app's Logs view, and `proxy rotate`, respectively.
 
@@ -78,52 +80,33 @@ Give Rel a URL to load it in embedded Chromium and write the rendered HTML to
 standard output:
 
 ```sh
-rel https://example.com
+rel https://rel.me
 ```
 
-Redirect it just like curl when saving the page is more useful:
+It follows the same output model as curl: page data goes to standard output and
+capture events go to standard error. Redirect either stream independently when
+saving them is more useful:
 
 ```sh
-rel https://example.com > example.html
+rel https://rel.me > rel.html 2> capture.ndjson
 ```
 
-### Create a proxied session and keep using it
+### Navigate, perform, and capture in one session
 
-Create the named proxy first:
+Create a session with `--id-only` so command substitution receives only its
+canonical ID, then use that ID for the complete stateful workflow:
 
 ```sh
-rel proxy create \
-  --alias office \
-  --upstream-host proxy.example.com \
-  --upstream-port 8000 \
-  --username account \
-  --password secret
+session_id="$(rel session create --name Research --id-only)"
+
+rel navigate https://rel.me --session-id="$session_id"
+rel perform '[{"action":"wait-for","selector":"body"}]' --session-id="$session_id"
+rel capture --session-id="$session_id" > rel.html
 ```
 
-By default, `session create` returns the ordinary JSON response envelope. Add
-`--id-only` to print just the canonical `Session<number>` ID for shell command
-substitution, then
-quote the variable when passing it to later commands:
-
-```sh
-session_id="$(rel session create --name Research --proxy=office --id-only)"
-
-rel navigate https://example.com --session-id="$session_id"
-rel capture --session-id="$session_id" > example.html
-```
-
-For a sequence of commands, export the ID under Rel's standard environment
-variable and omit the repeated options:
-
-```sh
-export REL_SESSION_ID="$session_id"
-
-rel navigate https://example.com
-rel perform '[{"action":"wait-for","selector":"body"}]'
-rel capture > example.html
-```
-
-An explicit `--session-id` always takes precedence over `REL_SESSION_ID`.
+The final argument-free `rel capture` reads the page selected by `rel navigate`
+after `rel perform` finishes. `rel tab create` is equivalent to
+`rel session create` if tab-oriented terminology is more natural.
 
 ## Output and errors
 
@@ -405,6 +388,9 @@ rel proxy rotate office
 ```
 
 ## Sessions
+
+`rel tab` is an alias for `rel session`; every subcommand and option below works
+with either spelling.
 
 Read and delete persistent browser sessions by their canonical session IDs:
 

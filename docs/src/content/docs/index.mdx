@@ -17,10 +17,12 @@ CLI, a local API, or the typed Rust client.
 The bundled `rel` CLI is the quickest way to capture a rendered page and the best place to learn Rel’s model.
 
 ```sh
-rel capture https://example.com --output ./example.html
+rel https://rel.me
 ```
 
-Rel keeps Chromium inside the installed macOS app. The CLI asks the local agent to use that browser, waits for the rendered result, and writes the HTML to disk.
+Rel keeps Chromium inside the installed macOS app. Like curl, the CLI writes
+page data to standard output and events to standard error, so either stream can
+be piped or redirected independently.
 
 [Read the CLI guide →](/cli/)
 
