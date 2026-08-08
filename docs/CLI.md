@@ -225,13 +225,17 @@ the current page and session. It accepts `--session-id`, `--proxy`, `--output`,
 
 If the main frame returns HTTP 4xx or 5xx, `navigate` normally exits
 unsuccessfully as soon as Chromium commits that response instead of waiting for
-all background loading to stop. By default, Rel first detects Cloudflare
-Turnstile and managed challenge pages and gives them up to 15 seconds to
-continue. A successful redirect completes normally; otherwise the original
-target error is returned. Turn off **Rel → Settings… → General → Wait for
-Cloudflare Turnstile** to restore immediate failure for every HTTP error. The
-`UPSTREAM_UNAVAILABLE` error message and details include the exact target status
-and final URL. The rendered page remains selected in the session.
+all background loading to stop. By default, Rel detects concrete Cloudflare
+Turnstile and managed challenge document markers independently of the HTTP
+status and gives a detected page up to 15 seconds to continue. An official
+Turnstile resource request starts that clock, but Rel requires a committed
+widget or managed-challenge marker before applying the continuation window. A
+successful redirect completes normally; otherwise the original target error is
+returned.
+Turn off **Rel → Settings… → General → Wait for Cloudflare Turnstile** to skip
+this continuation window. The `UPSTREAM_UNAVAILABLE` error message and details
+include the exact target status and final URL. The rendered page remains
+selected in the session.
 
 `perform` calls `POST /v1/perform` with one positional, non-empty JSON array of
 canonical action objects. Actions run in array order. It accepts `--session-id`,
@@ -325,10 +329,12 @@ CLI exit code. When stdout is the destination, `capture.writing` and
 never exposed. A target website response such as HTTP 404 or 429 is reported
 as `target_http_status`; it is not a Rel RPC error. URL capture treats a target
 HTTP error as ready without waiting for Chromium's internal error document to
-finish loading. Rel writes any source available at that point, completes with
-`outcome:"target_error"`, and applies the configured
-capture retry policy. URL capture does not apply the Turnstile continuation
-window; `rel navigate` retains the configurable behavior described above.
+finish loading. Rel uses at most one second to inspect available source for
+concrete Turnstile markers; detection is not inferred from the HTTP status. A
+resource request alone does not activate the wait. A confirmed challenge
+receives the configurable continuation window described above. Otherwise Rel
+writes any source available at that point, completes with
+`outcome:"target_error"`, and applies the configured capture retry policy.
 
 Example:
 

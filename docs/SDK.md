@@ -165,11 +165,14 @@ in `output_path`, even when a request supplied a relative `output` path. The MCP
 adapter maps these paths to `file:///` URIs; the Rust SDK preserves the native
 RPC path contract.
 
-A target HTTP error completes the stream immediately with
+A target HTTP error normally completes the stream promptly with
 `outcome:"target_error"`, the exact `target_http_status`, and exit code 1. The
 output can be empty when Chromium has not committed an error document yet. URL
-capture does not apply the navigation-only Cloudflare Turnstile continuation
-window, and the configured capture retry policy still applies.
+capture uses at most one second to inspect source for concrete Turnstile
+markers, independently of the HTTP status. A matching resource request starts
+the clock but does not activate the wait without document confirmation. A
+confirmed challenge receives the configured continuation window; otherwise the
+fast path and configured capture retry policy apply.
 
 Dropping `CaptureStream` before `capture.finished` closes its HTTP connection
 and cancels the matching agent and Chromium operation. The persistent session
