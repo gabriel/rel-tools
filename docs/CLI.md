@@ -586,6 +586,12 @@ the session. `play` idempotently resumes network activity and reloads the
 current page when the pause interrupted or deferred navigation. Both commands
 return the RPC envelope with `data.session_id` and `data.network_paused`.
 
+When a new URL is submitted, REL covers the existing page until the new document
+finishes loading. Cancelling before the new document commits restores the previous
+URL and its live page state without reloading. Pausing during this interval also
+restores that page, and playing resumes networking without reloading it. Once the
+new document commits, the previous document can no longer be restored this way.
+
 Close every session in a group. Repeating the command after the group is empty
 succeeds and returns an empty `data.deleted_ids` array:
 

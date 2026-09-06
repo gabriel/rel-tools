@@ -112,6 +112,8 @@ available as `MAX_TRANSFER_FILE_BYTES`.
 `pause_session` and `play_session` return `SessionNetworkStateData`, containing
 the canonical `session_id` and resulting `network_paused` value. Both methods
 are idempotent; play reloads when the pause interrupted or deferred navigation.
+If pause cancels navigation before the new document commits, REL restores the
+previous URL and live document; play then resumes without reloading that page.
 
 `Health::build` and `StatusReport::build` expose an optional `BuildIdentity`
 with the installed bundle's ID, configuration, worktree, branch, commit, and
