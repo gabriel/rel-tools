@@ -74,6 +74,13 @@ response. A browser startup failure can be retried with **Try Again**, refresh,
 or a newly submitted address; REL recreates that Session's browser and keeps
 the latest requested URL.
 
+If AdBlock blocks the main page, REL shows **This Page Was Blocked** with the
+requested URL and a filter explanation. Check **AdBlock** in the Session's
+**Filters** panel before trying again; retrying with the same blocking rule still
+blocks the page. This can also happen to a proxy test URL, independently of the
+proxy connection. Blocked scripts, images, or embedded frames remain filter log
+events and do not mark the main page as failed.
+
 ## Site permissions
 
 Website permissions are stored by origin inside each Session's isolated
