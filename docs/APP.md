@@ -81,6 +81,33 @@ blocks the page. This can also happen to a proxy test URL, independently of the
 proxy connection. Blocked scripts, images, or embedded frames remain filter log
 events and do not mark the main page as failed.
 
+## Session logs
+
+Open **Logs** in a Session's bottom panel to follow its activity. Logging runs
+while the Session is active, even when the panel is closed, and works with both
+direct and proxied connections.
+
+- **Network → Requests** shows Chromium HTTP and HTTPS request results for pages,
+  scripts, stylesheets, images, frames, and fetch/XHR traffic. Entries include
+  the method, URL, HTTP status or failure, elapsed milliseconds, and received
+  bytes. Redirects include their destination. Results appear when a request
+  finishes, fails, or is canceled; an open stream appears when it ends.
+- **Network → Filtered Requests** explains requests blocked by Session filters.
+- **Chromium → Runtime** includes browser open/close, navigation starts, finishes
+  and failures, Back, Forward, Reload, and network pause/resume activity.
+- **Clients → Requests** includes browser operations and individual automation
+  actions, with their completion or failure and elapsed time.
+
+Chromium request and activity entries omit request/response bodies, headers,
+entered text, URL credentials, and URL fragments. Query parameter names remain
+visible with their values replaced by `REDACTED`. Proxy transport diagnostics
+remain separate from Chromium request results, so a proxied request can have
+both a transport entry and a browser result.
+
+Use the category menu to filter the stream. **Clear Logs** clears only the
+selected Session and live logging continues. Logs remain local to this app's
+data directory.
+
 ## Site permissions
 
 Website permissions are stored by origin inside each Session's isolated
