@@ -805,6 +805,8 @@ A session resource is:
   return `data.session_id` and `data.network_paused`. Pause cancels active
   requests and blocks new network work. Play resumes network activity and
   reloads the current page when the pause interrupted or deferred navigation.
+  If pause cancels navigation before the new document commits, REL restores the
+  previous URL and live document; play then resumes without reloading that page.
 - `DELETE /v1/sessions/{id}` returns the canonical session ID as
   `data.deleted_id`.
 - `POST /v1/sessions/close` accepts `{"group":"pgm"}` and returns the trimmed
