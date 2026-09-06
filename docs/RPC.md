@@ -694,6 +694,24 @@ or `st`. REL generates a distinct persistent sticky ID for each browser session.
 The dedicated rotate-session operation replaces the IDs for all sessions assigned
 to that proxy. IDs are not part of the public proxy resource.
 
+### Paste proxy settings from curl
+
+In the app's proxy editor, choose **Paste curl command** to fill the proxy fields
+from the clipboard. The importer accepts `--proxy` / `-x` and `--proxy-user` /
+`-U`, including quoted values, `--option=value`, attached short options, and
+credentials embedded in an HTTP proxy URL. The endpoint must include a port.
+
+REL recognizes provider presets and extracts Bright Data or Oxylabs location
+suffixes into their controls. Pasted session suffixes are replaced by REL's
+per-browser-session IDs. Bright Data's `[replace with password]` placeholder is
+left blank; enter the real password before saving. When importing into an existing
+proxy, enter the imported proxy's password rather than reusing its saved password.
+The alias remains unchanged. Review the form and save to apply the settings.
+
+The command is parsed as text and is never executed. The destination URL and
+other curl options are ignored, including `-k`; REL's certificate validation
+settings still apply.
+
 ### Bright Data location and sessions
 
 Select Bright Data in the app's proxy editor to configure a country and optional
