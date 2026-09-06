@@ -303,6 +303,11 @@ main-frame navigation starts during that delay, REL waits for it and restarts
 the delay. Use a timed `wait` action when the workflow needs additional
 settling time before its next step.
 
+A submitted navigation replaces the session's active target immediately, even
+if the proxy or browser fails before the page loads. Refresh and retry use that
+target, so a second failed navigation does not send the session back to the
+first URL. Unsubmitted address-field edits do not change the retry target.
+
 If the main frame returns HTTP 4xx or 5xx, `navigate` normally exits
 unsuccessfully as soon as Chromium commits that response instead of waiting for
 all background loading to stop. By default, REL first detects Cloudflare
