@@ -865,3 +865,143 @@ Proxy create/update requests accept a `tls` object, also returned on proxy resou
 Use `system` to clear additional roots. Omission on create selects system trust; omission on update preserves the existing setting. `bright_data` requires `brd.superproxy.io:44445`. `custom` requires a PEM bundle with 1–16 CA certificates and a maximum size of 64 KiB. Unknown modes/fields, malformed certificates, private keys, leaf certificates and inconsistent provider endpoints are rejected before updating the proxy. Normal hostname, validity and chain verification stays enabled.
 
 Session resources additionally contain `proxy_ca_certificates`, a derived array of base64 DER CA certificates from the assigned proxy. Direct sessions return an empty array. This is read-only session metadata; configure trust on the proxy. Updating proxy certificates synchronizes affected open sessions and recreates their browser views. Proxy/profile transfer format version 3 stores the TLS configuration; versions 1 and 2 remain readable and default to system trust.
+
+## Webhooks
+
+Webhook calls use the same loopback RPC v1 API. Browser session cookies,
+fingerprints, and proxy settings are not used. Configure up to 32 named webhooks;
+REL stores their URLs, credentials, and routing configuration in the current app
+variant's macOS Keychain. List and create responses contain metadata only.
+Webhook request bodies are limited to 32 KiB.
+
+| Method | Path | Result |
+| --- | --- | --- |
+| `GET` | `/v1/webhooks` | `{webhooks:[...]}` metadata |
+| `POST` | `/v1/webhooks` | Create configuration; `{webhook:{...}}` |
+| `DELETE` | `/v1/webhooks/{id}` | Remove configuration and its pending events; `{deleted:true}` |
+| `POST` | `/v1/webhooks/{id}/send` | Send once; `{webhook_id,http_status,accepted:true}` |
+| `GET` | `/v1/webhooks/events` | `{events:[...]}` pending inbound events |
+| `DELETE` | `/v1/webhooks/events/{event_id}` | Acknowledge/remove an event; `{acknowledged:true}` |
+| `POST` | `/v1/webhooks/{id}/receive` | Authenticated provider callback |
+| `GET` | `/v1/webhooks/{id}/receive` | WhatsApp callback verification only |
+
+There are no webhook CLI commands, MCP tools, or typed SDK methods yet. Scripts
+can use these HTTP endpoints directly. Settings provides creation, deletion,
+callback copying, and an explicit **Send Test** action.
+
+### Configuration
+
+Create a webhook with a unique `name`, `kind` (`json`, `discord`, or `whatsapp`),
+and at least one direction:
+
+```json
+{
+  "name": "Team updates",
+  "kind": "discord",
+  "url": "https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN"
+}
+```
+
+For outgoing calls, `url` is an absolute HTTPS URL. HTTP is allowed only for
+`localhost`, `127.0.0.1`, and `::1` fixtures. URL userinfo and fragments are
+rejected. Optional `bearer_token` sets the Authorization bearer token. WhatsApp
+sending additionally requires `recipient` and `bearer_token`; set `url` to the
+versioned Graph API `/{phone-number-id}/messages` endpoint. REL does not choose
+or upgrade the Graph API version.
+
+For incoming events, add:
+
+```json
+{
+  "receive": {
+    "schedule_id": "UUID-OF-A-SAVED-PROMPT",
+    "secret": "PROVIDER-SIGNING-SECRET-OR-DISCORD-PUBLIC-KEY",
+    "verify_token": "WHATSAPP-VERIFICATION-TOKEN"
+  }
+}
+```
+
+`receive.schedule_id` is the UUID of a prompt saved in REL. Settings offers a
+picker. `secret` must be 32 to 4096 bytes. For Discord it is the application's
+64-digit hexadecimal Ed25519 public key. For WhatsApp it is the Meta app secret;
+`verify_token` must contain at least 16 characters. JSON webhooks use an HMAC
+signing secret and do not need `verify_token`.
+
+Metadata is `{id,name,kind,can_send,schedule_id,receive_path}`. The last two
+fields are null for destinations without an incoming trigger. Credentials and
+outgoing URLs are never returned. To rotate or change a destination, create a
+replacement, update prompt completion selections, and delete the old webhook.
+Deletion does not silently redirect prompts to another destination.
+
+### Sending
+
+Send either `{"text":"Hello"}` or `{"payload":{...}}`, never both. The JSON
+object `payload` is sent unchanged for service-specific messages such as
+WhatsApp templates or Discord embeds. `text` maps to:
+
+- JSON: `{"text":"Hello"}`.
+- Discord: `{"content":"Hello","allowed_mentions":{"parse":[]}}`.
+- WhatsApp: `{"messaging_product":"whatsapp","to":"RECIPIENT","type":"text","text":{"body":"Hello"}}`.
+
+Text limits are 2,000 characters for Discord and 4,096 for WhatsApp. Longer
+messages fail with `INVALID_REQUEST`; they are never silently truncated or
+split. Shorten the saved prompt's expected output or supply a service-specific
+payload. Discord calls set `wait=true`, preserving other query parameters.
+
+Delivery has a 15-second timeout, disables redirects, and makes no automatic
+retry. HTTP 2xx means the provider accepted the request, not that a person read
+it. HTTP 429 returns `RATE_LIMITED`; other non-2xx statuses, including redirects,
+return `UPSTREAM_UNAVAILABLE`, with `details.http_status`. Transport failures
+also return `UPSTREAM_UNAVAILABLE`. These errors have `retryable:false`: after
+a timeout or ambiguous failure, inspect the destination before sending again.
+Provider response bodies and transport URLs are omitted from errors.
+
+### Receiving and consuming events
+
+The local agent stays bound to loopback. An external provider requires a public
+HTTPS relay or reverse proxy forwarding **only** the selected
+`/v1/webhooks/{id}/receive` path, preserving the raw JSON body, query string, and
+signature headers. Buffer and size-limit the request at the relay. Never expose
+management, send, inbox, browser, or other RPC routes to the public internet.
+Relaying, DNS, TLS certificates, and provider subscriptions are configured
+outside REL. REL must remain open and the Mac reachable.
+
+- **JSON**: `X-REL-Webhook-Signature: sha256=<hex>` contains HMAC-SHA256 of the
+  exact raw body using the configured secret. Include a unique event identifier
+  in the body when otherwise identical events should run separately.
+- **WhatsApp**: `X-Hub-Signature-256: sha256=<hex>` contains HMAC-SHA256 of the
+  raw body with the Meta app secret. Verification accepts
+  `hub.mode=subscribe`, the configured `hub.verify_token`, and a numeric
+  `hub.challenge`; it returns the challenge as plain text. Signed message
+  notifications for `object:whatsapp_business_account` enter the inbox. Status
+  receipts are acknowledged without triggering a prompt, avoiding reply loops.
+- **Discord Webhook Events**: verify `X-Signature-Ed25519` against the timestamp
+  concatenated with the raw body. `X-Signature-Timestamp` must be within five
+  minutes of the Mac's clock. A signed `type:0` PING receives an empty HTTP 204;
+  signed `type:1` events enter the inbox and receive HTTP 204. This endpoint is
+  for Discord Webhook Events, not Gateway events or interaction callbacks.
+
+Missing, invalid, or stale signatures return HTTP 401. Other callback errors
+use RPC error envelopes. JSON and WhatsApp accepted event responses use the
+ordinary success envelope with `{accepted:true}`; exact duplicate bodies return
+`{accepted:false}`. WhatsApp status-only receipts return plain text HTTP 200.
+Discord callback acknowledgements and WhatsApp verification/status responses
+use the provider's wire format without the ordinary RPC envelope/request ID.
+
+Events have `{id,webhook_id,schedule_id,payload,trust}`; `trust` is always
+`untrusted_webhook_content`. The inbox holds at most 64 pending events and
+returns `RATE_LIMITED` (429) instead of dropping events when full. The most
+recent 1,024 accepted body hashes, scoped to their webhook, suppress duplicates
+even after acknowledgment. The inbox and duplicate history are in memory and
+reset when the agent exits. This is not a durable queue or an exactly-once
+processing guarantee.
+
+The app polls every two seconds, waits for the selected prompt to be enabled
+and idle, acknowledges the event, and runs that saved prompt with the body
+explicitly labeled as untrusted data. The original saved prompt is unchanged.
+Incoming data cannot select another prompt or completion destination. Missing,
+disabled, and busy prompts leave events pending; remove their webhook or use
+the event DELETE endpoint to clear them. A model failure is recorded as a failed
+prompt run, without automatically replaying the event. A crash after
+acknowledgment can interrupt an event's run. Separate consumers should not
+acknowledge events intended for the app.

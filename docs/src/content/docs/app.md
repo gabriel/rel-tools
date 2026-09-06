@@ -179,13 +179,14 @@ then answers. Restoring the default prompt returns to this behavior.
 
 ## Scheduled prompts
 
-Open **REL → Settings… → Scheduled** to create repeating prompts. Each schedule
+Open **Schedules** to create saved prompts. Each schedule
 contains:
 
 - a name;
 - the Profile used to create a fresh Session;
 - the prompt that runs in that Session;
-- one or more weekdays and one local time; and
+- an optional repeating timer with weekdays and local time;
+- an optional Shortcut or webhook completion action; and
 - an enabled or disabled state.
 
 REL Free supports one saved schedule; REL Pro supports multiple schedules.
@@ -203,6 +204,48 @@ Use **Run Now** to execute a schedule immediately without changing its next
 repeating run. Disable a row to pause it without deleting its configuration.
 If its Profile is later deleted, REL marks the Profile as missing and the
 schedule cannot run until it is edited to select an available Profile.
+
+## Webhooks
+
+Open **REL → Settings… → Webhooks** to add a JSON webhook, Discord integration,
+or WhatsApp Cloud API integration. A configuration can send messages, receive
+events, or do both. Its URL and credentials are stored in the current REL app
+variant's Keychain, separately from browser sessions. Settings can send an
+explicit test message and delete a destination.
+
+To deliver a prompt's final response, edit it in **Schedules** and choose
+**Send Result to Webhook**. A completion action can use either a webhook or a
+macOS Shortcut. Keep Discord results within 2,000 characters and WhatsApp text
+results within 4,096 characters. Delivery errors mark the prompt run as failed;
+REL does not automatically resend messages.
+
+To run a prompt from an event, create the prompt first, then select it under
+**Run a prompt on incoming events** when adding the webhook. Turn off **Run on a
+schedule** in the prompt editor for webhook-only operation. Keep **Enabled** on.
+Incoming data is appended to the run as untrusted JSON; write the saved prompt
+to describe which fields it should process. REL runs one event at a time per
+prompt and keeps events queued while the prompt is busy or disabled.
+
+**Copy Local Callback** copies the loopback receive URL. External services need
+a public HTTPS relay forwarding only that path. The [RPC webhook guide](/rpc/#webhooks)
+documents signing, provider setup, callback responses, inbox limits, and direct
+HTTP calls. The inbox holds up to 64 events and resets when REL quits; use a
+separate durable relay if events must survive app restarts.
+
+For Discord sending, paste the channel webhook URL. Incoming Discord Webhook
+Events require the application's public key and event subscriptions in the
+Developer Portal. These subscriptions are distinct from ordinary channel
+messages delivered through the Discord Gateway. See the official
+[Discord webhook reference](https://docs.discord.com/developers/resources/webhook)
+and [Webhook Events setup](https://docs.discord.com/developers/events/webhook-events).
+
+For WhatsApp sending, supply your versioned Graph API messages endpoint, access
+token, and recipient. Incoming events require the Meta app secret and a
+verification token; REL handles callback verification and ignores delivery
+status receipts. Text messages require an open customer service window. For
+messages outside that window, callers can send an approved template using the
+RPC `payload` option. See Meta's
+[WhatsApp Cloud API reference](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
 
 ## Proxy certificate trust
 
