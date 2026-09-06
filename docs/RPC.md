@@ -851,3 +851,17 @@ loading them. Seeds and other fingerprint settings are preserved; changed
 session fingerprints advance their generation. This happens transactionally
 in the current app database and does not reset browser data. API submissions
 must still use a Chromium 152 four-component version and matching user agent.
+
+### Proxy TLS configuration
+
+Proxy create/update requests accept a `tls` object, also returned on proxy resources:
+
+```json
+{"tls":{"mode":"system"}}
+{"tls":{"mode":"bright_data"}}
+{"tls":{"mode":"custom","certificate_pem":"-----BEGIN CERTIFICATE-----\n…\n-----END CERTIFICATE-----\n"}}
+```
+
+Use `system` to clear additional roots. Omission on create selects system trust; omission on update preserves the existing setting. `bright_data` requires `brd.superproxy.io:44445`. `custom` requires a PEM bundle with 1–16 CA certificates and a maximum size of 64 KiB. Unknown modes/fields, malformed certificates, private keys, leaf certificates and inconsistent provider endpoints are rejected before updating the proxy. Normal hostname, validity and chain verification stays enabled.
+
+Session resources additionally contain `proxy_ca_certificates`, a derived array of base64 DER CA certificates from the assigned proxy. Direct sessions return an empty array. This is read-only session metadata; configure trust on the proxy. Updating proxy certificates synchronizes affected open sessions and recreates their browser views. Proxy/profile transfer format version 3 stores the TLS configuration; versions 1 and 2 remain readable and default to system trust.
