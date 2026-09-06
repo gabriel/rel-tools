@@ -97,6 +97,13 @@ The explicit `rel capture URL [options]` form is equivalent. Argument-free
 `--rotate-proxy-session` interfaces have no compatibility aliases; use
 `status`, the app's Logs view, and `proxy rotate`, respectively.
 
+The app's Logs view displays each event on one compact line. Browser request
+summaries show the method, URL, HTTP status, failure or block reason, and duration
+when available. Select a row to inspect the formatted JSON record, including its
+structured `data` fields. **Copy JSON** (or Command-C) copies selected records as
+newline-delimited JSON, one object per line, preserving multiline messages and
+metadata for diagnostic tools. Session log files already use this NDJSON format.
+
 `rel observe` returns bounded rendered semantics and observation-scoped element
 refs. `--mode=hybrid` adds a synchronized viewport PNG resource; `visual`
 returns minimal semantics plus the image. `--page-id` targets an attached page,
