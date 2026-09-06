@@ -694,6 +694,10 @@ or `st`. REL generates a distinct persistent sticky ID for each browser session.
 The dedicated rotate-session operation replaces the IDs for all sessions assigned
 to that proxy. IDs are not part of the public proxy resource.
 
+The app's New Proxy form suggests the first available alias such as `proxy-1`
+or `proxy-2`, checking existing aliases without regard to case. You can edit the
+suggestion before saving. Existing proxy aliases remain immutable.
+
 ### Paste proxy settings from curl
 
 In the app's proxy editor, choose **Paste curl command** to fill the proxy fields
