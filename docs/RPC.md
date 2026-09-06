@@ -844,3 +844,10 @@ The fingerprint object is an identity template. When REL.app creates a session
 from a named profile, it preserves the template settings and generates a fresh
 seed before the session's Chromium context is used. The built-in profiles use
 the compatibility template by default.
+
+On the Chromium 152 upgrade, REL updates stored Chromium 151 fingerprint
+versions and their matching user agents in sessions and named profiles before
+loading them. Seeds and other fingerprint settings are preserved; changed
+session fingerprints advance their generation. This happens transactionally
+in the current app database and does not reset browser data. API submissions
+must still use a Chromium 152 four-component version and matching user agent.
