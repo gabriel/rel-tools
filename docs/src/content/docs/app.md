@@ -7,6 +7,14 @@ The macOS app owns REL's embedded Chromium runtime, persistent Sessions, browser
 Profiles, and AI chat. Keep REL running whenever local clients or scheduled
 prompts need to use it.
 
+REL's embedded browser includes the Clark Browser and ungoogled-Chromium patch
+sets. The privacy layer removes built-in Google service integrations and
+blocks substituted background-service destinations. Websites you visit can
+still load Google resources, and you can open Google pages explicitly.
+
+Sessions keep cookies, site storage, and saved logins when REL quits. The
+privacy layer does not enable automatic clearing on exit.
+
 ## Free and Pro
 
 REL Free does not require registration. It includes one Session at a time, one
@@ -44,6 +52,8 @@ Identity is configured per Session; there is no app-wide identity setting.
 Saving an identity change closes and recreates only that Session's Chromium
 context, then returns it to the same page. Choose Native Chromium to remove the
 profile and use the embedded Chromium runtime without identity overrides.
+Native Chromium uses the same patched privacy layer. Its WebRTC default also
+restricts non-proxied UDP connections.
 
 Compatibility profiles keep the selected browser, platform, locale, time zone,
 hardware, screen, graphics, storage, and network claims coherent. REL applies
@@ -59,6 +69,23 @@ seed is stable across sites in that Session, so sites may still correlate
 visits. Network identity is also separate: use a Session proxy when traffic
 must leave through another route. Proxied Sessions prevent WebRTC from using a
 non-proxied UDP route, but REL does not turn a direct Session into a VPN.
+
+## Navigation errors and retry
+
+Submitting an address immediately makes it the Session's active URL. If the
+page or proxy fails, the address field, Application panel, and **Try Again**
+button refer to that request. After submitting a different address, refresh
+retries the new URL even if it also fails. Typing without submitting does not
+change the retry target.
+
+Back and Forward work with history entries created within the same page.
+Submitting an address that only changes its `#fragment` also keeps the current
+document available without waiting for a full page reload.
+
+Chromium's automatic retries keep the error visible until the page returns a
+response. A browser startup failure can be retried with **Try Again**, refresh,
+or a newly submitted address; REL recreates that Session's browser and keeps
+the latest requested URL.
 
 ## Site permissions
 
@@ -100,9 +127,19 @@ transfers are not supported.
 ## AI models
 
 Configure providers and choose the default AI model in **REL → Settings… →
-Models**. API keys are stored in macOS Keychain. Scheduled prompts use this
-default model when their new Session starts. REL Free supports one configured
-provider; REL Pro supports multiple providers.
+Providers**. API keys are stored in macOS Keychain. Ollama connections can use
+the local server at `http://127.0.0.1:11434` without an API key. Scheduled
+prompts use the default provider and model when their new Session starts. REL
+Free supports one configured provider; REL Pro supports multiple providers.
+
+Each Chat response stops after 12 model calls or a 64,000-token request budget.
+REL uses the preceding model call's reported usage to avoid starting a call
+that would predictably exceed the remaining budget. A retryable browser error
+gets one recovery attempt. If the same error recurs through another tool or
+argument set, REL removes browser tools for the rest of that response so the
+model answers from collected evidence or explains the limitation. When an
+exhaustive request exceeds a page or tool output bound, the response summarizes
+the available evidence and states what was omitted.
 
 ## Agent instructions and current-page context
 

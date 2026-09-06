@@ -4,6 +4,14 @@ The macOS app owns REL's embedded Chromium runtime, persistent Sessions, browser
 Profiles, and AI chat. Keep REL running whenever local clients or scheduled
 prompts need to use it.
 
+REL's embedded browser includes the Clark Browser and ungoogled-Chromium patch
+sets. The privacy layer removes built-in Google service integrations and
+blocks substituted background-service destinations. Websites you visit can
+still load Google resources, and you can open Google pages explicitly.
+
+Sessions keep cookies, site storage, and saved logins when REL quits. The
+privacy layer does not enable automatic clearing on exit.
+
 ## Free and Pro
 
 REL Free does not require registration. It includes one Session at a time, one
@@ -41,6 +49,8 @@ Identity is configured per Session; there is no app-wide identity setting.
 Saving an identity change closes and recreates only that Session's Chromium
 context, then returns it to the same page. Choose Native Chromium to remove the
 profile and use the embedded Chromium runtime without identity overrides.
+Native Chromium uses the same patched privacy layer. Its WebRTC default also
+restricts non-proxied UDP connections.
 
 Compatibility profiles keep the selected browser, platform, locale, time zone,
 hardware, screen, graphics, storage, and network claims coherent. REL applies
