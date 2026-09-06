@@ -65,6 +65,10 @@ button refer to that request. After submitting a different address, refresh
 retries the new URL even if it also fails. Typing without submitting does not
 change the retry target.
 
+Back and Forward work with history entries created within the same page.
+Submitting an address that only changes its `#fragment` also keeps the current
+document available without waiting for a full page reload.
+
 Chromium's automatic retries keep the error visible until the page returns a
 response. A browser startup failure can be retried with **Try Again**, refresh,
 or a newly submitted address; REL recreates that Session's browser and keeps

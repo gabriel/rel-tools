@@ -308,6 +308,9 @@ if the proxy or browser fails before the page loads. Refresh and retry use that
 target, so a second failed navigation does not send the session back to the
 first URL. Unsubmitted address-field edits do not change the retry target.
 
+Fragment-only navigation and same-document Back/Forward complete using the
+existing document. They preserve its HTTP status without requiring a full load.
+
 If the main frame returns HTTP 4xx or 5xx, `navigate` normally exits
 unsuccessfully as soon as Chromium commits that response instead of waiting for
 all background loading to stop. By default, REL first detects Cloudflare
