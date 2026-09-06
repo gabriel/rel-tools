@@ -467,3 +467,19 @@ against the envelope or every NDJSON event.
 
 The SDK targets RPC v1 only. Removing legacy CLI syntax does not change this
 wire contract. SDK versions are distributed alongside compatible REL releases.
+
+### Per-proxy CA certificates
+
+`ProxyCreateRequest` and `ProxyUpdateRequest` expose `tls: Option<ProxyTls>`:
+
+```rust
+use rel_client::{ProxyTls, ProxyUpdateRequest};
+let request = ProxyUpdateRequest {
+    tls: Some(ProxyTls::Custom {
+        certificate_pem: std::fs::read_to_string("company-root-ca.pem")?,
+    }),
+    ..Default::default()
+};
+```
+
+`ProxyTls::System` clears added roots, and `ProxyTls::BrightData` uses REL's bundled root for `brd.superproxy.io:44445`. `None` preserves trust on update and selects system trust on create. Proxy responses include the selected `tls` configuration. All certificate validation and session scoping is performed by the agent and embedded browser.

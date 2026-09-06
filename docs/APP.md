@@ -200,3 +200,15 @@ Use **Run Now** to execute a schedule immediately without changing its next
 repeating run. Disable a row to pause it without deleting its configuration.
 If its Profile is later deleted, REL marks the Profile as missing and the
 schedule cannot run until it is edited to select an available Profile.
+
+## Proxy certificate trust
+
+In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certificates → Trust**:
+
+- **System trust** uses Chromium's ordinary certificate verification and macOS trust. Existing proxies retain this setting.
+- **Bright Data certificate** adds REL's bundled Bright Data root CA for `brd.superproxy.io:44445`. Creating a proxy with the Bright Data type preselects this option; an existing proxy requires an explicit change.
+- **Custom certificate** imports a PEM bundle or DER CRT file. REL saves the certificate contents with the proxy, so the original file is no longer needed. PEM bundles may contain 1–16 CA certificates, up to 64 KiB; private keys and website leaf certificates are rejected.
+
+Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change restarts affected browser views while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
+
+Proxy and profile transfers preserve certificate settings. The import sheet identifies transfers that add a trusted proxy CA. Older transfer versions import with system trust.

@@ -60,6 +60,57 @@ visits. Network identity is also separate: use a Session proxy when traffic
 must leave through another route. Proxied Sessions prevent WebRTC from using a
 non-proxied UDP route, but REL does not turn a direct Session into a VPN.
 
+## Navigation errors and retry
+
+Submitting an address immediately makes it the Session's active URL. If the
+page or proxy fails, the address field, Application panel, and **Try Again**
+button refer to that request. After submitting a different address, refresh
+retries the new URL even if it also fails. Typing without submitting does not
+change the retry target.
+
+Back and Forward work with history entries created within the same page.
+Submitting an address that only changes its `#fragment` also keeps the current
+document available without waiting for a full page reload.
+
+Chromium's automatic retries keep the error visible until the page returns a
+response. A browser startup failure can be retried with **Try Again**, refresh,
+or a newly submitted address; REL recreates that Session's browser and keeps
+the latest requested URL.
+
+If AdBlock blocks the main page, REL shows **This Page Was Blocked** with the
+requested URL and a filter explanation. Check **AdBlock** in the Session's
+**Filters** panel before trying again; retrying with the same blocking rule still
+blocks the page. This can also happen to a proxy test URL, independently of the
+proxy connection. Blocked scripts, images, or embedded frames remain filter log
+events and do not mark the main page as failed.
+
+## Session logs
+
+Open **Logs** in a Session's bottom panel to follow its activity. Logging runs
+while the Session is active, even when the panel is closed, and works with both
+direct and proxied connections.
+
+- **Network → Requests** shows Chromium HTTP and HTTPS request results for pages,
+  scripts, stylesheets, images, frames, and fetch/XHR traffic. Entries include
+  the method, URL, HTTP status or failure, elapsed milliseconds, and received
+  bytes. Redirects include their destination. Results appear when a request
+  finishes, fails, or is canceled; an open stream appears when it ends.
+- **Network → Filtered Requests** explains requests blocked by Session filters.
+- **Chromium → Runtime** includes browser open/close, navigation starts, finishes
+  and failures, Back, Forward, Reload, and network pause/resume activity.
+- **Clients → Requests** includes browser operations and individual automation
+  actions, with their completion or failure and elapsed time.
+
+Chromium request and activity entries omit request/response bodies, headers,
+entered text, URL credentials, and URL fragments. Query parameter names remain
+visible with their values replaced by `REDACTED`. Proxy transport diagnostics
+remain separate from Chromium request results, so a proxied request can have
+both a transport entry and a browser result.
+
+Use the category menu to filter the stream. **Clear Logs** clears only the
+selected Session and live logging continues. Logs remain local to this app's
+data directory.
+
 ## Site permissions
 
 Website permissions are stored by origin inside each Session's isolated
@@ -100,9 +151,19 @@ transfers are not supported.
 ## AI models
 
 Configure providers and choose the default AI model in **REL → Settings… →
-Models**. API keys are stored in macOS Keychain. Scheduled prompts use this
-default model when their new Session starts. REL Free supports one configured
-provider; REL Pro supports multiple providers.
+Providers**. API keys are stored in macOS Keychain. Ollama connections can use
+the local server at `http://127.0.0.1:11434` without an API key. Scheduled
+prompts use the default provider and model when their new Session starts. REL
+Free supports one configured provider; REL Pro supports multiple providers.
+
+Each Chat response stops after 12 model calls or a 64,000-token request budget.
+REL uses the preceding model call's reported usage to avoid starting a call
+that would predictably exceed the remaining budget. A retryable browser error
+gets one recovery attempt. If the same error recurs through another tool or
+argument set, REL removes browser tools for the rest of that response so the
+model answers from collected evidence or explains the limitation. When an
+exhaustive request exceeds a page or tool output bound, the response summarizes
+the available evidence and states what was omitted.
 
 ## Agent instructions and current-page context
 
@@ -142,3 +203,15 @@ Use **Run Now** to execute a schedule immediately without changing its next
 repeating run. Disable a row to pause it without deleting its configuration.
 If its Profile is later deleted, REL marks the Profile as missing and the
 schedule cannot run until it is edited to select an available Profile.
+
+## Proxy certificate trust
+
+In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certificates → Trust**:
+
+- **System trust** uses Chromium's ordinary certificate verification and macOS trust. Existing proxies retain this setting.
+- **Bright Data certificate** adds REL's bundled Bright Data root CA for `brd.superproxy.io:44445`. Creating a proxy with the Bright Data type preselects this option; an existing proxy requires an explicit change.
+- **Custom certificate** imports a PEM bundle or DER CRT file. REL saves the certificate contents with the proxy, so the original file is no longer needed. PEM bundles may contain 1–16 CA certificates, up to 64 KiB; private keys and website leaf certificates are rejected.
+
+Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change restarts affected browser views while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
+
+Proxy and profile transfers preserve certificate settings. The import sheet identifies transfers that add a trusted proxy CA. Older transfer versions import with system trust.

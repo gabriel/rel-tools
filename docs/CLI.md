@@ -604,3 +604,13 @@ rel session update Session12 --direct
 or clearing a proxy assignment during update. An update requires at least one
 mutable option. Session name and filtering policy are mutable; the canonical
 session ID is immutable.
+
+### Proxy TLS certificates
+
+```sh
+rel proxy update bright-data --upstream-host brd.superproxy.io --upstream-port 44445 --tls bright-data
+rel proxy update office --ca-cert ./company-root-ca.pem
+rel proxy update office --tls system
+```
+
+Both `proxy create` and `proxy update` accept either `--tls system|bright-data` or `--ca-cert PATH`. These options are mutually exclusive. The CLI reads a PEM CA bundle locally and sends its contents, not its path. The agent validates CA certificates and limits bundles to 1–16 certificates and 64 KiB. Omission on create uses system trust; omission on update preserves the current setting. Additional roots apply only to sessions assigned to that proxy. A TLS setting change restarts affected browser views; storage and logins remain intact.
