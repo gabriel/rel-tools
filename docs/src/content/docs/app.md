@@ -96,8 +96,7 @@ subresources, with cached or newly downloaded rules. Image blocking and image
 size limits still apply. Unrelated requests from provider pages remain subject
 to AdBlock, as do ordinary destinations reached through a proxy.
 
-The [provider-domain list](https://github.com/gabriel/rel/blob/main/Packages/ClarkBrowserKit/AdblockRustFFI/proxy-provider-domains.txt)
-is maintained with REL app updates. It does not discover every proxy domain
+The provider-domain list is maintained with REL app updates. It does not discover every proxy domain
 automatically; new provider domains need to be added to that list.
 
 ## Session logs
