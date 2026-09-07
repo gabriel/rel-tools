@@ -845,6 +845,36 @@ from a named profile, it preserves the template settings and generates a fresh
 seed before the session's Chromium context is used. The built-in profiles use
 the compatibility template by default.
 
+Fingerprint profiles also accept an optional `overrides` array. Omit the field
+for the historical full-profile behavior, or provide an explicit list to leave
+all unlisted controls native. An empty array applies no overrides. All existing
+profile value fields remain required and validated; inactive values are stored
+for later editing, but are not sent as browser overrides.
+
+| Override | Applied behavior |
+| --- | --- |
+| `identity` | User agent, platform, and matching client hints together |
+| `locale` | Language preferences and locale |
+| `timezone` | IANA timezone |
+| `hardware_concurrency` | Page CPU thread count; workers retain native values in this engine |
+| `network` | Network information profile |
+| `device_surfaces` | Linked memory, touch, screen/pixel ratio, PDF plugin fallback, and storage quota controls |
+| `graphics` | Linked Canvas/WebGL readbacks, WebGL identity/extensions, and unavailable WebGPU adapters |
+| `audio` | Audio readbacks using the profile's audio mode |
+
+For example, add `"overrides": ["timezone"]` to a valid profile with
+`"timezone": "Asia/Tokyo"` to change only timezone. Unknown override names and
+non-array values are rejected. Saving the profile preserves this list through
+export/import. Missing lists in older profiles retain their full behavior.
+
+In the macOS app, new untemplated sessions and new editor drafts start Native.
+Choose **Native + overrides** in **Session Identity**, enable only the desired
+controls, and review **Changed from native** before saving. Resetting every
+control to native saves a null session fingerprint. Saving recreates only the
+session's Chromium context. Named profile templates retain their explicit
+settings. Device surfaces and graphics are linked groups in the pinned engine;
+individual fields within those groups cannot independently remain native.
+
 On the Chromium 152 upgrade, REL updates stored Chromium 151 fingerprint
 versions and their matching user agents in sessions and named profiles before
 loading them. Seeds and other fingerprint settings are preserved; changed
