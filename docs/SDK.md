@@ -433,6 +433,17 @@ at creation, when any. `CaptureRequest`, `NavigateRequest`, and
 created session can join a group. Group matching is case-insensitive; closing
 an empty group succeeds with an empty `deleted_ids` vector.
 
+`ProxyCreateRequest.locale: Option<String>` configures an optional BCP-47 locale
+for the proxy. `ProxyUpdateRequest.locale: Change<String>` supports set, clear,
+and unchanged. `Proxy.locale` and `Session.proxy_locale` return it. This preference is independent of any
+country selection, and travels with proxy/profile exports.
+
+`FingerprintProfile.locale_mode` accepts `FingerprintLocaleMode::Automatic` or
+`Custom`; the SDK also preserves the optional `overrides` list on round-trip.
+Automatic uses the configured proxy locale, then the macOS user's preferred
+locale. Custom uses the explicit fingerprint `locale` ahead of those defaults.
+Only a value different from native Chromium is applied as an override.
+
 `ProxyCreateRequest` requires an immutable, unique `alias`. The typed proxy
 methods and the capture/page `proxy` field accept only that alias; public proxy
 resources never expose or accept numeric IDs or UUIDs. Proxy creation, update,

@@ -111,6 +111,19 @@ readback seed for the Session, then keeps it stable for that Session. Profile ed
 Use a Session's tab menu to change its identity; saving recreates only that
 Session's Chromium context and returns it to the same page.
 
+**Full Privacy** uses **Automatic** for language and locale. REL resolves an
+explicit Custom locale first, then the locale configured on the session's proxy,
+then the macOS user's preferred/default locale. It applies a language/locale
+override only when the resolved value differs from native Chromium. An enabled
+language control can therefore leave native values untouched.
+
+Set **Language and Locale** in a proxy's editor to associate a BCP-47 locale such
+as `fr-CA` with that proxy. Leave it blank to use your user/default locale.
+A country selection alone never picks a language, including in multilingual
+countries. In Custom Privacy, choose **Automatic** or **Custom** in the Language
+row; Custom exposes the explicit locale field. Disabling that control keeps
+native language and locale regardless of proxy settings.
+
 Privacy controls cover graphics, audio, device surfaces, language and locale,
 time zone, network information, and the CPU thread count reported to pages.
 User-Agent and client hints remain native in every mode. Graphics protection

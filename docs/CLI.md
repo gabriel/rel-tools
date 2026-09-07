@@ -630,4 +630,12 @@ rel proxy update office --ca-cert ./company-root-ca.pem
 rel proxy update office --tls system
 ```
 
+`proxy create` and `proxy update` accept `--locale BCP47`, for example
+`--locale fr-CA`, to configure the language/locale used by Automatic privacy
+settings for that proxy. `proxy update ALIAS --clear-locale` removes it; omission
+preserves it. Country settings alone never select a language. Full Privacy uses
+Automatic: an explicit Custom identity locale wins, then the proxy locale, then
+the macOS user's preferred/default locale. A value matching native Chromium
+requires no override.
+
 Both `proxy create` and `proxy update` accept either `--tls system|bright-data` or `--ca-cert PATH`. These options are mutually exclusive. The CLI reads a PEM CA bundle locally and sends its contents, not its path. The agent validates CA certificates and limits bundles to 1–16 certificates and 64 KiB. Omission on create uses system trust; omission on update preserves the current setting. Additional roots apply only to sessions assigned to that proxy. A TLS setting change restarts affected browser views; storage and logins remain intact.

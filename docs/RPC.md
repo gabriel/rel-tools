@@ -677,13 +677,21 @@ Passwords are accepted on writes but never returned.
 - `GET /v1/proxies/{alias}` returns `data.proxy`.
 - `POST /v1/proxies` requires `alias`, `upstream_host`, and `upstream_port`. Optional
   write fields are `username`, `password`, `oxylabs_enabled`,
-  `oxylabs_location_parameter`, `oxylabs_location_value`, and `bright_data`.
+  `oxylabs_location_parameter`, `oxylabs_location_value`, `bright_data`, and `locale`.
 - `PATCH /v1/proxies/{alias}` is a true partial update. Missing fields are retained.
-  `username:null` or `password:null` clears that value.
+  `username:null`, `password:null`, or `locale:null` clears that value.
 - `DELETE /v1/proxies/{alias}` detaches it from all sessions, then returns
   `data.deleted_alias`.
 - `POST /v1/proxies/{alias}/rotate-session` requires an Oxylabs- or Bright Data-enabled proxy and
   returns `data.proxy`.
+
+`locale` is an optional BCP-47 language/locale associated with the proxy, such as
+`fr-CA`. Whitespace is trimmed and underscores normalize to hyphens. Null or an
+empty string clears the preference; omission on update preserves it. Invalid
+values are rejected before mutation. Countries and provider location selectors
+never infer this value. Proxy responses include `locale`, and assigned session
+responses include `proxy_locale`. Proxy/Profile transfers preserve this setting
+in transfer version 5; older transfers have no proxy locale.
 
 Aliases are case-insensitively unique, immutable, and must start with a letter;
 they may contain only letters, numbers, hyphens, and underscores (maximum 64
@@ -944,13 +952,27 @@ for later editing, but are not sent as browser overrides.
 
 | Override | Applied behavior |
 | --- | --- |
-| `locale` | Language preferences and locale |
+| `locale` | Language preferences and locale, applied only when resolved values differ from native |
 | `timezone` | IANA timezone |
 | `hardware_concurrency` | Page CPU thread count; workers retain native values in this engine |
 | `network` | Network information profile |
 | `device_surfaces` | Linked memory, touch, screen/pixel ratio, PDF plugin fallback, and storage quota controls |
 | `graphics` | Linked Canvas/WebGL readbacks, WebGL identity/extensions, and unavailable WebGPU adapters |
 | `audio` | Audio readbacks using the profile's audio mode |
+
+`locale_mode` accepts `automatic` or `custom`. Full Privacy defaults to
+`automatic`. Resolution uses an explicit Custom `locale` first, then the
+assigned proxy's configured `locale`, then the macOS user's preferred/default
+locale. In Automatic mode the required legacy `locale` field is stored but does
+not pin the effective value. A proxy country alone is never a language hint.
+Matching native values skip both language and locale emulation; the stored
+control selection stays enabled. A disabled `locale` control always stays native.
+
+For older fingerprints without `locale_mode`, omitted `overrides` means
+Automatic, while an explicit override list preserves Custom locale semantics.
+Set `locale_mode` explicitly when writing new fingerprints. Resolution is shared
+by app, CLI, SDK, MCP, and restored sessions when their Chromium contexts are
+prepared. Proxy routing, data, and the remaining privacy controls are unchanged.
 
 Browser identity overrides have been removed. Chromium supplies the native
 User-Agent, navigator platform, and client hints for every session, including
