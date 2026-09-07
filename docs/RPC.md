@@ -946,7 +946,9 @@ non-array values are rejected. Saving the profile preserves this list through
 export/import. Missing lists in older profiles enable the remaining supported overrides.
 
 In the macOS app, new sessions and profile drafts default to **Full Privacy**,
-with all seven supported controls enabled. It presents a read-only summary.
+with all seven supported controls enabled. Its read-only details are collapsed
+by default in profiles, privacy editors, and session information. Choose
+**Show** beside the mode value to inspect them, and **Hide** to collapse them again.
 Choose **Custom Privacy** to edit individual values and toggles in compact rows.
 The shared device preset appears once, info buttons explain linked settings,
 and the readback seed is in an expandable section. **Native** turns off all
