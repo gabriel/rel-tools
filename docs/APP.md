@@ -193,6 +193,63 @@ Use the category menu to filter the stream. **Clear Logs** clears only the
 selected Session and live logging continues. Logs remain local to this app's
 data directory.
 
+### Log record schema
+
+The log inspector, copied records, and local NDJSON logs use the same flat JSON
+object. NDJSON contains one object per line. There is no `data` wrapper, nested
+object, or array. Optional fields are omitted when unavailable, never written as
+`null`. All names use `snake_case`.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `id` | string, required | Opaque record ID, suitable for deduplication. |
+| `created_at` | integer, required | UTC Unix timestamp in seconds. |
+| `category` | string, required | `agent`, `chromium`, `chromium.profile`, `network`, `network.filtered`, or `proxy`. |
+| `level` | string, required | Severity, normally `info`, `warn`, or `error`; diagnostic sources can also emit `trace`, `debug`, `warning`, or `fault`. |
+| `message` | string, required | Short human-readable summary. Use structured fields for filtering and analysis instead of parsing this text. |
+| `session_id` | string | The Session associated with the event. Omitted for unscoped records. This is the only Session identity field; there is no `browser_profile_id` or `tab_name`. |
+| `event` | string | Machine-readable event name, such as `navigation_started`, `browser_request`, `browser_action`, or `agent_request`. Unstructured diagnostics may omit it. |
+| `url` | string | Destination associated with the event. |
+| `method` | string | HTTP method. |
+| `path` | string | Local API request path. |
+| `page_id` | string | Page handle associated with an API request. |
+| `group` | string | Session group associated with an API request. |
+| `operation` | string | Browser operation or action, such as `navigate`, `click`, or `type`. |
+| `request_id` | string | Request or action correlation ID. Interpret within its Session and event source. |
+| `status` | string | Outcome, such as `completed`, `failed`, `canceled`, or `redirect`. |
+| `status_code` | integer | HTTP status code, when available. |
+| `error_code` | integer | Nonzero Chromium/CEF error code, when available. |
+| `resource_type` | string | Chromium resource classification, such as `document`, `script`, `image`, or `xhr`. |
+| `reason` | string | Filter reason, such as `adblock`. |
+| `duration_ms` | integer | Elapsed milliseconds. Zero is a valid measurement. |
+| `received_bytes` | integer | Received byte count reported by Chromium. Zero is a valid measurement. |
+| `redirect_url` | string | Redirect destination. |
+
+Event-specific fields appear only when relevant. Additional scalar fields
+(strings, numbers, or booleans) may be added; consumers should tolerate them.
+Event fields cannot overwrite the required fields or `session_id`.
+
+Navigation example:
+
+```json
+{"id":"e57b6b74-170c-4fcd-a9bf-e96a9af98448","created_at":1788762428,"category":"chromium","level":"info","session_id":"Session78","event":"navigation_started","message":"Navigation started: about:","url":"about:"}
+```
+
+Request result example:
+
+```json
+{"id":"b37c10ef-a84c-4e11-9ad8-4f531e96eaad","created_at":1788762429,"category":"network","level":"info","session_id":"Session78","event":"browser_request","message":"GET https://example.com/: HTTP 200","method":"GET","url":"https://example.com/","resource_type":"document","request_id":"1:42","status":"completed","status_code":200,"duration_ms":42,"received_bytes":1024}
+```
+
+Activity messages use `Summary: URL` when a URL is present. Request messages
+use `METHOD URL: result`; timing, size, resource type, and redirect destination
+remain in their own fields. Browser URLs retain the redaction described above.
+Non-HTTP(S) URLs are reduced to their scheme, such as `about:` or `data:`, so
+inline document content is never included.
+
+This format replaces the nested log schema. Existing nested records are not
+converted or supported by the new readers.
+
 ## Site permissions
 
 Website permissions are stored by origin inside each Session's isolated
