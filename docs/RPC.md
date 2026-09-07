@@ -843,7 +843,8 @@ app-owned template without changing sessions already created from it.
 The fingerprint object is an identity template. When REL.app creates a session
 from a named profile, it preserves the template settings and generates a fresh
 seed before the session's Chromium context is used. The built-in profiles use
-the compatibility template by default.
+the Privacy preset by default. New profiles also use it when
+`fingerprint_profile` is omitted; explicit null keeps native values.
 
 Fingerprint profiles also accept an optional `overrides` array. Omit the field
 to enable all supported overrides, or provide an explicit list to leave
@@ -872,9 +873,12 @@ For example, add `"overrides": ["timezone"]` to a valid profile with
 non-array values are rejected. Saving the profile preserves this list through
 export/import. Missing lists in older profiles enable the remaining supported overrides.
 
-In the macOS app, new untemplated sessions and new editor drafts start Native.
-Choose **Native + overrides** in **Session Identity**, enable only the desired
-controls, and review **Changed from native** before saving. Resetting every
+In the macOS app, new sessions and new profile drafts default to **Privacy
+controls**, with graphics and audio enabled and the remaining values native.
+Open **Privacy Controls** from the session tab menu. Each toggle reveals its
+settings directly below it, with labels above inputs. Choose **Native Chromium**
+to turn off all controls. Saved session-creation preferences and existing
+profiles retain their explicit choices. Resetting every
 control to native saves a null session fingerprint. Saving recreates only the
 session's Chromium context. Named profile templates retain their explicit
 settings. Device surfaces and graphics are linked groups in the pinned engine;
