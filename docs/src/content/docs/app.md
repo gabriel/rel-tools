@@ -429,8 +429,8 @@ stable IDs.
 
 In **Settings → Profiles, Proxies, Schedules, or Providers**, the glass button
 group contains **Add (+)**, **Edit**, a divider, **Import (down arrow)**, and
-**Export (up arrow)**. Select a row to enable export. Import opens a text editor; export
-shows selectable text with a **Copy** button. No file picker is involved.
+**Export (up arrow)**. Select a row to enable export. Import opens a text editor with a **Paste** button to insert the clipboard
+contents; export shows selectable text with a **Copy** button. No file picker is involved.
 Imports create new records and remain subject to the plan's creation limits.
 Existing records are not overwritten.
 
