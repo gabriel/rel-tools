@@ -862,6 +862,11 @@ for later editing, but are not sent as browser overrides.
 | `graphics` | Linked Canvas/WebGL readbacks, WebGL identity/extensions, and unavailable WebGPU adapters |
 | `audio` | Audio readbacks using the profile's audio mode |
 
+For macOS identities, the high-entropy client hint `platformVersion` reports
+the host macOS version. The legacy User-Agent's frozen `10_15_7` token does not
+determine that hint. Configured browser versions and User-Agent strings remain
+unchanged.
+
 For example, add `"overrides": ["timezone"]` to a valid profile with
 `"timezone": "Asia/Tokyo"` to change only timezone. Unknown override names and
 non-array values are rejected. Saving the profile preserves this list through
