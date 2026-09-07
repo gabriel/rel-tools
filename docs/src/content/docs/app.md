@@ -7,6 +7,20 @@ The macOS app owns REL's embedded Chromium runtime, persistent Sessions, browser
 Profiles, and AI chat. Keep REL running whenever local clients or scheduled
 prompts need to use it.
 
+## Anonymous diagnostics
+
+On the first normal startup, REL asks whether to share anonymous app usage and
+reliability events. Diagnostics remain off unless you select **Share
+Diagnostics**. You can change the choice later under **REL → Settings… →
+General → Diagnostics**.
+
+The fixed event schema includes app and macOS versions, launch and update
+outcomes, agent availability, and the number of open Sessions. Events use a
+random identifier that lasts only for the current app launch. They do not
+include an account or persistent installation ID, URLs, page content, prompts,
+Profile names, credentials, or local logs. Delivery is best effort and failed
+events are not stored for retry.
+
 ## Free and Pro
 
 REL Free does not require registration. It includes one Session at a time, one
