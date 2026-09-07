@@ -38,6 +38,14 @@ each tool has a detailed contract later in this guide.
 
 ## Configure an MCP client
 
+In **REL Settings → MCP**, click **Copy configuration** beside the executable
+path to copy a JSON `mcpServers` entry for your MCP client. It includes the
+absolute command path and the agent port for that REL runtime.
+
+Click **Test connection** to verify that the bundled stdio adapter can call
+`rel_status` on the local REL service. The result appears below the Connection
+section; failures and timeouts are shown there so you can retry.
+
 Use the CLI bundled in the installed app or install the public `rel-cli`
 package as described in the [CLI guide](CLI.md). An absolute path to the bundled
 binary is the most reliable choice for GUI clients that do not inherit an
