@@ -230,6 +230,22 @@ non-proxied UDP route, but REL does not turn a direct Session into a VPN.
 
 ## Navigation errors and retry
 
+Navigation failures show a readable explanation and retain the original source
+error. Proxy tunnel failures include the proxy name, upstream HTTP status line,
+and available provider diagnostics such as `Proxy-Status` and Bright Data error
+codes. For example, Bright Data's `403` / `policy_20000` restriction appears with
+the provider's access-denied explanation instead of only Chromium's generic
+connection error. Check the provider's policy or configuration before retrying
+a persistent rejection.
+
+Expand **Technical Details** for long diagnostics, or use **Copy Details** to
+copy the explanation, full retained diagnostics, Chromium error, and requested
+URL. Short errors are shown directly. Details remain selectable and the page
+scrolls when needed. Credentials, authentication challenges, and cookies are
+excluded from proxy diagnostics; retained text is bounded to 8,192 characters
+with a truncation marker. Website-generated HTTP error documents remain visible
+rather than being replaced by REL's failure page.
+
 Submitting an address immediately makes it the Session's active URL. If the
 page or proxy fails, the address field, Application panel, and **Try Again**
 button refer to that request. After submitting a different address, refresh
@@ -392,11 +408,18 @@ transfers are not supported.
 
 ## AI models
 
+When Chat has no available model, select **Add Provider** in the empty state
+or chat input to open the Add Provider form directly. Cancel returns to Chat.
+
 Configure providers and choose the default AI model in **REL → Settings… →
 Providers**. API keys are stored in macOS Keychain. Ollama connections can use
 the local server at `http://127.0.0.1:11434` without an API key. Scheduled
 prompts use the default provider and model when their new Session starts. REL
 Free supports one configured provider; REL Pro supports multiple providers.
+
+The Chat model picker uses the provider's display name when available, or the
+exact model ID when no display name is supplied. This also applies to newly
+discovered models. API requests always use the model ID.
 
 Each Chat response stops after 12 model calls or a 64,000-token request budget.
 REL uses the preceding model call's reported usage to avoid starting a call
@@ -426,6 +449,13 @@ healthy chats. The recovery report identifies affected records.
 
 Closing a Chat tab removes its saved conversation and draft. Clearing a conversation
 removes its saved messages. Deleting a Session removes its saved chats.
+
+## Reading chat history
+
+Chat follows new messages and activity while you are near the bottom. Scroll up
+to read earlier messages without being pulled back down. Choose **Jump to latest**
+to return to the newest content and resume following, or scroll back near the
+bottom yourself.
 
 ## Agent instructions and current-page context
 
@@ -468,6 +498,20 @@ Use **Run Now** to execute a schedule immediately without changing its next
 repeating run. Disable a row to pause it without deleting its configuration.
 If its Profile is later deleted, REL marks the Profile as missing and the
 schedule cannot run until it is edited to select an available Profile.
+
+## Notifications
+
+Open **REL → Settings… → Notifications** in the Browser section to control
+**Send notifications to the agent** and inspect recent shared website notifications.
+Sharing is off by default. Websites must first receive permission to send
+notifications. Shared content is untrusted website data and never starts an agent turn.
+
+The page refreshes automatically and shows up to 256 shared notifications, newest
+first, with each notification's origin, title, body, session ID, and display time.
+The Recent section appears only when shared notifications are available.
+Turning sharing off stops new entries; existing entries remain until the local
+agent restarts. The queue is not a permanent notification archive. Debug runtimes
+with website notifications disabled show that status on the page.
 
 ## Webhooks
 
