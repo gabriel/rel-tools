@@ -80,7 +80,10 @@ in Proxies even if you later cancel the profile.
 Create Session always starts with **Custom**. It shows the Profile picker only
 when saved Profiles exist. Selecting one loads its configuration into the form;
 all settings remain editable and changes apply only to the new Session. AdBlock,
-Browser Identity, Proxy, Image Blocking, and Browser Data share one section.
+Browser Identity, Proxy, Image Blocking, and Browser Data share one section
+with equal-height setting rows. Choosing **Custom Privacy** in Create Session
+opens a separate editor; **Use Identity** applies it to the draft and **Cancel**
+preserves the previous identity. **Edit** reopens a custom identity.
 **Show Config** below the section opens a read-only popover with the session
 settings and all browser privacy controls, including controls left native. Proxy
 uses the same dropdown style as the other settings.
