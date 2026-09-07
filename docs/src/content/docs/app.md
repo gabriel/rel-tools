@@ -89,9 +89,10 @@ keeps it selected; deleting it requires selecting another default. Changing
 the preference restarts the local agent and preserves existing Sessions.
 Choosing **Custom** in session creation uses the form’s explicit settings and
 browser-data selection; **None** does not inherit another Profile’s browser data.
-Create Session keeps Profile, Browser Identity, and AdBlock in the main section.
-**Advanced** is collapsed when the sheet opens and contains Proxy, Image Blocking,
-and Browser Data. Custom sessions start with **Allow all images**; selecting a
+Create Session keeps Profile and an editable AdBlock toggle in the main section.
+AdBlock starts with the selected Profile’s value; changing it affects only the new
+Session, leaving the saved Profile unchanged. The **Advanced** section header
+expands Browser Identity, Proxy, Image Blocking, and Browser Data. It starts collapsed. Custom sessions start with **Allow all images**; selecting a
 saved Profile retains that Profile's image filter. For Custom sessions, expand Advanced and choose
 **Proxy → New Proxy…** to create and automatically select a proxy while preserving
 the session draft. Cancelling the proxy editor leaves the selection unchanged.
