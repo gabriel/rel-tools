@@ -10,11 +10,12 @@ REL Free does not require registration. It includes one Session at a time, one
 scheduled prompt, one custom Profile, and one configured AI model provider.
 Proxies cannot be created, configured, assigned, or used on the Free plan.
 
-Register a REL Pro license in **REL → Settings… → Plan** to use proxies and
-remove those limits. If Pro registration expires or is removed, REL preserves
-existing Sessions and configuration instead of deleting them. Free prevents
-additional creation beyond its limits, and any stored proxy assignment runs as
-a direct connection until Pro access is restored.
+REL Pro costs $20 as a single upfront payment for one year of access. It does
+not renew automatically. Register the license in **REL → Settings… → Plan** to
+use proxies and remove the Free plan limits. If Pro registration expires or is
+removed, REL preserves existing Sessions and configuration instead of deleting
+them. Free prevents additional creation beyond its limits, and any stored proxy
+assignment runs as a direct connection until Pro access is restored.
 
 ## Profiles and Sessions
 
