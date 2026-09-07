@@ -2775,7 +2775,7 @@ mod tests {
     fn profile_json() -> Value {
         json!({
             "id": "builtin-default",
-            "name": "Direct",
+            "name": "Private",
             "proxy_alias": null,
             "adblock_enabled": false,
             "image_blocking_mode": "none",

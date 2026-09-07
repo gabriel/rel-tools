@@ -67,36 +67,57 @@ connection, network filters, and any browser data that should be copied when a
 Session is created. A **Session** is the persistent browser created from that
 template; later Profile changes do not modify existing Sessions.
 
-Manage templates in **REL → Settings… → Profiles**. The built-in Default,
-AdBlock, and BandwidthSaver Profiles are always available. Custom Profiles can
-also use a configured proxy and imported cookies or passwords.
+Manage templates in **REL → Settings… → Profiles**. The built-in Private,
+AdBlock, BandwidthSaver, and Native Chromium Profiles are always available.
+Custom Profiles can also use a configured proxy and imported cookies or passwords. The Profiles
+list includes a **Session Identity** column showing Full Privacy, Custom Privacy,
+or Native.
+
+In **New Profile**, choose **Proxy → New Proxy…** to add a proxy without leaving
+the profile draft. Saving selects the new proxy automatically. Cancelling returns
+to the draft without changing its proxy selection. A saved proxy remains available
+in Proxies even if you later cancel the profile.
+
+Choose **Settings → General → Default Profile** to select the template used
+when a new Session does not specify one. The default is **Private** when no
+preference is set. The app, CLI, SDK, MCP, and Python clients all follow this
+preference. Explicit profile choices take precedence. Renaming a custom Profile
+keeps it selected; deleting it requires selecting another default. Changing
+the preference restarts the local agent and preserves existing Sessions.
+Choosing **Custom** in session creation uses the form’s explicit settings and
+browser-data selection; **None** does not inherit another Profile’s browser data.
 
 ## Session identity
 
-The app assigns every new Session a curated compatibility profile with a
-coherent User-Agent, hardware profile, locale, time zone, and network profile.
-This includes quick-created Sessions and Sessions created from built-in or
-saved Profiles. REL generates a fresh numeric seed for each Session, then keeps
-that seed stable for the life of the Session. Choose Native Chromium in the
-Custom creation form to opt out.
+New Sessions copy the selected Profile's **Session Identity**. Private, AdBlock,
+BandwidthSaver, and new Profile drafts use **Full Privacy**, which enables all
+seven supported privacy controls. **Show** beside its value opens a read-only popover without
+expanding the surrounding form. In Profile forms, Session Identity is in the
+main section. Choose **New Session Identity…** in its dropdown to customize the
+current settings in a separate editor. **Use Identity** applies them to the draft
+as **Custom Privacy**; **Cancel** leaves the previous identity unchanged. These
+settings are saved with the Profile. Use **Edit** beside Custom Privacy to change
+them later. Starting from **Native** leaves every override off, so you can enable
+only the controls you need. **Native** uses Chromium's native values. The
+**Native Chromium** built-in
+selects Native identity, a direct connection, and no network filters. It can
+also be chosen as the Default Profile.
 
-Use the Session's tab menu to inspect, change, or disable its identity profile.
-Identity is configured per Session; there is no app-wide identity setting.
-Saving an identity change closes and recreates only that Session's Chromium
-context, then returns it to the same page. Choose Native Chromium to remove the
-profile and use the embedded Chromium runtime without identity overrides.
+For identities with overrides, every creation path generates a fresh numeric
+readback seed for the Session, then keeps it stable for that Session. Profile edits apply to future Sessions.
+Use a Session's tab menu to change its identity; saving recreates only that
+Session's Chromium context and returns it to the same page.
+
+Privacy controls cover graphics, audio, device surfaces, language and locale,
+time zone, network information, and the CPU thread count reported to pages.
+User-Agent and client hints remain native in every mode. Graphics protection
+changes Canvas and WebGL readbacks together with the graphics identity and
+makes WebGPU unavailable. Text geometry, native input, and other unlisted
+surfaces remain native.
+
 Native Chromium uses the same patched privacy layer. Its WebRTC default also
-restricts non-proxied UDP connections.
-
-Compatibility profiles keep the selected browser, platform, locale, time zone,
-hardware, screen, graphics, storage, and network claims coherent. REL applies
-small deterministic changes to Canvas, WebGL, and Web Audio readbacks so two
-Sessions use different values while one Session stays stable. AudioBuffer
-exposes live sample arrays, so its small sample changes can also affect later
-playback. Text and element geometry remains native so clicks, accessibility
-bounds, and screenshots keep matching the page. A profiled Session reports WebGPU as
-unavailable rather than exposing native graphics details that contradict its
-profile. Font enumeration and other unlisted surfaces remain native.
+restricts non-proxied UDP connections. Audio protection makes small changes to
+AudioBuffer's live sample arrays, which can also affect later playback.
 
 An identity profile is a compatibility tool, not an anonymity guarantee. Its
 seed is stable across sites in that Session, so sites may still correlate

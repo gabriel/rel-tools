@@ -823,10 +823,11 @@ shared by any number of sessions.
 
 ## Profiles
 
-Profiles are named templates copied into future sessions. The three generated
-built-ins are **Direct** (direct connection, filters off), **AdBlock**
-(AdBlock on), and **BandwidthSaver** (AdBlock on and images larger than 10 kB
-blocked). A profile resource is:
+Profiles are named templates copied into future sessions. The four generated
+built-ins are **Private** (direct connection, filters off), **AdBlock**
+(AdBlock on), **BandwidthSaver** (AdBlock on and images larger than 10 kB
+blocked), and **Native Chromium** (direct connection, filters off, native
+identity). A profile resource is:
 
 ```json
 {
@@ -901,9 +902,24 @@ the same five tables: `metadata`, `proxies`, `profiles`, `cookies`, and
 and Proxies embedded in Profile archives. Protected credential and browser
 payloads are encrypted BLOBs. Version 1 accepts no legacy JSON representation.
 
+The built-in **Direct** profile is now named **Private**, with the same stable
+ID. Upgrading updates existing session references without changing their data
+or identity. A custom profile already named Private is preserved as
+**Private (custom)**, using a numbered suffix if necessary. Its ID and data stay
+unchanged. New requests must use the current profile name.
+
+Adding the Native Chromium built-in preserves an existing custom profile with
+that name as **Native Chromium (custom)**, with a numbered suffix if needed.
+Its ID, copied session identities, and browser data are preserved.
+
 Profile names contain 1–128 non-control characters after trimming and are the
 selector used during session creation. On `POST /v1/sessions`, omission selects
-**Direct**. Explicit session settings override the selected profile. A present
+the **Default Profile** configured in **Settings → General**, or **Private**
+when no preference is set. This applies to the macOS app, CLI, SDK, MCP, and
+other RPC clients. An explicit profile always takes precedence. The preference
+uses the stable profile ID, so renaming a custom profile preserves its selection.
+If that profile is deleted, creation without an explicit profile reports an error
+until another default is selected. Explicit session settings override the selected profile. A present
 `proxy_alias:null` is a direct override; a non-null value must reference an
 existing proxy. Automatically created sessions for capture, navigation, and
 attached pages follow the same rule. Capture events and page responses include
@@ -912,10 +928,12 @@ cross RPC in plaintext; the inclusion flags describe what the app has attached t
 profile. Importing a selected category again replaces that category in the
 app-owned template without changing sessions already created from it.
 
-The fingerprint object is an identity template. When REL.app creates a session
-from a named profile, it preserves the template settings and generates a fresh
-seed before the session's Chromium context is used. The built-in profiles use
-the Full Privacy preset by default. New profiles also use it when
+The fingerprint object is an identity template. Every session creation path
+copies the selected profile through the agent. It preserves the template settings and generates a fresh
+seed before the session's Chromium context is used. Private, AdBlock, and
+BandwidthSaver use the Full Privacy preset. Native Chromium has stable ID
+`builtin-native-chromium` and `fingerprint_profile: null`, so sessions created
+from it use native identity without a seed. New profiles use Full Privacy when
 `fingerprint_profile` is omitted; explicit null keeps native values.
 
 Fingerprint profiles also accept an optional `overrides` array. Omit the field
@@ -945,9 +963,15 @@ For example, add `"overrides": ["timezone"]` to a valid profile with
 non-array values are rejected. Saving the profile preserves this list through
 export/import. Missing lists in older profiles enable the remaining supported overrides.
 
-In the macOS app, new sessions and profile drafts default to **Full Privacy**,
-with all seven supported controls enabled. It presents a read-only summary.
+New profile drafts and the three privacy built-ins use **Full Privacy**,
+with all seven supported controls enabled. Its read-only details are hidden
+by default in profiles, identity editors, and session information. Choose
+**Show** beside the mode value to open a popover without expanding the parent
+layout. The **Session Identity** row belongs to the main Profile section.
 Choose **Custom Privacy** to edit individual values and toggles in compact rows.
+Profile forms open those settings in a separate editor; **New Session Identity…**
+starts from the current identity and **Use Identity** applies the custom settings
+to the Profile draft.
 The shared device preset appears once, info buttons explain linked settings,
 and the readback seed is in an expandable section. **Native** turns off all
 controls. User-Agent and client hints remain native in every mode.

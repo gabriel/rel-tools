@@ -13,7 +13,7 @@ class CrawlApplicationTests(unittest.TestCase):
             app = CrawlApplication(
                 definition=CrawlDefinition(start_url="https://example.com/"),
                 state_path=Path(temporary) / "checkpoint.json",
-                profile="Direct",
+                profile="Private",
                 retry_failed=False,
             )
 
@@ -21,7 +21,7 @@ class CrawlApplicationTests(unittest.TestCase):
 
         self.assertEqual(crawler.profile, "Oxylabs")
         self.assertTrue(crawler.retry_failed)
-        self.assertEqual(app.profile, "Direct")
+        self.assertEqual(app.profile, "Private")
         self.assertFalse(app.retry_failed)
 
     def test_rejects_unknown_runtime_override(self) -> None:

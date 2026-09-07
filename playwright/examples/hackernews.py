@@ -8,7 +8,7 @@ from rel_playwright.sync_api import sync_playwright
 
 
 def main() -> None:
-    profile = os.environ.get("REL_PROFILE", "Direct")
+    profile = os.environ.get("REL_PROFILE")
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(profile=profile)
         page = browser.new_page()

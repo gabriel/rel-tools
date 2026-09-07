@@ -45,7 +45,7 @@ class RelCrawler(
         client: CrawlerClient | None = None,
         rel_base_url: str | None = None,
         session_id: str | None = None,
-        profile: str = "Direct",
+        profile: str | None = None,
         group: str | None = None,
         timeout: float = 90.0,
         wait: float = 1.0,
@@ -66,7 +66,7 @@ class RelCrawler(
             canonicalize_url(definition.start_url)
         except (ValueError, UnicodeError) as error:
             raise CrawlConfigurationError(str(error)) from error
-        if not profile.strip():
+        if profile is not None and (not isinstance(profile, str) or not profile.strip()):
             raise CrawlConfigurationError("profile must not be empty")
         for name, selector in (
             ("source_ready_selector", definition.source_ready_selector),
@@ -120,7 +120,7 @@ class RelCrawler(
         self.capture_dir = Path(capture_dir).expanduser().resolve()
         self.client = client if client is not None else RelClient(rel_base_url)
         self.requested_session_id = session_id
-        self.profile = profile.strip()
+        self.profile = profile.strip() if profile is not None else None
         self.group = group.strip() if group is not None else self._default_group()
         if not self.group:
             raise CrawlConfigurationError("group must not be empty")

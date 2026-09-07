@@ -47,7 +47,7 @@ class _Handler(BaseHTTPRequestHandler):
             data = {
                 "session": {
                     "id": f"Session{server.session_sequence}",
-                    "profile": payload["profile"],
+                    "profile": payload.get("profile", "Configured default"),
                     "group": payload["group"],
                 }
             }
@@ -201,7 +201,7 @@ class SyncApiTests(_RelServerMixin, unittest.TestCase):
     def tearDown(self) -> None:
         self.stop_server()
 
-    def test_launch_uses_direct_profile_by_default(self) -> None:
+    def test_launch_omits_profile_to_use_the_configured_default(self) -> None:
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(rel_base_url=self.base_url)
             browser.new_page()
@@ -212,7 +212,7 @@ class SyncApiTests(_RelServerMixin, unittest.TestCase):
             for request in self.server.requests
             if request[:2] == ("POST", "/v1/sessions")
         )
-        self.assertEqual(create[2]["profile"], "Direct")  # type: ignore[index]
+        self.assertNotIn("profile", create[2])  # type: ignore[index]
 
     def test_playwright_shaped_scraping_uses_rel_profile_and_native_actions(
         self,

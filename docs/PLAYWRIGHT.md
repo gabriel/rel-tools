@@ -3,7 +3,7 @@
 `rel-playwright` provides a scraping-focused subset of Playwright's Python API
 while using the Chromium browser and saved configuration in REL. Change the
 import and keep the familiar browser/page/locator workflow. Launching without
-options uses REL's built-in `Direct` Profile; select another saved Profile or
+options uses REL's configured Default Profile (`Private` when unset); select another saved Profile or
 Session only when the scraper needs it.
 
 ```python
@@ -69,7 +69,7 @@ REL-specific changes. The executable versions live in
 
 Each keeps the documented Playwright browser/page/locator shape. The import
 changes to `rel_playwright`, and a zero-argument `chromium.launch()` uses REL's
-built-in `Direct` Profile. Pass `profile="Research"` when another saved
+configured Default Profile (`Private` when unset). Pass `profile="Research"` when another saved
 Profile's browser identity, storage, proxy, and filtering should be used.
 
 Release REL uses `http://127.0.0.1:17319/v1` by default. `REL_AGENT_PORT` or
@@ -78,7 +78,7 @@ RELDebug normally uses port `27319`.
 
 ## Port an existing scraper
 
-Change the import. The unchanged zero-argument launch uses the `Direct` Profile:
+Change the import. The unchanged zero-argument launch uses the configured Default Profile (`Private` when unset):
 
 ```diff
 -from playwright.sync_api import sync_playwright
@@ -118,7 +118,7 @@ Sessions concurrently.
 
 | Option | Meaning |
 | --- | --- |
-| `profile="Direct"` | Existing REL Profile copied into every new page Session. `Direct` is the default when omitted. |
+| `profile="Private"` | Explicit existing REL Profile copied into every new page Session. Omitting it uses the configured Default Profile, or `Private` if unset. |
 | `session_id="Session12"` | Use one existing persistent Session instead of creating one. |
 | `group="crawler-run"` | Group assigned to Sessions created by this Browser. A unique group is generated when omitted. |
 | `persist=False` | Leave adapter-created Sessions open after close when true. Existing Sessions are never deleted. |

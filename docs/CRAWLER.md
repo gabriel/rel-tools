@@ -37,7 +37,7 @@ RELDebug normally uses port `27319`.
 ## Run the example
 
 The public example crawls discussion links from the Hacker News front page. It
-uses the existing `Direct` Profile by default:
+uses the configured Default Profile (`Private` when unset):
 
 ```sh
 cd crawler
@@ -92,7 +92,7 @@ app = CrawlApplication(
     definition=definition,
     state_path=root / "checkpoint.json",
     capture_dir=root / "pages",
-    profile="Direct",
+    profile="Private",
 )
 
 if __name__ == "__main__":

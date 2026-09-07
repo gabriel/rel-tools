@@ -21,7 +21,7 @@ class CrawlApplication:
     client: CrawlerClient | None = None
     rel_base_url: str | None = None
     session_id: str | None = None
-    profile: str = "Direct"
+    profile: str | None = None
     group: str | None = None
     timeout: float = 90.0
     wait: float = 1.0
