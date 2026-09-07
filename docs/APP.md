@@ -21,6 +21,23 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## Keeping and deleting Sessions
+
+Close the REL window or quit REL to keep Sessions and their saved logins for
+next time. Session deletion cannot be undone.
+
+**Delete Session…** in a Session's context menu and the Session tab's close
+button show a confirmation before deleting anything. **Close Session…** (⌘W)
+shows the same confirmation when no browser popup is open; when a popup is
+open, it closes only that popup. The confirmation names the Session and warns
+that deletion removes its cookies, saved logins, saved passwords, and other
+browser data. **Cancel** is the default action and keeps the Session intact.
+
+**Settings → General → Browser Data → Delete All Sessions…** also requires
+confirmation and warns that all Sessions and their browser data will be deleted.
+These confirmations apply to app controls; API and CLI deletion operations
+remain explicit destructive operations without an interactive confirmation.
+
 ## Database migration and recovery
 
 REL validates its local database before starting normal service. Supported
