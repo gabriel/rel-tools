@@ -401,6 +401,10 @@ the local server at `http://127.0.0.1:11434` without an API key. Scheduled
 prompts use the default provider and model when their new Session starts. REL
 Free supports one configured provider; REL Pro supports multiple providers.
 
+The Chat model picker uses the provider's display name when available, or the
+exact model ID when no display name is supplied. This also applies to newly
+discovered models. API requests always use the model ID.
+
 Each Chat response stops after 12 model calls or a 64,000-token request budget.
 REL uses the preceding model call's reported usage to avoid starting a call
 that would predictably exceed the remaining budget. A retryable browser error
