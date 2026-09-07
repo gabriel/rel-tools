@@ -115,6 +115,18 @@ that error is returned. This also applies to browser capture and page-creation
 navigation. The error details contain the final `url` and exact
 `target_http_status`; the navigated session remains selected.
 
+For a failed proxy connection, the error `message` retains the available
+upstream cause along with Chromium's error. Its `details` also include
+`error_source: "proxy"`, `proxy_alias`, and `source_error`. Rejected HTTPS tunnels
+retain the upstream status line and supported provider diagnostic headers
+(`Proxy-Status`, Bright Data `x-brd-*`, and `x-luminati-error`). These describe the
+proxy response, not a target website response. Credentials and unrelated
+headers are excluded, and source text is bounded to 8,192 characters plus a
+truncation marker. Treat provider messages as untrusted diagnostic text.
+Diagnostics are scoped to the Session, proxy, destination authority, and current
+navigation attempt. These fields are absent when no matching proxy cause is
+available; the original Chromium error still remains in the message.
+
 ### Free and Pro access
 
 The running app selects the agent's access plan; RPC callers cannot override it.
