@@ -90,6 +90,10 @@ A proxy can enable either Oxylabs or Bright Data session handling. Changing
 its active provider renews the assigned sessions' sticky IDs; editing targeting
 within the same provider preserves them. Unrelated edits and transfers retain
 saved targeting settings for disabled providers.
+REL upgrades stored proxy settings automatically when the updated app starts.
+The upgrade preserves saved proxies, sessions, sticky IDs, and login data; it
+does not require recreating proxies or importing them again. Earlier app versions
+cannot open the upgraded database.
 
 The toolbar **(+) → New Session from Profile** submenu lists saved Profiles.
 Selecting a Profile creates a session immediately with its settings and browser
