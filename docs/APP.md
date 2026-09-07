@@ -361,10 +361,15 @@ the available evidence and states what was omitted.
 ## Chat restoration
 
 REL saves each Session's open Chat tabs, their order and selection, conversation
-messages, completed-work details, and unsent drafts in its local workspace file.
+messages, completed-work details, and unsent drafts in its local SQLite database.
 Quitting and reopening REL restores them. Completed question-and-answer exchanges
 are restored to the AI harness before you send a follow-up. An interrupted response
 is not resumed automatically; its submitted prompt remains visible in the chat.
+Database upgrades use transactional migrations. Existing workspace layout and token
+usage are imported once from the current runtime’s old workspace file. If restoration
+fails, REL reports the error and blocks replacement writes. A save failure preserves
+the current draft in memory and asks you to restart before saving again.
+
 Closing a Chat tab removes its saved conversation and draft. Clearing a conversation
 removes its saved messages. Deleting a Session removes its saved chats.
 
