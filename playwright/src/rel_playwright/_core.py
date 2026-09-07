@@ -21,7 +21,7 @@ from ._rpc import (
 )
 
 DEFAULT_TIMEOUT_MS = 30_000.0
-DEFAULT_PROFILE = "Direct"
+DEFAULT_PROFILE = None
 SUPPORTED_WAIT_UNTIL = {"load", "domcontentloaded", "commit"}
 SUPPORTED_SCREENSHOT_FORMATS = {"png", "jpeg", "webp"}
 
@@ -667,7 +667,7 @@ class BrowserContext:
         self,
         browser: Browser,
         *,
-        profile: str,
+        profile: str | None,
         session_id: str | None,
         group: str,
         persist: bool,
@@ -761,7 +761,7 @@ class Browser:
         self,
         client: RelRpcClient,
         *,
-        profile: str,
+        profile: str | None,
         session_id: str | None,
         group: str,
         persist: bool,
@@ -839,7 +839,7 @@ class BrowserType:
         headless: bool | None = None,
         slow_mo: float | None = None,
         timeout: float | None = None,
-        profile: str = DEFAULT_PROFILE,
+        profile: str | None = DEFAULT_PROFILE,
         session_id: str | None = None,
         group: str | None = None,
         persist: bool = False,
@@ -928,7 +928,7 @@ def _raise_public_error(error: RpcError) -> NoReturn:
 def _validate_rel_options(
     profile: Any, session_id: Any, group: Any, persist: Any
 ) -> None:
-    if not isinstance(profile, str) or not profile.strip():
+    if profile is not None and (not isinstance(profile, str) or not profile.strip()):
         raise Error("profile must be a non-empty REL Profile name")
     if session_id is not None and (
         not isinstance(session_id, str)

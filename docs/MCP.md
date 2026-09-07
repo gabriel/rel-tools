@@ -10,6 +10,10 @@ Related documents: [Codex plugin](CODEX_PLUGIN.md),
 [Claude Code plugin](CLAUDE_CODE_PLUGIN.md), [CLI](CLI.md), [RPC](RPC.md), and
 [Rust SDK](SDK.md).
 
+When session creation omits a profile, REL uses **Settings → General → Default
+Profile**, or **Private** if the preference is unset. Explicit profile choices
+always take precedence.
+
 ## Tool quick reference
 
 REL MCP exposes exactly fourteen tools. This is the complete discovery list;

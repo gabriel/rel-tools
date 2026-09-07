@@ -18,7 +18,7 @@ with sync_playwright() as playwright:
 
 The import changes from `playwright.sync_api` to `rel_playwright.sync_api`.
 There is also an `async_api` module. No Playwright browser download is needed.
-`chromium.launch()` uses REL's built-in `Direct` Profile by default; pass
+`chromium.launch()` uses REL's configured Default Profile (`Private` when unset) by default; pass
 `profile="Research"` to select another saved Profile.
 
 This is a focused scraping compatibility layer, not the Playwright wire

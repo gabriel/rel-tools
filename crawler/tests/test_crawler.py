@@ -76,7 +76,7 @@ class FakeRelClient:
         self.back_url = SOURCE_URL
         self.deleted: list[str] = []
         self.profile: str | None = None
-        self.created_profiles: list[str] = []
+        self.created_profiles: list[str | None] = []
         self.create_count = 0
         self.action_batches: list[list[dict[str, Any]]] = []
         self.waited_for: list[str] = []
@@ -102,7 +102,7 @@ class FakeRelClient:
             "profile": self.profile,
         }
 
-    def create_session(self, *, profile: str, group: str) -> str:
+    def create_session(self, *, profile: str | None, group: str) -> str:
         self.create_count += 1
         failure = self.create_failures.get(self.create_count)
         if failure is not None:
@@ -859,7 +859,7 @@ class RelCrawlerTests(unittest.TestCase):
 
         self.assertEqual((summary.captured, summary.failed), (2, 0))
         self.assertEqual(self.client.performed, [ALBUM_ONE, ALBUM_ONE, ALBUM_TWO])
-        self.assertEqual(self.client.created_profiles, ["Direct", "Direct"])
+        self.assertEqual(self.client.created_profiles, [None, None])
         self.assertEqual(self.client.deleted, ["Session7"])
         self.assertEqual(summary.session_id, "Session8")
         self.assertEqual(summary.session_generation, 2)
@@ -878,7 +878,7 @@ class RelCrawlerTests(unittest.TestCase):
         summary = self.crawler(self.definition(processed), max_links=1).run()
 
         self.assertEqual((summary.captured, summary.failed), (1, 0))
-        self.assertEqual(self.client.created_profiles, ["Direct", "Direct"])
+        self.assertEqual(self.client.created_profiles, [None, None])
         self.assertEqual(self.client.deleted, ["Session7"])
         self.assertEqual(self.client.navigated, [SOURCE_URL, SOURCE_URL])
         self.assertEqual(summary.session_id, "Session8")
@@ -918,7 +918,7 @@ class RelCrawlerTests(unittest.TestCase):
         self.assertEqual(performed_after_first_run, [ALBUM_ONE, ALBUM_ONE, ALBUM_TWO])
         self.assertEqual(self.client.performed, performed_after_first_run)
         self.assertEqual(
-            self.client.created_profiles, ["Direct", "Direct", "Direct"]
+            self.client.created_profiles, [None, None, None]
         )
 
     def test_terminal_upstream_error_rotates_session_before_continuing(self) -> None:
@@ -929,7 +929,7 @@ class RelCrawlerTests(unittest.TestCase):
 
         self.assertEqual((summary.captured, summary.failed), (1, 1))
         self.assertEqual(self.client.performed, [ALBUM_ONE, ALBUM_ONE, ALBUM_TWO])
-        self.assertEqual(self.client.created_profiles, ["Direct", "Direct"])
+        self.assertEqual(self.client.created_profiles, [None, None])
         self.assertEqual(self.client.deleted, ["Session7"])
         self.assertEqual(summary.session_id, "Session8")
         self.assertEqual(summary.session_restart_count, 1)
@@ -1004,11 +1004,11 @@ class RelCrawlerTests(unittest.TestCase):
         processed: list[CapturedPage] = []
         definition = self.definition(processed)
 
-        first = self.crawler(definition, profile="Direct").run()
+        first = self.crawler(definition, profile="Private").run()
         second = self.crawler(definition, profile="oxylabs").run()
 
         self.assertNotEqual(first.session_id, second.session_id)
-        self.assertEqual(self.client.created_profiles, ["Direct", "oxylabs"])
+        self.assertEqual(self.client.created_profiles, ["Private", "oxylabs"])
 
     def test_existing_checkpoint_gains_session_tracking_fields(self) -> None:
         processed: list[CapturedPage] = []

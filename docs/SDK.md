@@ -386,7 +386,7 @@ update.
 ## Session profiles
 
 `SessionCreateRequest::default()` serializes to `{}`, so the agent copies the
-built-in **Direct** profile. Set `profile` to select **AdBlock**,
+configured **Default Profile**, or **Private** when the preference is unset. Set `profile` to select **AdBlock**,
 **BandwidthSaver**, or a case-insensitively unique custom name. Explicit proxy
 and filtering fields override the selected profile; use
 `Change::Set("alias".into())` for a proxy or `Change::Clear` for direct

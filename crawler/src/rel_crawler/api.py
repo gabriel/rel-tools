@@ -121,11 +121,11 @@ class RelClient:
             raise RelProtocolError("REL session response is missing data.session")
         return session
 
-    def create_session(self, *, profile: str, group: str) -> str:
+    def create_session(self, *, profile: str | None, group: str) -> str:
         data = self._request(
             "POST",
             "/sessions",
-            {"profile": profile, "group": group},
+            {"group": group, **({"profile": profile} if profile is not None else {})},
             timeout=10.0,
         )
         session = data.get("session")

@@ -123,6 +123,7 @@ class SessionMixin:
                 profile_changed = (
                     self._state.get("managed_session")
                     and isinstance(live_profile, str)
+                    and self.profile is not None
                     and live_profile.casefold() != self.profile.casefold()
                 )
                 if not profile_changed:

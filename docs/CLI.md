@@ -22,6 +22,10 @@ another browser or reads application data directly.
 Related documents: [Actions](ACTIONS.md), [MCP](MCP.md), [SDK](SDK.md), and
 [RPC](RPC.md).
 
+When session creation omits a profile, REL uses **Settings → General → Default
+Profile**, or **Private** if the preference is unset. Explicit profile choices
+always take precedence.
+
 ## Commands
 
 ```text

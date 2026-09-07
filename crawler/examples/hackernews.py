@@ -20,7 +20,7 @@ from rel_crawler import (
 
 ROOT = Path(__file__).resolve().parent / "hackernews-output"
 START_URL = os.environ.get("HN_START_URL", "https://news.ycombinator.com/news")
-PROFILE = os.environ.get("REL_PROFILE", "Direct")
+PROFILE = os.environ.get("REL_PROFILE")
 _ITEM_ID = re.compile(r"^[0-9]+$")
 
 

@@ -41,7 +41,7 @@ cd crawler
 HN_MAX_LINKS=3 .venv/bin/rel-crawler run examples/hackernews.py:app
 ```
 
-It uses the existing `Direct` Profile by default. To select another existing
+It uses the configured Default Profile (`Private` when unset). To select another existing
 Profile by name:
 
 ```sh
@@ -95,7 +95,7 @@ app = CrawlApplication(
     definition=definition,
     state_path=root / "checkpoint.json",
     capture_dir=root / "pages",
-    profile="Direct",
+    profile="Private",
 )
 
 if __name__ == "__main__":
