@@ -67,10 +67,9 @@ connection, network filters, and any browser data that should be copied when a
 Session is created. A **Session** is the persistent browser created from that
 template; later Profile changes do not modify existing Sessions.
 
-Manage templates in **REL → Settings… → Profiles**. The built-in Private,
-AdBlock, BandwidthSaver, and Native Chromium Profiles are always available.
-Custom Profiles can also use a configured proxy and imported cookies or passwords. The Profiles
-list includes a **Session Identity** column showing Full Privacy, Custom Privacy,
+Manage saved configurations in **Profiles**. There are no built-in Profiles.
+Profiles can use a configured proxy and imported cookies or passwords. The Profiles
+list includes a **Browser Identity** column showing Private, Custom Privacy,
 or Native.
 
 In **New Profile**, choose **Proxy → New Proxy…** to add a proxy without leaving
@@ -78,40 +77,83 @@ the profile draft. Saving selects the new proxy automatically. Cancelling return
 to the draft without changing its proxy selection. A saved proxy remains available
 in Proxies even if you later cancel the profile.
 
-Choose **Settings → General → Default Profile** to select the template used
-when a new Session does not specify one. The default is **Private** when no
-preference is set. The app, CLI, SDK, MCP, and Python clients all follow this
-preference. Explicit profile choices take precedence. Renaming a custom Profile
-keeps it selected; deleting it requires selecting another default. Changing
-the preference restarts the local agent and preserves existing Sessions.
-Choosing **Custom** in session creation uses the form’s explicit settings and
-browser-data selection; **None** does not inherit another Profile’s browser data.
+**Create Session**, **New Session** (Command-T), and the session tab bar’s plus
+button create a session immediately using the configured default Profile, or
+Custom defaults when none is set. You can change AdBlock, image blocking, Proxy,
+and Browser Identity afterward. Changing Browser Identity reopens the session.
+Browser data is copied or imported rather than switched as a setting.
 
-## Session identity
+The toolbar **(+) → New Session from Profile** submenu lists saved Profiles.
+Selecting a Profile creates a session immediately with its settings and browser
+data. The submenu appears only when saved Profiles exist.
 
-New Sessions copy the selected Profile's **Session Identity**. Private, AdBlock,
-BandwidthSaver, and new Profile drafts use **Full Privacy**, which enables all
-seven supported privacy controls. **Show** beside its value opens a read-only popover without
-expanding the surrounding form. In Profile forms, Session Identity is in the
-main section. Choose **New Session Identity…** in its dropdown to customize the
+Use **File → Create Session from Profile** (Option-Command-T) to choose settings
+before creation or copy a saved Profile’s browser data. This form starts with
+**Custom** and shows the Profile picker only
+when saved Profiles exist. Selecting one loads its configuration into the form;
+all settings remain editable and changes apply only to the new Session. AdBlock,
+Browser Identity, Proxy, Image Blocking, and Browser Data share one section
+with equal-height setting rows. Choosing **Custom Privacy** in Create Session
+opens a separate editor; **Use Identity** applies it to the draft and **Cancel**
+preserves the previous identity. **Edit** reopens a custom identity.
+**Show Config** below the section opens a read-only popover with the session
+settings and all browser privacy controls, including controls left native. Proxy
+uses the same dropdown style as the other settings.
+New Custom drafts start with **Allow all images**. **Proxy → New Proxy…** creates
+and selects a proxy without losing the draft. Cancelling keeps the current selection.
+
+**Settings → General → Default Profile** controls immediate session creation
+in the app and clients that omit a profile, including CLI, SDK, MCP, and Python. With no saved default, they use Custom:
+direct networking, AdBlock on, all images allowed, and Private. The creation
+form uses its explicit settings and browser-data choice instead. **None** does
+not inherit another Profile’s browser data. Renaming a saved default preserves
+its selection; deleting it requires choosing another default or Custom.
+Changing this preference restarts the local agent and preserves existing Sessions.
+
+Schedules that referenced former built-in Profiles keep their settings as explicit
+Custom session configurations. New schedules can create a Custom session without
+requiring a saved Profile.
+
+## Browser identity
+
+New Sessions use the form’s **Browser Identity**. New Custom configurations
+and Profile drafts use **Private**, which enables all
+seven supported privacy controls. In Profile forms, **Show** to the left of its
+value opens a read-only popover without expanding the form. Create Session uses
+**Show Config** below the main section instead. In Profile forms, Browser Identity is in the
+main section. Choose **New Browser Identity…** in its dropdown to customize the
 current settings in a separate editor. **Use Identity** applies them to the draft
 as **Custom Privacy**; **Cancel** leaves the previous identity unchanged. These
 settings are saved with the Profile. Use **Edit** beside Custom Privacy to change
 them later. Starting from **Native** leaves every override off, so you can enable
-only the controls you need. **Native** uses Chromium's native values. The
-**Native Chromium** built-in
-selects Native identity, a direct connection, and no network filters. It can
-also be chosen as the Default Profile.
+only the controls you need. **Native** uses Chromium's native values.
 
 For identities with overrides, every creation path generates a fresh numeric
 readback seed for the Session, then keeps it stable for that Session. Profile edits apply to future Sessions.
 Use a Session's tab menu to change its identity; saving recreates only that
 Session's Chromium context and returns it to the same page.
 
+**Private** uses **Automatic** for language and locale. REL resolves an
+explicit Custom locale first, then the locale configured on the session's proxy,
+then the macOS user's preferred/default locale. It applies a language/locale
+override only when the resolved value differs from native Chromium. An enabled
+language control can therefore leave native values untouched.
+
+Set **Language and Locale** in a proxy's editor to associate a BCP-47 locale such
+as `fr-CA` with that proxy. Leave it blank to use your user/default locale.
+A country selection alone never picks a language, including in multilingual
+countries. In Custom Privacy, choose **Automatic** or **Custom** in the Language
+row; Custom exposes the explicit locale field. Disabling that control keeps
+native language and locale regardless of proxy settings.
+
 Privacy controls cover graphics, audio, device surfaces, language and locale,
 time zone, network information, and the CPU thread count reported to pages.
-User-Agent and client hints remain native in every mode. Graphics protection
-changes Canvas and WebGL readbacks together with the graphics identity and
+Chromium generates the User-Agent in every mode with its product version reduced
+to `MAJOR.0.0.0` (for example, `Chrome/152.0.0.0`). The engine supplies its native
+brand list and client hints; these are not editable. High-entropy client hints
+can still expose the engine’s full version when requested by a site.
+
+Graphics protection changes Canvas and WebGL readbacks together with the graphics identity and
 makes WebGPU unavailable. Text geometry, native input, and other unlisted
 surfaces remain native.
 
@@ -318,8 +360,10 @@ then answers. Restoring the default prompt returns to this behavior.
 
 ## Scheduled prompts
 
-Open **Schedules** to create saved prompts. Each schedule
-contains:
+Open **Schedules** and click **Add Schedule** in the bottom action bar to create
+a saved prompt, even if no Sessions or Profiles exist yet. The action bar also
+provides **Edit Schedule**, **Delete Schedule**, and **Run Now** for a selected
+schedule. Each schedule contains:
 
 - a name;
 - the Profile used to create a fresh Session;

@@ -2106,6 +2106,8 @@ pub enum ProxyTls {
 pub struct ProxyCreateRequest {
     pub alias: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub locale: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tls: Option<ProxyTls>,
     pub upstream_host: String,
     pub upstream_port: u16,
@@ -2135,6 +2137,8 @@ impl ProxyCreateRequest {
 pub struct ProxyUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub upstream_host: Option<String>,
+    #[serde(skip_serializing_if = "Change::is_unchanged")]
+    pub locale: Change<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tls: Option<ProxyTls>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2224,6 +2228,8 @@ pub struct Proxy {
     #[serde(default)]
     pub tls: ProxyTls,
     pub alias: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locale: Option<String>,
     pub upstream_host: String,
     pub upstream_port: u16,
     pub username: Option<String>,
@@ -2333,6 +2339,10 @@ pub struct FingerprintProfile {
     pub browser_version: String,
     pub user_agent: String,
     pub locale: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locale_mode: Option<FingerprintLocaleMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub overrides: Option<Vec<String>>,
     pub timezone: String,
     pub network_profile: FingerprintNetworkProfile,
     pub hardware_concurrency: u64,
@@ -2343,6 +2353,13 @@ pub struct FingerprintProfile {
     pub storage_quota_bytes: u64,
     pub canvas_noise_mode: FingerprintNoiseMode,
     pub audio_noise_mode: FingerprintNoiseMode,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum FingerprintLocaleMode {
+    Automatic,
+    Custom,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
@@ -2487,6 +2504,8 @@ pub struct Session {
     pub profile_data_id: Option<String>,
     pub group: Option<String>,
     pub proxy_alias: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proxy_locale: Option<String>,
     pub adblock_enabled: bool,
     pub image_blocking_mode: ImageBlockingMode,
     pub image_size_limit_kb: i64,
@@ -3075,6 +3094,17 @@ mod tests {
         let requests = handle.join().unwrap();
         assert_eq!(requests[0].method, "GET");
         assert_eq!(requests[0].path, "/v1/observations/observation-1");
+    }
+
+    #[test]
+    fn fingerprint_round_trip_preserves_locale_mode_and_selected_controls() {
+        let mut value = profile_json()["fingerprint_profile"].clone();
+        value["locale_mode"] = json!("custom");
+        value["locale"] = json!("fr-CA");
+        value["overrides"] = json!(["locale", "audio"]);
+        let profile: FingerprintProfile = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(profile.locale_mode, Some(FingerprintLocaleMode::Custom));
+        assert_eq!(serde_json::to_value(profile).unwrap(), value);
     }
 
     #[test]

@@ -1089,6 +1089,7 @@ fn parse_proxy_create(mut args: Arguments) -> Result<CliCommand, CliError> {
     let mut request = ProxyCreateRequest::default();
     while let Some((option, inline)) = args.pop_option()? {
         match option.as_str() {
+            "--locale" => request.locale = Some(args.option_value(&option, inline)?),
             "--alias" => request.alias = args.option_value(&option, inline)?,
             "--upstream-host" => request.upstream_host = args.option_value(&option, inline)?,
             "--upstream-port" => request.upstream_port = args.integer(&option, inline)?,
@@ -1127,6 +1128,15 @@ fn parse_proxy_update(mut args: Arguments) -> Result<CliCommand, CliError> {
     let mut request = ProxyUpdateRequest::default();
     while let Some((option, inline)) = args.pop_option()? {
         match option.as_str() {
+            "--locale" => set_change(
+                &mut request.locale,
+                Change::Set(args.option_value(&option, inline)?),
+                &option,
+            )?,
+            "--clear-locale" => {
+                args.flag(&option, inline)?;
+                set_change(&mut request.locale, Change::Clear, &option)?;
+            }
             "--upstream-host" => request.upstream_host = Some(args.option_value(&option, inline)?),
             "--upstream-port" => request.upstream_port = Some(args.integer(&option, inline)?),
             "--username" => set_change(
@@ -1462,7 +1472,8 @@ fn set_change<T>(slot: &mut Change<T>, value: Change<T>, option: &str) -> Result
 }
 
 fn proxy_update_is_empty(request: &ProxyUpdateRequest) -> bool {
-    request.upstream_host.is_none()
+    request.locale.is_unchanged()
+        && request.upstream_host.is_none()
         && request.upstream_port.is_none()
         && request.username.is_unchanged()
         && request.password.is_unchanged()
@@ -1746,10 +1757,10 @@ rel proxy import FILE [--alias ALIAS]\n\n\
 Write options:\n  \
 --alias ALIAS --upstream-host HOST --upstream-port PORT\n  \
 --tls system|bright-data OR --ca-cert PATH (PEM CA bundle)\n  \
---username USER --password PASS --oxylabs-enabled true|false\n  \
+--username USER --password PASS --locale BCP47 --oxylabs-enabled true|false\n  \
 --oxylabs-location-parameter cc|country|st --oxylabs-location-value VALUE\n\
 Update clear options:\n  \
---clear-username --clear-password --clear-oxylabs-location\n\n\
+--clear-username --clear-password --clear-oxylabs-location --clear-locale\n\n\
 Export writes a versioned .relproxy file with non-secret routing settings.
 App-protected credentials are not available to CLI export. Import accepts
 settings-only SQLite archives; --alias overrides the alias stored in the file.
@@ -2482,6 +2493,53 @@ mod tests {
     }
 
     #[test]
+    fn proxy_locale_can_be_set_preserved_or_explicitly_cleared() {
+        let CliCommand::ProxyCreate(request) = parse(&[
+            "proxy",
+            "create",
+            "--alias",
+            "canada",
+            "--upstream-host",
+            "proxy.example",
+            "--upstream-port",
+            "8080",
+            "--locale",
+            "fr-CA",
+        ])
+        .unwrap() else {
+            panic!("expected proxy create");
+        };
+        assert_eq!(request.locale.as_deref(), Some("fr-CA"));
+        for (options, expected) in [
+            (
+                vec!["--locale", "fr-CA"],
+                serde_json::json!({"locale":"fr-CA"}),
+            ),
+            (vec!["--clear-locale"], serde_json::json!({"locale":null})),
+            (
+                vec!["--upstream-port", "8081"],
+                serde_json::json!({"upstream_port":8081}),
+            ),
+        ] {
+            let mut args = vec!["proxy", "update", "canada"];
+            args.extend(options);
+            let CliCommand::ProxyUpdate { request, .. } = parse(&args).unwrap() else {
+                panic!("expected proxy update");
+            };
+            assert_eq!(serde_json::to_value(request).unwrap(), expected);
+        }
+        assert!(parse(&[
+            "proxy",
+            "update",
+            "canada",
+            "--locale",
+            "fr-CA",
+            "--clear-locale"
+        ])
+        .is_err());
+    }
+
+    #[test]
     fn proxy_tls_options_are_explicit_and_mutually_exclusive() {
         for (option, mode) in [("system", "system"), ("bright-data", "bright_data")] {
             let CliCommand::ProxyUpdate { request, .. } =
@@ -2593,6 +2651,7 @@ mod tests {
                     profile_data_id: None,
                     group: Some("pgm".to_string()),
                     proxy_alias: Some("office".to_string()),
+                    proxy_locale: Some("fr-CA".to_string()),
                     adblock_enabled: true,
                     image_blocking_mode: ImageBlockingMode::OverLimit,
                     image_size_limit_kb: 100,
