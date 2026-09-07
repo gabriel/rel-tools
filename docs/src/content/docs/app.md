@@ -306,8 +306,10 @@ then answers. Restoring the default prompt returns to this behavior.
 
 ## Scheduled prompts
 
-Open **Schedules** to create saved prompts. Each schedule
-contains:
+Open **Schedules** and click **Add Schedule** in the bottom action bar to create
+a saved prompt, even if no Sessions or Profiles exist yet. The action bar also
+provides **Edit Schedule**, **Delete Schedule**, and **Run Now** for a selected
+schedule. Each schedule contains:
 
 - a name;
 - the Profile used to create a fresh Session;
