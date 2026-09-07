@@ -7,6 +7,23 @@ The macOS app owns REL's embedded Chromium runtime, persistent Sessions, browser
 Profiles, and AI chat. Keep REL running whenever local clients or scheduled
 prompts need to use it.
 
+REL's embedded browser includes the Clark Browser and ungoogled-Chromium patch
+sets. The privacy layer removes built-in Google service integrations and
+blocks substituted background-service destinations. Websites you visit can
+still load Google resources, and you can open Google pages explicitly.
+
+REL configures Sessions to retain cookies, site storage, and saved logins when
+it quits. The privacy layer does not enable automatic clearing on exit. This
+preserves website login state; it does not enable Chromium's password manager
+or guarantee that every sign-in flow is compatible.
+
+The patch sets also remove Safe Browsing malware/download reputation checks,
+automatic extension updates, browser Google account synchronization, and
+Google-backed Web Push. Third-party cookie restrictions and disabled FedCM can
+affect federated sign-in. The current ungoogled download patch also removes
+macOS quarantine metadata. These are retained source-policy tradeoffs, not
+just telemetry removal.
+
 ## Anonymous diagnostics
 
 On the first normal startup, REL asks whether to share anonymous app usage and
@@ -71,13 +88,16 @@ Identity is configured per Session; there is no app-wide identity setting.
 Saving an identity change closes and recreates only that Session's Chromium
 context, then returns it to the same page. Choose Native Chromium to remove the
 profile and use the embedded Chromium runtime without identity overrides.
+Native Chromium uses the same patched privacy layer. Its WebRTC default also
+restricts non-proxied UDP connections.
 
 Compatibility profiles keep the selected browser, platform, locale, time zone,
 hardware, screen, graphics, storage, and network claims coherent. REL applies
-small deterministic changes to copied Canvas, WebGL, and Web Audio readbacks so
-two Sessions use different values while one Session stays stable. Text and
-element geometry remains native so clicks, accessibility bounds, and
-screenshots keep matching the page. A profiled Session reports WebGPU as
+small deterministic changes to Canvas, WebGL, and Web Audio readbacks so two
+Sessions use different values while one Session stays stable. AudioBuffer
+exposes live sample arrays, so its small sample changes can also affect later
+playback. Text and element geometry remains native so clicks, accessibility
+bounds, and screenshots keep matching the page. A profiled Session reports WebGPU as
 unavailable rather than exposing native graphics details that contradict its
 profile. Font enumeration and other unlisted surfaces remain native.
 
