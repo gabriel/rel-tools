@@ -86,6 +86,10 @@ Custom defaults when none is set. You can change AdBlock, image blocking, Proxy,
 and Browser Identity afterward. Changing Browser Identity reopens the session.
 Browser data is copied or imported rather than switched as a setting.
 
+The toolbar **(+) → New Session from Profile** submenu lists saved Profiles.
+Selecting a Profile creates a session immediately with its settings and browser
+data. The submenu appears only when saved Profiles exist.
+
 Use **File → Create Session from Profile** (Option-Command-T) to choose settings
 before creation or copy a saved Profile’s browser data. This form starts with
 **Custom** and shows the Profile picker only
