@@ -497,3 +497,10 @@ let request = ProxyUpdateRequest {
 ```
 
 `ProxyTls::System` clears added roots, and `ProxyTls::BrightData` uses REL's bundled root for `brd.superproxy.io:44445`. `None` preserves trust on update and selects system trust on create. Proxy responses include the selected `tls` configuration. All certificate validation and session scoping is performed by the agent and embedded browser.
+
+### Database recovery status
+
+`Health.database_recovery` is an optional `DatabaseRecoverySummary`. It preserves
+the schema version, original backup and report paths, recovery item count, and
+retained session count. Older agents may omit it. See the [health contract](RPC.md#health)
+and [app recovery guide](APP.md#database-migration-and-recovery) for semantics.

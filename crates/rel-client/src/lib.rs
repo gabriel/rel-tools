@@ -2540,6 +2540,17 @@ pub struct Health {
     pub browser_proxy_port: u16,
     pub build: Option<BuildIdentity>,
     pub worker: Worker,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub database_recovery: Option<DatabaseRecoverySummary>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct DatabaseRecoverySummary {
+    pub schema_version: u32,
+    pub backup_path: String,
+    pub report_path: String,
+    pub issue_count: u64,
+    pub retained_sessions: u64,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -3909,5 +3920,26 @@ mod tests {
             serde_json::from_str::<Value>(&requests[0].body).unwrap(),
             json!({"url":"example.com"})
         );
+    }
+}
+
+#[cfg(test)]
+mod database_recovery_tests {
+    use super::*;
+
+    #[test]
+    fn health_preserves_recovery_summary_and_accepts_older_agents() {
+        let mut json = serde_json::json!({
+            "version": "0.1.39", "pid": 42, "browser_proxy_port": 17400,
+            "build": null, "worker": {"state": "idle"}
+        });
+        let legacy: Health = serde_json::from_value(json.clone()).unwrap();
+        assert!(legacy.database_recovery.is_none());
+        json["database_recovery"] = serde_json::json!({
+            "schema_version": 14, "backup_path": "/tmp/original.sqlite3",
+            "report_path": "/tmp/report.json", "issue_count": 1, "retained_sessions": 2
+        });
+        let health: Health = serde_json::from_value(json.clone()).unwrap();
+        assert_eq!(serde_json::to_value(health).unwrap(), json);
     }
 }
