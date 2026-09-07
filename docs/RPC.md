@@ -265,7 +265,7 @@ Check IDs are `rel_app`, `agent`, `browser_proxy`, and `chromium_bridge`.
 ### `GET /v1/notifications`
 
 Returns up to 256 notifications displayed since the supervised agent started.
-REL only adds events while **Settings → General → Send notifications to the
+REL only adds events while **Settings → Notifications → Send notifications to the
 agent** is enabled; the setting is off by default. Reading the queue does not
 remove entries, wake an agent, or start a model turn.
 
