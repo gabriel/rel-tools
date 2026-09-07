@@ -21,6 +21,22 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## Session and workspace errors
+
+Click the warning icon in the main toolbar to open **Session and Workspace
+Errors**. The sheet shows session and workspace persistence errors separately,
+with scrollable, selectable details. **Copy Details** copies both error messages.
+
+For session errors, use **Refresh Sessions** to reload the session list, then
+retry the failed action. **Open Settings** lets you review session limits and
+the default Profile. Refresh is available while the local agent is running and
+no session refresh or save is in progress.
+
+For workspace persistence errors, **Save Current Workspace** retries saving the
+current tabs and layout for the next launch. It writes the current workspace;
+it does not restore a previous layout. If the save fails, the sheet keeps the
+error visible. **Report a Bug** opens the report form for further help.
+
 ## Anonymous diagnostics
 
 On the first normal startup, REL asks whether to share anonymous app usage and
