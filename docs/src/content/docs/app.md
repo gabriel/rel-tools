@@ -32,6 +32,11 @@ Custom Profiles can also use a configured proxy and imported cookies or password
 list includes a **Session Identity** column showing Full Privacy, Custom Privacy,
 or Native.
 
+In **New Profile**, choose **Proxy → New Proxy…** to add a proxy without leaving
+the profile draft. Saving selects the new proxy automatically. Cancelling returns
+to the draft without changing its proxy selection. A saved proxy remains available
+in Proxies even if you later cancel the profile.
+
 Choose **Settings → General → Default Profile** to select the template used
 when a new Session does not specify one. The default is **Private** when no
 preference is set. The app, CLI, SDK, MCP, and Python clients all follow this
@@ -47,8 +52,13 @@ New Sessions copy the selected Profile's **Session Identity**. Private, AdBlock,
 BandwidthSaver, and new Profile drafts use **Full Privacy**, which enables all
 seven supported privacy controls. **Show** beside its value opens a read-only popover without
 expanding the surrounding form. In Profile forms, Session Identity is in the
-main section. **Custom Privacy** exposes individual settings and toggles;
-**Native** uses Chromium's native values. The **Native Chromium** built-in
+main section. Choose **New Session Identity…** in its dropdown to customize the
+current settings in a separate editor. **Use Identity** applies them to the draft
+as **Custom Privacy**; **Cancel** leaves the previous identity unchanged. These
+settings are saved with the Profile. Use **Edit** beside Custom Privacy to change
+them later. Starting from **Native** leaves every override off, so you can enable
+only the controls you need. **Native** uses Chromium's native values. The
+**Native Chromium** built-in
 selects Native identity, a direct connection, and no network filters. It can
 also be chosen as the Default Profile.
 

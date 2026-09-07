@@ -969,6 +969,9 @@ by default in profiles, identity editors, and session information. Choose
 **Show** beside the mode value to open a popover without expanding the parent
 layout. The **Session Identity** row belongs to the main Profile section.
 Choose **Custom Privacy** to edit individual values and toggles in compact rows.
+Profile forms open those settings in a separate editor; **New Session Identity…**
+starts from the current identity and **Use Identity** applies the custom settings
+to the Profile draft.
 The shared device preset appears once, info buttons explain linked settings,
 and the readback seed is in an expandable section. **Native** turns off all
 controls. User-Agent and client hints remain native in every mode.
