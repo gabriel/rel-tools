@@ -40,6 +40,11 @@ current tabs and layout for the next launch. It writes the current workspace;
 it does not restore a previous layout. If the save fails, the sheet keeps the
 error visible. **Report a Bug** opens the report form for further help.
 
+In Debug builds, **Debug → Error Recovery** can trigger a session error, a
+workspace error, or both. These simulated errors appear in the same toolbar
+warning and details sheet without changing sessions, files, or permissions.
+Use **Refresh Sessions** and **Save Current Workspace** to exercise recovery.
+
 ## Anonymous diagnostics
 
 On the first normal startup, REL asks whether to share anonymous app usage and
