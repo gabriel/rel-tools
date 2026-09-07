@@ -132,8 +132,12 @@ native language and locale regardless of proxy settings.
 
 Privacy controls cover graphics, audio, device surfaces, language and locale,
 time zone, network information, and the CPU thread count reported to pages.
-User-Agent and client hints remain native in every mode. Graphics protection
-changes Canvas and WebGL readbacks together with the graphics identity and
+Chromium generates the User-Agent in every mode with its product version reduced
+to `MAJOR.0.0.0` (for example, `Chrome/152.0.0.0`). The engine supplies its native
+brand list and client hints; these are not editable. High-entropy client hints
+can still expose the engine’s full version when requested by a site.
+
+Graphics protection changes Canvas and WebGL readbacks together with the graphics identity and
 makes WebGPU unavailable. Text geometry, native input, and other unlisted
 surfaces remain native.
 

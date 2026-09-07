@@ -974,8 +974,8 @@ Set `locale_mode` explicitly when writing new fingerprints. Resolution is shared
 by app, CLI, SDK, MCP, and restored sessions when their Chromium contexts are
 prepared. Proxy routing, data, and the remaining privacy controls are unchanged.
 
-Browser identity overrides have been removed. Chromium supplies the native
-User-Agent, navigator platform, and client hints for every session, including
+Browser identity overrides have been removed. Chromium generates the User-Agent
+with a reduced product version and supplies native platform and client hints for every session, including
 legacy full profiles. The retired `identity` selection is accepted only to read
 old profiles and is removed during normalization. Stored browser identity fields
 remain required for the existing schema but do not override browser identity.
@@ -996,7 +996,10 @@ starts from the current identity and **Use Identity** applies the custom setting
 to the Profile draft.
 The shared device preset appears once, info buttons explain linked settings,
 and the readback seed is in an expandable section. **Native** turns off all
-controls. User-Agent and client hints remain native in every mode.
+controls. Chromium generates the User-Agent with the product version reduced to
+`MAJOR.0.0.0` in every mode. Native branding and client hints remain engine-owned
+and are not editable. High-entropy client hints can still expose the full engine
+version when requested by a site.
 
 Custom Privacy saves an explicit `overrides` list, including when all seven
 controls are enabled or all are disabled. It therefore reopens as Custom.
