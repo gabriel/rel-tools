@@ -988,10 +988,10 @@ export/import. Missing lists in older profiles enable the remaining supported ov
 New profile drafts and the three privacy built-ins use **Full Privacy**,
 with all seven supported controls enabled. Its read-only details are hidden
 by default in profiles, identity editors, and session information. Choose
-**Show** beside the mode value to open a popover without expanding the parent
-layout. The **Session Identity** row belongs to the main Profile section.
+**Show** to the left of the mode value to open a popover without expanding the parent
+layout. The **Browser Identity** row belongs to the main Profile section.
 Choose **Custom Privacy** to edit individual values and toggles in compact rows.
-Profile forms open those settings in a separate editor; **New Session Identity…**
+Profile forms open those settings in a separate editor; **New Browser Identity…**
 starts from the current identity and **Use Identity** applies the custom settings
 to the Profile draft.
 The shared device preset appears once, info buttons explain linked settings,

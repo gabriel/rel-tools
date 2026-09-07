@@ -70,7 +70,7 @@ template; later Profile changes do not modify existing Sessions.
 Manage templates in **REL → Settings… → Profiles**. The built-in Private,
 AdBlock, BandwidthSaver, and Native Chromium Profiles are always available.
 Custom Profiles can also use a configured proxy and imported cookies or passwords. The Profiles
-list includes a **Session Identity** column showing Full Privacy, Custom Privacy,
+list includes a **Browser Identity** column showing Full Privacy, Custom Privacy,
 or Native.
 
 In **New Profile**, choose **Proxy → New Proxy…** to add a proxy without leaving
@@ -86,14 +86,20 @@ keeps it selected; deleting it requires selecting another default. Changing
 the preference restarts the local agent and preserves existing Sessions.
 Choosing **Custom** in session creation uses the form’s explicit settings and
 browser-data selection; **None** does not inherit another Profile’s browser data.
+Create Session keeps Profile, Browser Identity, and AdBlock in the main section.
+**Advanced** is collapsed when the sheet opens and contains Proxy, Image Blocking,
+and Browser Data. Custom sessions start with **Allow all images**; selecting a
+saved Profile retains that Profile's image filter. For Custom sessions, expand Advanced and choose
+**Proxy → New Proxy…** to create and automatically select a proxy while preserving
+the session draft. Cancelling the proxy editor leaves the selection unchanged.
 
-## Session identity
+## Browser identity
 
-New Sessions copy the selected Profile's **Session Identity**. Private, AdBlock,
+New Sessions copy the selected Profile's **Browser Identity**. Private, AdBlock,
 BandwidthSaver, and new Profile drafts use **Full Privacy**, which enables all
-seven supported privacy controls. **Show** beside its value opens a read-only popover without
-expanding the surrounding form. In Profile forms, Session Identity is in the
-main section. Choose **New Session Identity…** in its dropdown to customize the
+seven supported privacy controls. **Show** to the left of its value opens a read-only popover without
+expanding the surrounding form. In Profile forms, Browser Identity is in the
+main section. Choose **New Browser Identity…** in its dropdown to customize the
 current settings in a separate editor. **Use Identity** applies them to the draft
 as **Custom Privacy**; **Cancel** leaves the previous identity unchanged. These
 settings are saved with the Profile. Use **Edit** beside Custom Privacy to change
