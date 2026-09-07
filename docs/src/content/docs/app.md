@@ -80,9 +80,26 @@ the latest requested URL.
 If AdBlock blocks the main page, REL shows **This Page Was Blocked** with the
 requested URL and a filter explanation. Check **AdBlock** in the Session's
 **Filters** panel before trying again; retrying with the same blocking rule still
-blocks the page. This can also happen to a proxy test URL, independently of the
-proxy connection. Blocked scripts, images, or embedded frames remain filter log
+blocks the page. Blocked scripts, images, or embedded frames remain filter log
 events and do not mark the main page as failed.
+
+### Proxy-provider AdBlock exclusions
+
+In Sessions using a proxy, REL excludes known proxy-provider destinations and
+their subdomains from AdBlock by default, including provider websites, APIs, gateways, and diagnostic URLs.
+The maintained list covers Bright Data/Luminati, Oxylabs, Decodo/Smartproxy,
+IPRoyal, Webshare, SOAX, and Rayobyte. For example, `geo.brdtest.com`,
+`ip.oxylabs.io`, and `ip.decodo.com` can load with AdBlock enabled.
+
+These exclusions apply only while a Session has a proxy configured, to main
+pages and subresources, with cached or newly downloaded rules. Direct Sessions
+use normal AdBlock rules. Removing a Session's proxy restores normal filtering;
+assigning a proxy enables the exclusions again. Image blocking and image
+size limits still apply. Unrelated requests from provider pages remain subject
+to AdBlock, as do ordinary destinations reached through a proxy.
+
+The provider-domain list is maintained with REL app updates. It does not discover every proxy domain
+automatically; new provider domains need to be added to that list.
 
 ## Session logs
 
