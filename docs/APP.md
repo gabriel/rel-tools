@@ -407,6 +407,13 @@ model answers from collected evidence or explains the limitation. When an
 exhaustive request exceeds a page or tool output bound, the response summarizes
 the available evidence and states what was omitted.
 
+## Reading chat history
+
+Chat follows new messages and activity while you are near the bottom. Scroll up
+to read earlier messages without being pulled back down. Choose **Jump to latest**
+to return to the newest content and resume following, or scroll back near the
+bottom yourself.
+
 ## Agent instructions and current-page context
 
 Open **REL → Settings… → Agent** to edit the system prompt used by native Chat.
