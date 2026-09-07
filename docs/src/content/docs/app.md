@@ -35,15 +35,65 @@ retry the failed action. **Open Settings** lets you review session limits and
 the default Profile. Refresh is available while the local agent is running and
 no session refresh or save is in progress.
 
-For workspace persistence errors, **Save Current Workspace** retries saving the
-current tabs and layout for the next launch. It writes the current workspace;
-it does not restore a previous layout. If the save fails, the sheet keeps the
-error visible. **Report a Bug** opens the report form for further help.
+**Save Current Workspace** requests a save of the current tabs and layout for
+the next launch; it does not restore a previous layout. After a real workspace
+save failure, REL keeps the error visible and blocks further writes until you
+restart. The button cannot bypass that protection. **Report a Bug** opens the
+report form for further help.
 
 In Debug builds, **Debug → Error Recovery** can trigger a session error, a
 workspace error, or both. These simulated errors appear in the same toolbar
 warning and details sheet without changing sessions, files, or permissions.
 Use **Refresh Sessions** and **Save Current Workspace** to exercise recovery.
+
+## Database migration and recovery
+
+REL validates its local database before starting normal service. Supported
+schema versions 3 through 14 are upgraded to schema 14. Before any upgrade or
+repair, REL creates a consistent SQLite snapshot including committed WAL data
+under `Data/Recovery/<run-id>/original.sqlite3` in its Application Support
+folder. Debug builds use their isolated worktree Application Support folder.
+Legacy root-level databases and schemas older than version 3 are not imported.
+
+Migration runs against a separate candidate. If a supported migration or data
+validation fails, REL rebuilds the current schema and copies valid records.
+Invalid optional descriptive metadata can be cleared independently. Records
+that cannot be converted safely remain in the original snapshot and are omitted
+from the active database. Sessions and Profiles referencing an unrecoverable
+proxy are withheld as well; recovery never changes that assignment to a direct
+connection. Invalid fingerprint settings withhold the affected record rather
+than silently changing its browser identity. Valid sessions remain available.
+
+REL checks types, application decoding, schema structure, and references before
+committing the candidate. Activation is one SQLite transaction: interruption
+leaves the original database or the complete upgraded database. A concurrent
+writer causes recovery to stop so its changes are not overwritten. Restarting
+retries from the current data. A successful recovery is not repeated on every
+launch.
+
+When records or fields need review, REL displays a recovery notice. Choose
+**Show Report**, or **Settings → Service → Show Recovery Report**, to locate
+`report.json`. It lists retained counts and affected tables, record IDs, fields,
+and reasons. Original values remain in the snapshot. The database's recovery
+history identifies committed runs; a folder left by an interrupted attempt is
+not proof that its candidate was activated. Recovery does not access or export
+Keychain credentials.
+
+Chromium session folders, cookies, and saved logins are preserved. A durable
+`Data/Recovery/preserve-browser-storage` marker prevents automatic orphan-folder
+cleanup after recovery, including on subsequent launches. Existing session IDs
+are reserved so new sessions cannot inherit withheld sessions' storage. Keep the
+marker and original snapshot while reviewing recovery. Quarantined records are
+not automatically restored; use the original snapshot for diagnosis and careful
+repair. Recovery does not manufacture missing records or browser data.
+
+Storage, permission, locking, unreadable database pages, and backup failures
+stop recovery without resetting the database. A database from a newer REL build
+requires updating REL and is never downgraded. The app remains open with the
+service error and **Retry Local Service**. Correct the reported condition and
+retry. The service only becomes ready after validation; the supervisor allows
+startup backup and recovery to finish instead of restarting them after its
+normal health-poll threshold.
 
 ## Anonymous diagnostics
 
@@ -204,6 +254,22 @@ must leave through another route. Proxied Sessions prevent WebRTC from using a
 non-proxied UDP route, but REL does not turn a direct Session into a VPN.
 
 ## Navigation errors and retry
+
+Navigation failures show a readable explanation and retain the original source
+error. Proxy tunnel failures include the proxy name, upstream HTTP status line,
+and available provider diagnostics such as `Proxy-Status` and Bright Data error
+codes. For example, Bright Data's `403` / `policy_20000` restriction appears with
+the provider's access-denied explanation instead of only Chromium's generic
+connection error. Check the provider's policy or configuration before retrying
+a persistent rejection.
+
+Expand **Technical Details** for long diagnostics, or use **Copy Details** to
+copy the explanation, full retained diagnostics, Chromium error, and requested
+URL. Short errors are shown directly. Details remain selectable and the page
+scrolls when needed. Credentials, authentication challenges, and cookies are
+excluded from proxy diagnostics; retained text is bounded to 8,192 characters
+with a truncation marker. Website-generated HTTP error documents remain visible
+rather than being replaced by REL's failure page.
 
 Submitting an address immediately makes it the Session's active URL. If the
 page or proxy fails, the address field, Application panel, and **Try Again**
@@ -367,11 +433,18 @@ transfers are not supported.
 
 ## AI models
 
+When Chat has no available model, select **Add Provider** in the empty state
+or chat input to open the Add Provider form directly. Cancel returns to Chat.
+
 Configure providers and choose the default AI model in **REL → Settings… →
 Providers**. API keys are stored in macOS Keychain. Ollama connections can use
 the local server at `http://127.0.0.1:11434` without an API key. Scheduled
 prompts use the default provider and model when their new Session starts. REL
 Free supports one configured provider; REL Pro supports multiple providers.
+
+The Chat model picker uses the provider's display name when available, or the
+exact model ID when no display name is supplied. This also applies to newly
+discovered models. API requests always use the model ID.
 
 Each Chat response stops after 12 model calls or a 64,000-token request budget.
 REL uses the preceding model call's reported usage to avoid starting a call
@@ -381,6 +454,13 @@ argument set, REL removes browser tools for the rest of that response so the
 model answers from collected evidence or explains the limitation. When an
 exhaustive request exceeds a page or tool output bound, the response summarizes
 the available evidence and states what was omitted.
+
+## Reading chat history
+
+Chat follows new messages and activity while you are near the bottom. Scroll up
+to read earlier messages without being pulled back down. Choose **Jump to latest**
+to return to the newest content and resume following, or scroll back near the
+bottom yourself.
 
 ## Agent instructions and current-page context
 
@@ -423,6 +503,20 @@ Use **Run Now** to execute a schedule immediately without changing its next
 repeating run. Disable a row to pause it without deleting its configuration.
 If its Profile is later deleted, REL marks the Profile as missing and the
 schedule cannot run until it is edited to select an available Profile.
+
+## Notifications
+
+Open **REL → Settings… → Notifications** in the Browser section to control
+**Send notifications to the agent** and inspect recent shared website notifications.
+Sharing is off by default. Websites must first receive permission to send
+notifications. Shared content is untrusted website data and never starts an agent turn.
+
+The page refreshes automatically and shows up to 256 shared notifications, newest
+first, with each notification's origin, title, body, session ID, and display time.
+The Recent section appears only when shared notifications are available.
+Turning sharing off stops new entries; existing entries remain until the local
+agent restarts. The queue is not a permanent notification archive. Debug runtimes
+with website notifications disabled show that status on the page.
 
 ## Webhooks
 
