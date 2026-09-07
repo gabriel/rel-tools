@@ -21,6 +21,28 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## Session and workspace errors
+
+Click the warning icon in the main toolbar to open **Session and Workspace
+Errors**. The sheet shows session and workspace persistence errors separately,
+with scrollable, selectable details. **Copy Details** copies both error messages.
+
+For session errors, use **Refresh Sessions** to reload the session list, then
+retry the failed action. **Open Settings** lets you review session limits and
+the default Profile. Refresh is available while the local agent is running and
+no session refresh or save is in progress.
+
+**Save Current Workspace** requests a save of the current tabs and layout for
+the next launch; it does not restore a previous layout. After a real workspace
+save failure, REL keeps the error visible and blocks further writes until you
+restart. The button cannot bypass that protection. **Report a Bug** opens the
+report form for further help.
+
+In Debug builds, **Debug → Error Recovery** can trigger a session error, a
+workspace error, or both. These simulated errors appear in the same toolbar
+warning and details sheet without changing sessions, files, or permissions.
+Use **Refresh Sessions** and **Save Current Workspace** to exercise recovery.
+
 ## Keeping and deleting Sessions
 
 Close the REL window or quit REL to keep Sessions and their saved logins for
