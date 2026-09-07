@@ -115,6 +115,18 @@ that error is returned. This also applies to browser capture and page-creation
 navigation. The error details contain the final `url` and exact
 `target_http_status`; the navigated session remains selected.
 
+For a failed proxy connection, the error `message` retains the available
+upstream cause along with Chromium's error. Its `details` also include
+`error_source: "proxy"`, `proxy_alias`, and `source_error`. Rejected HTTPS tunnels
+retain the upstream status line and supported provider diagnostic headers
+(`Proxy-Status`, Bright Data `x-brd-*`, and `x-luminati-error`). These describe the
+proxy response, not a target website response. Credentials and unrelated
+headers are excluded, and source text is bounded to 8,192 characters plus a
+truncation marker. Treat provider messages as untrusted diagnostic text.
+Diagnostics are scoped to the Session, proxy, destination authority, and current
+navigation attempt. These fields are absent when no matching proxy cause is
+available; the original Chromium error still remains in the message.
+
 ### Free and Pro access
 
 The running app selects the agent's access plan; RPC callers cannot override it.
@@ -213,7 +225,8 @@ HTTP 200 while the worker is ready or operating within its deadline:
       "commit": "deadbeef",
       "dirty": true
     },
-    "worker": { "state": "idle" }
+    "worker": { "state": "idle" },
+    "database_recovery": null
   }
 }
 ```
@@ -224,6 +237,20 @@ were not launched from a metadata-bearing app bundle. Worker state is
 violation or failed worker returns `AGENT_UNHEALTHY`, with the worker
 snapshot in `error.details.worker`. Health deadlines diagnose stalls; they do not
 cancel the active request.
+
+`database_recovery` is `null` when no committed database upgrade/recovery report
+exists. Otherwise it contains `schema_version` (integer), `backup_path` and
+`report_path` (local absolute paths), `issue_count` (number of reported repair or
+quarantine items, not necessarily distinct records), and `retained_sessions`
+(number of sessions retained at recovery time). The most recent report with
+issues remains visible across restarts and later successful upgrades; when
+there are no such reports, the latest upgrade report is returned. Paths point
+to the agent host, not to a remote client. See [database recovery](APP.md#database-migration-and-recovery)
+for backup, quarantine, and failure behavior.
+
+The health endpoint is not ready during startup migration. Successful health
+means schema and data validation completed; it does not mean every original
+record could be recovered.
 
 ### `GET /v1/status`
 
@@ -265,7 +292,7 @@ Check IDs are `rel_app`, `agent`, `browser_proxy`, and `chromium_bridge`.
 ### `GET /v1/notifications`
 
 Returns up to 256 notifications displayed since the supervised agent started.
-REL only adds events while **Settings → General → Send notifications to the
+REL only adds events while **Settings → Notifications → Send notifications to the
 agent** is enabled; the setting is off by default. Reading the queue does not
 remove entries, wake an agent, or start a model turn.
 
