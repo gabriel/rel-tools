@@ -823,10 +823,11 @@ shared by any number of sessions.
 
 ## Profiles
 
-Profiles are named templates copied into future sessions. The three generated
+Profiles are named templates copied into future sessions. The four generated
 built-ins are **Private** (direct connection, filters off), **AdBlock**
-(AdBlock on), and **BandwidthSaver** (AdBlock on and images larger than 10 kB
-blocked). A profile resource is:
+(AdBlock on), **BandwidthSaver** (AdBlock on and images larger than 10 kB
+blocked), and **Native Chromium** (direct connection, filters off, native
+identity). A profile resource is:
 
 ```json
 {
@@ -907,6 +908,10 @@ or identity. A custom profile already named Private is preserved as
 **Private (custom)**, using a numbered suffix if necessary. Its ID and data stay
 unchanged. New requests must use the current profile name.
 
+Adding the Native Chromium built-in preserves an existing custom profile with
+that name as **Native Chromium (custom)**, with a numbered suffix if needed.
+Its ID, copied session identities, and browser data are preserved.
+
 Profile names contain 1–128 non-control characters after trimming and are the
 selector used during session creation. On `POST /v1/sessions`, omission selects
 the **Default Profile** configured in **Settings → General**, or **Private**
@@ -925,8 +930,10 @@ app-owned template without changing sessions already created from it.
 
 The fingerprint object is an identity template. Every session creation path
 copies the selected profile through the agent. It preserves the template settings and generates a fresh
-seed before the session's Chromium context is used. The built-in profiles use
-the Full Privacy preset by default. New profiles also use it when
+seed before the session's Chromium context is used. Private, AdBlock, and
+BandwidthSaver use the Full Privacy preset. Native Chromium has stable ID
+`builtin-native-chromium` and `fingerprint_profile: null`, so sessions created
+from it use native identity without a seed. New profiles use Full Privacy when
 `fingerprint_profile` is omitted; explicit null keeps native values.
 
 Fingerprint profiles also accept an optional `overrides` array. Omit the field
@@ -956,7 +963,7 @@ For example, add `"overrides": ["timezone"]` to a valid profile with
 non-array values are rejected. Saving the profile preserves this list through
 export/import. Missing lists in older profiles enable the remaining supported overrides.
 
-New profile drafts and built-in profiles use **Full Privacy**,
+New profile drafts and the three privacy built-ins use **Full Privacy**,
 with all seven supported controls enabled. Its read-only details are hidden
 by default in profiles, identity editors, and session information. Choose
 **Show** beside the mode value to open a popover without expanding the parent

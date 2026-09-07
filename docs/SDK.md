@@ -387,7 +387,7 @@ update.
 
 `SessionCreateRequest::default()` serializes to `{}`, so the agent copies the
 configured **Default Profile**, or **Private** when the preference is unset. Set `profile` to select **AdBlock**,
-**BandwidthSaver**, or a case-insensitively unique custom name. Explicit proxy
+**BandwidthSaver**, **Native Chromium**, or a case-insensitively unique custom name. Explicit proxy
 and filtering fields override the selected profile; use
 `Change::Set("alias".into())` for a proxy or `Change::Clear` for direct
 networking:
@@ -422,7 +422,8 @@ persistent Session and one custom Profile; REL Pro removes those limits.
 the default compatibility template, `Change::Clear` for native Chromium, and
 `Change::Set(profile)` for explicit identity settings. REL.app preserves those
 settings but generates a fresh seed whenever it creates a session from the
-profile. The three built-in profiles use the compatibility template.
+profile. Private, AdBlock, and BandwidthSaver use Full Privacy. The Native Chromium
+built-in has no identity template and creates sessions with native values.
 
 `Session::profile` exposes the source profile name and
 `Session::profile_data_id` identifies the custom browser-data template copied

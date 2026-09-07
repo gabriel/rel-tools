@@ -27,8 +27,10 @@ Session is created. A **Session** is the persistent browser created from that
 template; later Profile changes do not modify existing Sessions.
 
 Manage templates in **REL → Settings… → Profiles**. The built-in Private,
-AdBlock, and BandwidthSaver Profiles are always available. Custom Profiles can
-also use a configured proxy and imported cookies or passwords.
+AdBlock, BandwidthSaver, and Native Chromium Profiles are always available.
+Custom Profiles can also use a configured proxy and imported cookies or passwords. The Profiles
+list includes a **Session Identity** column showing Full Privacy, Custom Privacy,
+or Native.
 
 Choose **Settings → General → Default Profile** to select the template used
 when a new Session does not specify one. The default is **Private** when no
@@ -41,15 +43,17 @@ browser-data selection; **None** does not inherit another Profile’s browser da
 
 ## Session identity
 
-New Sessions copy the selected Profile's **Session Identity**. Built-in Profiles
-and new Profile drafts use **Full Privacy**, which enables all seven supported
-privacy controls. **Show** beside its value opens a read-only popover without
+New Sessions copy the selected Profile's **Session Identity**. Private, AdBlock,
+BandwidthSaver, and new Profile drafts use **Full Privacy**, which enables all
+seven supported privacy controls. **Show** beside its value opens a read-only popover without
 expanding the surrounding form. In Profile forms, Session Identity is in the
 main section. **Custom Privacy** exposes individual settings and toggles;
-**Native** uses Chromium's native values.
+**Native** uses Chromium's native values. The **Native Chromium** built-in
+selects Native identity, a direct connection, and no network filters. It can
+also be chosen as the Default Profile.
 
-Every creation path generates a fresh numeric readback seed for the Session,
-then keeps it stable for that Session. Profile edits apply to future Sessions.
+For identities with overrides, every creation path generates a fresh numeric
+readback seed for the Session, then keeps it stable for that Session. Profile edits apply to future Sessions.
 Use a Session's tab menu to change its identity; saving recreates only that
 Session's Chromium context and returns it to the same page.
 
