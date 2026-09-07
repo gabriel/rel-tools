@@ -1010,6 +1010,18 @@ class RelCrawlerTests(unittest.TestCase):
         self.assertNotEqual(first.session_id, second.session_id)
         self.assertEqual(self.client.created_profiles, ["Private", "oxylabs"])
 
+    def test_unspecified_profile_reuses_managed_session_with_named_profile(self) -> None:
+        processed: list[CapturedPage] = []
+        definition = self.definition(processed)
+
+        first = self.crawler(definition).run()
+        self.client.profile = "Research"
+        second = self.crawler(definition).run()
+
+        self.assertEqual(first.session_id, second.session_id)
+        self.assertEqual(self.client.created_profiles, [None])
+        self.assertEqual(self.client.deleted, [])
+
     def test_existing_checkpoint_gains_session_tracking_fields(self) -> None:
         processed: list[CapturedPage] = []
         self.crawler(self.definition(processed), max_links=1).run()

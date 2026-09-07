@@ -7,17 +7,61 @@ The macOS app owns REL's embedded Chromium runtime, persistent Sessions, browser
 Profiles, and AI chat. Keep REL running whenever local clients or scheduled
 prompts need to use it.
 
+REL's embedded browser includes the Clark Browser and ungoogled-Chromium patch
+sets. The privacy layer removes built-in Google service integrations and
+blocks substituted background-service destinations. Websites you visit can
+still load Google resources, and you can open Google pages explicitly.
+
+REL configures Sessions to retain cookies, site storage, and saved logins when
+it quits. The privacy layer does not enable automatic clearing on exit. This
+preserves website login state; it does not enable Chromium's password manager
+or guarantee that every sign-in flow is compatible.
+
+The patch sets also remove Safe Browsing malware/download reputation checks,
+automatic extension updates, browser Google account synchronization, and
+Google-backed Web Push. Third-party cookie restrictions and disabled FedCM can
+affect federated sign-in. The current ungoogled download patch also removes
+macOS quarantine metadata. These are retained source-policy tradeoffs, not
+just telemetry removal.
+
+## Anonymous diagnostics
+
+On the first normal startup, REL asks whether to share anonymous app usage and
+reliability events. Diagnostics remain off unless you select **Share
+Diagnostics**. You can change the choice later under **REL → Settings… →
+General → Diagnostics**.
+
+The fixed event schema includes app and macOS versions, launch and update
+outcomes, agent availability, and the number of open Sessions. Events use a
+random identifier that lasts only for the current app launch. They do not
+include an account or persistent installation ID, URLs, page content, prompts,
+Profile names, credentials, or local logs. Delivery is best effort and failed
+events are not stored for retry.
+
 ## Free and Pro
 
 REL Free does not require registration. It includes one Session at a time, one
 scheduled prompt, one custom Profile, and one configured AI model provider.
 Proxies cannot be created, configured, assigned, or used on the Free plan.
 
-Register a REL Pro license in **REL → Settings… → Plan** to use proxies and
-remove those limits. If Pro registration expires or is removed, REL preserves
-existing Sessions and configuration instead of deleting them. Free prevents
-additional creation beyond its limits, and any stored proxy assignment runs as
-a direct connection until Pro access is restored.
+REL Pro costs $20 as a single upfront payment for one year of access. It does
+not renew automatically. Register the license in **REL → Settings… → Plan** to
+use proxies and remove the Free plan limits. If Pro registration expires or is
+removed, REL preserves existing Sessions and configuration instead of deleting
+them. Free prevents additional creation beyond its limits, and any stored proxy
+assignment runs as a direct connection until Pro access is restored.
+
+You can also enter a `REL-PRO-...` promo code in the same Plan field when one
+has been provided to you. Promo codes grant one, two, or three calendar months
+of REL Pro without a checkout or payment method. Each trial can be redeemed on
+one REL installation, and a campaign code stops working after its configured
+number of redemptions.
+
+REL displays the trial end date in Plan settings. It checks the grant with REL
+at most once per day and supports up to seven days offline, without extending
+access beyond that end date. At expiry, REL automatically returns to Free and
+keeps existing Sessions and configuration under the Free plan limits described
+above.
 
 ## Profiles and Sessions
 
@@ -73,6 +117,10 @@ User-Agent and client hints remain native in every mode. Graphics protection
 changes Canvas and WebGL readbacks together with the graphics identity and
 makes WebGPU unavailable. Text geometry, native input, and other unlisted
 surfaces remain native.
+
+Native Chromium uses the same patched privacy layer. Its WebRTC default also
+restricts non-proxied UDP connections. Audio protection makes small changes to
+AudioBuffer's live sample arrays, which can also affect later playback.
 
 An identity profile is a compatibility tool, not an anonymity guarantee. Its
 seed is stable across sites in that Session, so sites may still correlate
