@@ -358,6 +358,16 @@ model answers from collected evidence or explains the limitation. When an
 exhaustive request exceeds a page or tool output bound, the response summarizes
 the available evidence and states what was omitted.
 
+## Chat restoration
+
+REL saves each Session's open Chat tabs, their order and selection, conversation
+messages, completed-work details, and unsent drafts in its local workspace file.
+Quitting and reopening REL restores them. Completed question-and-answer exchanges
+are restored to the AI harness before you send a follow-up. An interrupted response
+is not resumed automatically; its submitted prompt remains visible in the chat.
+Closing a Chat tab removes its saved conversation and draft. Clearing a conversation
+removes its saved messages. Deleting a Session removes its saved chats.
+
 ## Agent instructions and current-page context
 
 Open **REL → Settings… → Agent** to edit the system prompt used by native Chat.
