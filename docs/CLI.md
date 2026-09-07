@@ -397,7 +397,7 @@ session assigned to `oxylabs`, then capturing with it. Its canonical ID is
 returned as `data.session_id` in the NDJSON capture events. Omitting `--proxy`
 uses the selected profile, or the configured default when `--profile` is
 omitted. Without a saved default, Custom uses direct networking, AdBlock on,
-all images allowed, and Full Privacy.
+all images allowed, and Private.
 For an existing session, omission preserves its current assignment; an explicit
 proxy updates the assignment.
 
@@ -634,7 +634,7 @@ rel proxy update office --tls system
 `proxy create` and `proxy update` accept `--locale BCP47`, for example
 `--locale fr-CA`, to configure the language/locale used by Automatic privacy
 settings for that proxy. `proxy update ALIAS --clear-locale` removes it; omission
-preserves it. Country settings alone never select a language. Full Privacy uses
+preserves it. Country settings alone never select a language. Private uses
 Automatic: an explicit Custom identity locale wins, then the proxy locale, then
 the macOS user's preferred/default locale. A value matching native Chromium
 requires no override.

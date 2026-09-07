@@ -72,7 +72,7 @@ template; later Profile changes do not modify existing Sessions.
 
 Manage saved configurations in **Profiles**. There are no built-in Profiles.
 Profiles can use a configured proxy and imported cookies or passwords. The Profiles
-list includes a **Browser Identity** column showing Full Privacy, Custom Privacy,
+list includes a **Browser Identity** column showing Private, Custom Privacy,
 or Native.
 
 In **New Profile**, choose **Proxy → New Proxy…** to add a proxy without leaving
@@ -92,7 +92,7 @@ and selects a proxy without losing the draft. Cancelling keeps the current selec
 
 **Settings → General → Default Profile** controls clients that omit a profile,
 including CLI, SDK, MCP, and Python. With no saved default, they use Custom:
-direct networking, AdBlock on, all images allowed, and Full Privacy. The creation
+direct networking, AdBlock on, all images allowed, and Private. The creation
 form uses its explicit settings and browser-data choice instead. **None** does
 not inherit another Profile’s browser data. Renaming a saved default preserves
 its selection; deleting it requires choosing another default or Custom.
@@ -105,7 +105,7 @@ requiring a saved Profile.
 ## Browser identity
 
 New Sessions use the form’s **Browser Identity**. New Custom configurations
-and Profile drafts use **Full Privacy**, which enables all
+and Profile drafts use **Private**, which enables all
 seven supported privacy controls. In Profile forms, **Show** to the left of its
 value opens a read-only popover without expanding the form. Create Session uses
 **Show Config** below the main section instead. In Profile forms, Browser Identity is in the
@@ -121,7 +121,7 @@ readback seed for the Session, then keeps it stable for that Session. Profile ed
 Use a Session's tab menu to change its identity; saving recreates only that
 Session's Chromium context and returns it to the same page.
 
-**Full Privacy** uses **Automatic** for language and locale. REL resolves an
+**Private** uses **Automatic** for language and locale. REL resolves an
 explicit Custom locale first, then the locale configured on the session's proxy,
 then the macOS user's preferred/default locale. It applies a language/locale
 override only when the resolved value differs from native Chromium. An enabled

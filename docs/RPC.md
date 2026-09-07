@@ -914,7 +914,7 @@ original data-preserving rename behavior.
 Profile names contain 1–128 non-control characters after trimming and are the
 selector used during session creation. On `POST /v1/sessions`, omission selects
 the **Default Profile** configured in **Settings → General**, or direct **Custom** settings
-when no preference is set (AdBlock on, all images allowed, Full Privacy). This applies to clients that omit the field. Create Session in the app
+when no preference is set (AdBlock on, all images allowed, Private). This applies to clients that omit the field. Create Session in the app
 starts with Custom and sends explicit settings. `profile:null` explicitly selects Custom without inheriting any saved profile
 or browser data. An explicit saved profile always takes precedence. The preference
 uses the stable profile ID, so renaming a custom profile preserves its selection.
@@ -931,7 +931,7 @@ app-owned template without changing sessions already created from it.
 The fingerprint object is an identity template. Every session creation path
 copies the selected profile through the agent. It preserves the template settings and generates a fresh
 seed before the session's Chromium context is used. New profiles and Custom
-sessions use Full Privacy when `fingerprint_profile` is omitted; explicit null
+sessions use Private when `fingerprint_profile` is omitted; explicit null
 keeps native values. `POST /v1/sessions` also accepts `fingerprint_profile` as a
 direct override of the selected configuration.
 
@@ -952,7 +952,7 @@ for later editing, but are not sent as browser overrides.
 | `graphics` | Linked Canvas/WebGL readbacks, WebGL identity/extensions, and unavailable WebGPU adapters |
 | `audio` | Audio readbacks using the profile's audio mode |
 
-`locale_mode` accepts `automatic` or `custom`. Full Privacy defaults to
+`locale_mode` accepts `automatic` or `custom`. Private defaults to
 `automatic`. Resolution uses an explicit Custom `locale` first, then the
 assigned proxy's configured `locale`, then the macOS user's preferred/default
 locale. In Automatic mode the required legacy `locale` field is stored but does
@@ -977,7 +977,7 @@ For example, add `"overrides": ["timezone"]` to a valid profile with
 non-array values are rejected. Saving the profile preserves this list through
 export/import. Missing lists in older profiles enable the remaining supported overrides.
 
-New profile drafts and Custom session defaults use **Full Privacy**,
+New profile drafts and Custom session defaults use **Private**,
 with all seven supported controls enabled. Its read-only details are hidden
 by default in profiles, identity editors, and session information. Choose
 **Show** to the left of the mode value to open a popover without expanding the parent
@@ -995,7 +995,7 @@ version when requested by a site.
 
 Custom Privacy saves an explicit `overrides` list, including when all seven
 controls are enabled or all are disabled. It therefore reopens as Custom.
-Full Privacy uses the omitted-list representation; selecting it resets custom
+Private uses the omitted-list representation; selecting it resets custom
 values to the standard full preset while retaining the session seed. Native
 saves a null fingerprint. Existing explicit choices and saved session-creation
 preferences are preserved. Saving recreates only the session's Chromium context.
