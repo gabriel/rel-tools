@@ -875,8 +875,9 @@ export/import. Missing lists in older profiles enable the remaining supported ov
 
 In the macOS app, new sessions and new profile drafts default to **Privacy
 controls**, with graphics and audio enabled and the remaining values native.
-Open **Privacy Controls** from the session tab menu. Each toggle reveals its
-settings directly below it, with labels above inputs. Choose **Native Chromium**
+Open **Privacy Controls** from the session tab menu. Each compact row places a label, value, and toggle alongside one another.
+The shared device preset appears once; info buttons explain linked settings,
+and the readback seed is in an expandable section. Choose **Native Chromium**
 to turn off all controls. Saved session-creation preferences and existing
 profiles retain their explicit choices. Resetting every
 control to native saves a null session fingerprint. Saving recreates only the
