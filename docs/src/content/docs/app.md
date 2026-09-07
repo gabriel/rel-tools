@@ -233,6 +233,22 @@ non-proxied UDP route, but REL does not turn a direct Session into a VPN.
 
 ## Navigation errors and retry
 
+Navigation failures show a readable explanation and retain the original source
+error. Proxy tunnel failures include the proxy name, upstream HTTP status line,
+and available provider diagnostics such as `Proxy-Status` and Bright Data error
+codes. For example, Bright Data's `403` / `policy_20000` restriction appears with
+the provider's access-denied explanation instead of only Chromium's generic
+connection error. Check the provider's policy or configuration before retrying
+a persistent rejection.
+
+Expand **Technical Details** for long diagnostics, or use **Copy Details** to
+copy the explanation, full retained diagnostics, Chromium error, and requested
+URL. Short errors are shown directly. Details remain selectable and the page
+scrolls when needed. Credentials, authentication challenges, and cookies are
+excluded from proxy diagnostics; retained text is bounded to 8,192 characters
+with a truncation marker. Website-generated HTTP error documents remain visible
+rather than being replaced by REL's failure page.
+
 Submitting an address immediately makes it the Session's active URL. If the
 page or proxy fails, the address field, Application panel, and **Try Again**
 button refer to that request. After submitting a different address, refresh
