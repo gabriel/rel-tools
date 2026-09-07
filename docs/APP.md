@@ -82,14 +82,16 @@ events and do not mark the main page as failed.
 
 ### Proxy-provider AdBlock exclusions
 
-REL excludes known proxy-provider destinations and their subdomains from AdBlock
-by default, including provider websites, APIs, gateways, and diagnostic URLs.
+In Sessions using a proxy, REL excludes known proxy-provider destinations and
+their subdomains from AdBlock by default, including provider websites, APIs, gateways, and diagnostic URLs.
 The maintained list covers Bright Data/Luminati, Oxylabs, Decodo/Smartproxy,
 IPRoyal, Webshare, SOAX, and Rayobyte. For example, `geo.brdtest.com`,
 `ip.oxylabs.io`, and `ip.decodo.com` can load with AdBlock enabled.
 
-These exclusions apply in both direct and proxied Sessions, to main pages and
-subresources, with cached or newly downloaded rules. Image blocking and image
+These exclusions apply only while a Session has a proxy configured, to main
+pages and subresources, with cached or newly downloaded rules. Direct Sessions
+use normal AdBlock rules. Removing a Session's proxy restores normal filtering;
+assigning a proxy enables the exclusions again. Image blocking and image
 size limits still apply. Unrelated requests from provider pages remain subject
 to AdBlock, as do ordinary destinations reached through a proxy.
 
