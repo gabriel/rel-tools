@@ -449,6 +449,20 @@ repeating run. Disable a row to pause it without deleting its configuration.
 If its Profile is later deleted, REL marks the Profile as missing and the
 schedule cannot run until it is edited to select an available Profile.
 
+## Notifications
+
+Open **REL → Settings… → Notifications** in the Browser section to control
+**Send notifications to the agent** and inspect recent shared website notifications.
+Sharing is off by default. Websites must first receive permission to send
+notifications. Shared content is untrusted website data and never starts an agent turn.
+
+The page refreshes automatically and shows up to 256 shared notifications, newest
+first, with each notification's origin, title, body, session ID, and display time.
+The Recent section appears only when shared notifications are available.
+Turning sharing off stops new entries; existing entries remain until the local
+agent restarts. The queue is not a permanent notification archive. Debug runtimes
+with website notifications disabled show that status on the page.
+
 ## Webhooks
 
 Open **REL → Settings… → Webhooks** to add a JSON webhook, Discord integration,
