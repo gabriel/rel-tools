@@ -843,7 +843,7 @@ app-owned template without changing sessions already created from it.
 The fingerprint object is an identity template. When REL.app creates a session
 from a named profile, it preserves the template settings and generates a fresh
 seed before the session's Chromium context is used. The built-in profiles use
-the Privacy preset by default. New profiles also use it when
+the Full Privacy preset by default. New profiles also use it when
 `fingerprint_profile` is omitted; explicit null keeps native values.
 
 Fingerprint profiles also accept an optional `overrides` array. Omit the field
@@ -873,17 +873,21 @@ For example, add `"overrides": ["timezone"]` to a valid profile with
 non-array values are rejected. Saving the profile preserves this list through
 export/import. Missing lists in older profiles enable the remaining supported overrides.
 
-In the macOS app, new sessions and new profile drafts default to **Privacy
-controls**, with graphics and audio enabled and the remaining values native.
-Open **Privacy Controls** from the session tab menu. Each compact row places a label, value, and toggle alongside one another.
-The shared device preset appears once; info buttons explain linked settings,
-and the readback seed is in an expandable section. Choose **Native Chromium**
-to turn off all controls. Saved session-creation preferences and existing
-profiles retain their explicit choices. Resetting every
-control to native saves a null session fingerprint. Saving recreates only the
-session's Chromium context. Named profile templates retain their explicit
-settings. Device surfaces and graphics are linked groups in the pinned engine;
-individual fields within those groups cannot independently remain native.
+In the macOS app, new sessions and profile drafts default to **Full Privacy**,
+with all seven supported controls enabled. It presents a read-only summary.
+Choose **Custom Privacy** to edit individual values and toggles in compact rows.
+The shared device preset appears once, info buttons explain linked settings,
+and the readback seed is in an expandable section. **Native** turns off all
+controls. User-Agent and client hints remain native in every mode.
+
+Custom Privacy saves an explicit `overrides` list, including when all seven
+controls are enabled or all are disabled. It therefore reopens as Custom.
+Full Privacy uses the omitted-list representation; selecting it resets custom
+values to the standard full preset while retaining the session seed. Native
+saves a null fingerprint. Existing explicit choices and saved session-creation
+preferences are preserved. Saving recreates only the session's Chromium context.
+Device surfaces and graphics remain linked groups in the pinned engine.
+Individual fields within those groups cannot independently remain native.
 
 On the Chromium 152 upgrade, REL updates stored Chromium 151 fingerprint
 versions and their matching user agents in sessions and named profiles before
