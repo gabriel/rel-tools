@@ -97,6 +97,13 @@ The explicit `rel capture URL [options]` form is equivalent. Argument-free
 `--rotate-proxy-session` interfaces have no compatibility aliases; use
 `status`, the app's Logs view, and `proxy rotate`, respectively.
 
+The app's Logs view displays each event on one compact line. Browser request
+summaries show the method, URL, HTTP status, failure or block reason, and duration
+when available. Select a row to inspect the formatted JSON record, including its
+structured `data` fields. **Copy JSON** (or Command-C) copies selected records as
+newline-delimited JSON, one object per line, preserving multiline messages and
+metadata for diagnostic tools. Session log files already use this NDJSON format.
+
 `rel observe` returns bounded rendered semantics and observation-scoped element
 refs. `--mode=hybrid` adds a synchronized viewport PNG resource; `visual`
 returns minimal semantics plus the image. `--page-id` targets an attached page,
@@ -302,6 +309,14 @@ applies a bounded settling delay after main-frame readiness; if another
 main-frame navigation starts during that delay, REL waits for it and restarts
 the delay. Use a timed `wait` action when the workflow needs additional
 settling time before its next step.
+
+A submitted navigation replaces the session's active target immediately, even
+if the proxy or browser fails before the page loads. Refresh and retry use that
+target, so a second failed navigation does not send the session back to the
+first URL. Unsubmitted address-field edits do not change the retry target.
+
+Fragment-only navigation and same-document Back/Forward complete using the
+existing document. They preserve its HTTP status without requiring a full load.
 
 If the main frame returns HTTP 4xx or 5xx, `navigate` normally exits
 unsuccessfully as soon as Chromium commits that response instead of waiting for
@@ -578,6 +593,12 @@ the session. `play` idempotently resumes network activity and reloads the
 current page when the pause interrupted or deferred navigation. Both commands
 return the RPC envelope with `data.session_id` and `data.network_paused`.
 
+When a new URL is submitted, REL covers the existing page until the new document
+finishes loading. Cancelling before the new document commits restores the previous
+URL and its live page state without reloading. Pausing during this interval also
+restores that page, and playing resumes networking without reloading it. Once the
+new document commits, the previous document can no longer be restored this way.
+
 Close every session in a group. Repeating the command after the group is empty
 succeeds and returns an empty `data.deleted_ids` array:
 
@@ -596,3 +617,13 @@ rel session update Session12 --direct
 or clearing a proxy assignment during update. An update requires at least one
 mutable option. Session name and filtering policy are mutable; the canonical
 session ID is immutable.
+
+### Proxy TLS certificates
+
+```sh
+rel proxy update bright-data --upstream-host brd.superproxy.io --upstream-port 44445 --tls bright-data
+rel proxy update office --ca-cert ./company-root-ca.pem
+rel proxy update office --tls system
+```
+
+Both `proxy create` and `proxy update` accept either `--tls system|bright-data` or `--ca-cert PATH`. These options are mutually exclusive. The CLI reads a PEM CA bundle locally and sends its contents, not its path. The agent validates CA certificates and limits bundles to 1–16 certificates and 64 KiB. Omission on create uses system trust; omission on update preserves the current setting. Additional roots apply only to sessions assigned to that proxy. A TLS setting change restarts affected browser views; storage and logins remain intact.

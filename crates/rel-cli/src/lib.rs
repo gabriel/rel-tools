@@ -6,8 +6,8 @@ use rel_client::{
     NavigateRequest, ObservationActionRequest, ObservationMode, ObservationRequest,
     PageActionRequest, PageAttachRequest, PageCaptureRequest, PageObservationRequest,
     PageReadRequest, PerformRequest, ProfileTransferExportRequest, ProfileTransferImportRequest,
-    ProxyCreateRequest, ProxyTransferExportRequest, ProxyTransferImportRequest, ProxyUpdateRequest,
-    RelClient, SessionCreateRequest, SessionUpdateRequest,
+    ProxyCreateRequest, ProxyTls, ProxyTransferExportRequest, ProxyTransferImportRequest,
+    ProxyUpdateRequest, RelClient, SessionCreateRequest, SessionUpdateRequest,
 };
 use serde::Serialize;
 use std::collections::VecDeque;
@@ -1057,6 +1057,34 @@ fn parse_proxy(mut args: Arguments) -> Result<CliCommand, CliError> {
     }
 }
 
+fn parse_proxy_tls(option: &str, value: &str) -> Result<ProxyTls, CliError> {
+    if option == "--tls" {
+        return match value {
+            "system" => Ok(ProxyTls::System),
+            "bright-data" => Ok(ProxyTls::BrightData),
+            _ => Err(CliError::Message(
+                "--tls must be system or bright-data; use --ca-cert PATH for a custom CA"
+                    .to_string(),
+            )),
+        };
+    }
+    use std::io::Read;
+    let file = File::open(value)
+        .map_err(|error| CliError::Message(format!("Could not open CA file: {error}")))?;
+    let mut pem = String::new();
+    file.take(65_537)
+        .read_to_string(&mut pem)
+        .map_err(|error| CliError::Message(format!("Could not read PEM CA file: {error}")))?;
+    if pem.is_empty() || pem.len() > 65_536 {
+        return Err(CliError::Message(
+            "CA file must contain a PEM bundle of at most 64 KiB".to_string(),
+        ));
+    }
+    Ok(ProxyTls::Custom {
+        certificate_pem: pem,
+    })
+}
+
 fn parse_proxy_create(mut args: Arguments) -> Result<CliCommand, CliError> {
     let mut request = ProxyCreateRequest::default();
     while let Some((option, inline)) = args.pop_option()? {
@@ -1066,6 +1094,15 @@ fn parse_proxy_create(mut args: Arguments) -> Result<CliCommand, CliError> {
             "--upstream-port" => request.upstream_port = args.integer(&option, inline)?,
             "--username" => request.username = Some(args.option_value(&option, inline)?),
             "--password" => request.password = Some(args.option_value(&option, inline)?),
+            "--tls" | "--ca-cert" => {
+                if request.tls.is_some() {
+                    return Err(CliError::Message(
+                        "Use only one of --tls and --ca-cert".to_string(),
+                    ));
+                }
+                let value = args.option_value(&option, inline)?;
+                request.tls = Some(parse_proxy_tls(&option, &value)?);
+            }
             "--oxylabs-enabled" => request.oxylabs_enabled = Some(args.boolean(&option, inline)?),
             "--oxylabs-location-parameter" => {
                 request.oxylabs_location_parameter = Some(args.option_value(&option, inline)?)
@@ -1109,6 +1146,15 @@ fn parse_proxy_update(mut args: Arguments) -> Result<CliCommand, CliError> {
             "--clear-password" => {
                 args.flag(&option, inline)?;
                 set_change(&mut request.password, Change::Clear, &option)?;
+            }
+            "--tls" | "--ca-cert" => {
+                if request.tls.is_some() {
+                    return Err(CliError::Message(
+                        "Use only one of --tls and --ca-cert".to_string(),
+                    ));
+                }
+                let value = args.option_value(&option, inline)?;
+                request.tls = Some(parse_proxy_tls(&option, &value)?);
             }
             "--oxylabs-enabled" => request.oxylabs_enabled = Some(args.boolean(&option, inline)?),
             "--oxylabs-location-parameter" => {
@@ -1420,6 +1466,7 @@ fn proxy_update_is_empty(request: &ProxyUpdateRequest) -> bool {
         && request.upstream_port.is_none()
         && request.username.is_unchanged()
         && request.password.is_unchanged()
+        && request.tls.is_none()
         && request.oxylabs_enabled.is_none()
         && request.oxylabs_location_parameter.is_unchanged()
         && request.oxylabs_location_value.is_unchanged()
@@ -1698,6 +1745,7 @@ rel proxy export ALIAS [--output PATH]\n  \
 rel proxy import FILE [--alias ALIAS]\n\n\
 Write options:\n  \
 --alias ALIAS --upstream-host HOST --upstream-port PORT\n  \
+--tls system|bright-data OR --ca-cert PATH (PEM CA bundle)\n  \
 --username USER --password PASS --oxylabs-enabled true|false\n  \
 --oxylabs-location-parameter cc|country|st --oxylabs-location-value VALUE\n\
 Update clear options:\n  \
@@ -2431,6 +2479,52 @@ mod tests {
         assert_eq!(request.adblock_enabled, Some(true));
         assert_eq!(request.group.as_deref(), Some("pgm"));
         assert_eq!(request.image_blocking_mode, Some(ImageBlockingMode::None));
+    }
+
+    #[test]
+    fn proxy_tls_options_are_explicit_and_mutually_exclusive() {
+        for (option, mode) in [("system", "system"), ("bright-data", "bright_data")] {
+            let CliCommand::ProxyUpdate { request, .. } =
+                parse(&["proxy", "update", "office", "--tls", option]).unwrap()
+            else {
+                panic!("expected proxy update");
+            };
+            assert_eq!(
+                serde_json::to_value(request).unwrap(),
+                serde_json::json!({"tls":{"mode":mode}})
+            );
+        }
+        assert!(parse(&["proxy", "update", "office", "--tls", "insecure"]).is_err());
+        assert!(parse(&[
+            "proxy",
+            "update",
+            "office",
+            "--tls",
+            "system",
+            "--ca-cert",
+            "missing.pem"
+        ])
+        .is_err());
+        assert!(parse(&["proxy", "update", "office", "--ca-cert", "missing.pem"]).is_err());
+        let path = std::env::temp_dir().join(format!("rel-test-ca-{}.pem", Uuid::new_v4()));
+        fs::write(&path, "test PEM contents").unwrap();
+        let CliCommand::ProxyUpdate { request, .. } = parse(&[
+            "proxy",
+            "update",
+            "office",
+            "--ca-cert",
+            path.to_str().unwrap(),
+        ])
+        .unwrap() else {
+            panic!("expected proxy update");
+        };
+        fs::remove_file(path).unwrap();
+        assert_eq!(
+            request.tls,
+            Some(ProxyTls::Custom {
+                certificate_pem: "test PEM contents".into()
+            })
+        );
     }
 
     #[test]

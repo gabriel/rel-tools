@@ -2090,9 +2090,23 @@ fn escape_markdown_url(value: &str) -> String {
     value.trim().replace('<', "%3C").replace('>', "%3E")
 }
 
+/// Additional CA trust is scoped to sessions using this proxy.
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
+#[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
+pub enum ProxyTls {
+    #[default]
+    System,
+    BrightData,
+    Custom {
+        certificate_pem: String,
+    },
+}
+
 #[derive(Clone, Debug, Default, Serialize, PartialEq)]
 pub struct ProxyCreateRequest {
     pub alias: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tls: Option<ProxyTls>,
     pub upstream_host: String,
     pub upstream_port: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2121,6 +2135,8 @@ impl ProxyCreateRequest {
 pub struct ProxyUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub upstream_host: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tls: Option<ProxyTls>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub upstream_port: Option<u16>,
     #[serde(skip_serializing_if = "Change::is_unchanged")]
@@ -2205,6 +2221,8 @@ pub struct OxylabsProxy {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Proxy {
+    #[serde(default)]
+    pub tls: ProxyTls,
     pub alias: String,
     pub upstream_host: String,
     pub upstream_port: u16,
