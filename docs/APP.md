@@ -86,6 +86,10 @@ Browser data is copied or imported rather than switched as a setting.
 Use the session toolbar's **Proxy** menu to select a saved proxy, or **None** for
 a direct connection. Saved proxies from earlier REL versions remain selectable
 without recreating them or enabling provider-specific sticky sessions.
+A proxy can enable either Oxylabs or Bright Data session handling. Changing
+its active provider renews the assigned sessions' sticky IDs; editing targeting
+within the same provider preserves them. Unrelated edits and transfers retain
+saved targeting settings for disabled providers.
 
 The toolbar **(+) → New Session from Profile** submenu lists saved Profiles.
 Selecting a Profile creates a session immediately with its settings and browser
