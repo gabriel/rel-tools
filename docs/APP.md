@@ -331,6 +331,9 @@ transfers are not supported.
 
 ## AI models
 
+When Chat has no available model, select **Add Provider** in the empty state
+or chat input to open the Add Provider form directly. Cancel returns to Chat.
+
 Configure providers and choose the default AI model in **REL → Settings… →
 Providers**. API keys are stored in macOS Keychain. Ollama connections can use
 the local server at `http://127.0.0.1:11434` without an API key. Scheduled
