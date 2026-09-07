@@ -21,17 +21,44 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## Anonymous diagnostics
+
+On the first normal startup, REL asks whether to share anonymous app usage and
+reliability events. Diagnostics remain off unless you select **Share
+Diagnostics**. You can change the choice later under **REL → Settings… →
+General → Diagnostics**.
+
+The fixed event schema includes app and macOS versions, launch and update
+outcomes, agent availability, and the number of open Sessions. Events use a
+random identifier that lasts only for the current app launch. They do not
+include an account or persistent installation ID, URLs, page content, prompts,
+Profile names, credentials, or local logs. Delivery is best effort and failed
+events are not stored for retry.
+
 ## Free and Pro
 
 REL Free does not require registration. It includes one Session at a time, one
 scheduled prompt, one custom Profile, and one configured AI model provider.
 Proxies cannot be created, configured, assigned, or used on the Free plan.
 
-Register a REL Pro license in **REL → Settings… → Plan** to use proxies and
-remove those limits. If Pro registration expires or is removed, REL preserves
-existing Sessions and configuration instead of deleting them. Free prevents
-additional creation beyond its limits, and any stored proxy assignment runs as
-a direct connection until Pro access is restored.
+REL Pro costs $20 as a single upfront payment for one year of access. It does
+not renew automatically. Register the license in **REL → Settings… → Plan** to
+use proxies and remove the Free plan limits. If Pro registration expires or is
+removed, REL preserves existing Sessions and configuration instead of deleting
+them. Free prevents additional creation beyond its limits, and any stored proxy
+assignment runs as a direct connection until Pro access is restored.
+
+You can also enter a `REL-PRO-...` promo code in the same Plan field when one
+has been provided to you. Promo codes grant one, two, or three calendar months
+of REL Pro without a checkout or payment method. Each trial can be redeemed on
+one REL installation, and a campaign code stops working after its configured
+number of redemptions.
+
+REL displays the trial end date in Plan settings. It checks the grant with REL
+at most once per day and supports up to seven days offline, without extending
+access beyond that end date. At expiry, REL automatically returns to Free and
+keeps existing Sessions and configuration under the Free plan limits described
+above.
 
 ## Profiles and Sessions
 
@@ -66,8 +93,8 @@ hardware, screen, graphics, storage, and network claims coherent. REL applies
 small deterministic changes to Canvas, WebGL, and Web Audio readbacks so two
 Sessions use different values while one Session stays stable. AudioBuffer
 exposes live sample arrays, so its small sample changes can also affect later
-playback. Text and element geometry remains native so clicks, accessibility bounds, and
-screenshots keep matching the page. A profiled Session reports WebGPU as
+playback. Text and element geometry remains native so clicks, accessibility
+bounds, and screenshots keep matching the page. A profiled Session reports WebGPU as
 unavailable rather than exposing native graphics details that contradict its
 profile. Font enumeration and other unlisted surfaces remain native.
 
@@ -93,6 +120,57 @@ Chromium's automatic retries keep the error visible until the page returns a
 response. A browser startup failure can be retried with **Try Again**, refresh,
 or a newly submitted address; REL recreates that Session's browser and keeps
 the latest requested URL.
+
+If AdBlock blocks the main page, REL shows **This Page Was Blocked** with the
+requested URL and a filter explanation. Check **AdBlock** in the Session's
+**Filters** panel before trying again; retrying with the same blocking rule still
+blocks the page. Blocked scripts, images, or embedded frames remain filter log
+events and do not mark the main page as failed.
+
+### Proxy-provider AdBlock exclusions
+
+In Sessions using a proxy, REL excludes known proxy-provider destinations and
+their subdomains from AdBlock by default, including provider websites, APIs, gateways, and diagnostic URLs.
+The maintained list covers Bright Data/Luminati, Oxylabs, Decodo/Smartproxy,
+IPRoyal, Webshare, SOAX, and Rayobyte. For example, `geo.brdtest.com`,
+`ip.oxylabs.io`, and `ip.decodo.com` can load with AdBlock enabled.
+
+These exclusions apply only while a Session has a proxy configured, to main
+pages and subresources, with cached or newly downloaded rules. Direct Sessions
+use normal AdBlock rules. Removing a Session's proxy restores normal filtering;
+assigning a proxy enables the exclusions again. Image blocking and image
+size limits still apply. Unrelated requests from provider pages remain subject
+to AdBlock, as do ordinary destinations reached through a proxy.
+
+The provider-domain list is maintained with REL app updates. It does not discover every proxy domain
+automatically; new provider domains need to be added to that list.
+
+## Session logs
+
+Open **Logs** in a Session's bottom panel to follow its activity. Logging runs
+while the Session is active, even when the panel is closed, and works with both
+direct and proxied connections.
+
+- **Network → Requests** shows Chromium HTTP and HTTPS request results for pages,
+  scripts, stylesheets, images, frames, and fetch/XHR traffic. Entries include
+  the method, URL, HTTP status or failure, elapsed milliseconds, and received
+  bytes. Redirects include their destination. Results appear when a request
+  finishes, fails, or is canceled; an open stream appears when it ends.
+- **Network → Filtered Requests** explains requests blocked by Session filters.
+- **Chromium → Runtime** includes browser open/close, navigation starts, finishes
+  and failures, Back, Forward, Reload, and network pause/resume activity.
+- **Clients → Requests** includes browser operations and individual automation
+  actions, with their completion or failure and elapsed time.
+
+Chromium request and activity entries omit request/response bodies, headers,
+entered text, URL credentials, and URL fragments. Query parameter names remain
+visible with their values replaced by `REDACTED`. Proxy transport diagnostics
+remain separate from Chromium request results, so a proxied request can have
+both a transport entry and a browser result.
+
+Use the category menu to filter the stream. **Clear Logs** clears only the
+selected Session and live logging continues. Logs remain local to this app's
+data directory.
 
 ## Site permissions
 
@@ -162,13 +240,14 @@ then answers. Restoring the default prompt returns to this behavior.
 
 ## Scheduled prompts
 
-Open **REL → Settings… → Scheduled** to create repeating prompts. Each schedule
+Open **Schedules** to create saved prompts. Each schedule
 contains:
 
 - a name;
 - the Profile used to create a fresh Session;
 - the prompt that runs in that Session;
-- one or more weekdays and one local time; and
+- an optional repeating timer with weekdays and local time;
+- an optional Shortcut or webhook completion action; and
 - an enabled or disabled state.
 
 REL Free supports one saved schedule; REL Pro supports multiple schedules.
@@ -186,3 +265,57 @@ Use **Run Now** to execute a schedule immediately without changing its next
 repeating run. Disable a row to pause it without deleting its configuration.
 If its Profile is later deleted, REL marks the Profile as missing and the
 schedule cannot run until it is edited to select an available Profile.
+
+## Webhooks
+
+Open **REL → Settings… → Webhooks** to add a JSON webhook, Discord integration,
+or WhatsApp Cloud API integration. A configuration can send messages, receive
+events, or do both. Its URL and credentials are stored in the current REL app
+variant's Keychain, separately from browser sessions. Settings can send an
+explicit test message and delete a destination.
+
+To deliver a prompt's final response, edit it in **Schedules** and choose
+**Send Result to Webhook**. A completion action can use either a webhook or a
+macOS Shortcut. Keep Discord results within 2,000 characters and WhatsApp text
+results within 4,096 characters. Delivery errors mark the prompt run as failed;
+REL does not automatically resend messages.
+
+To run a prompt from an event, create the prompt first, then select it under
+**Run a prompt on incoming events** when adding the webhook. Turn off **Run on a
+schedule** in the prompt editor for webhook-only operation. Keep **Enabled** on.
+Incoming data is appended to the run as untrusted JSON; write the saved prompt
+to describe which fields it should process. REL runs one event at a time per
+prompt and keeps events queued while the prompt is busy or disabled.
+
+**Copy Local Callback** copies the loopback receive URL. External services need
+a public HTTPS relay forwarding only that path. The [RPC webhook guide](RPC.md#webhooks)
+documents signing, provider setup, callback responses, inbox limits, and direct
+HTTP calls. The inbox holds up to 64 events and resets when REL quits; use a
+separate durable relay if events must survive app restarts.
+
+For Discord sending, paste the channel webhook URL. Incoming Discord Webhook
+Events require the application's public key and event subscriptions in the
+Developer Portal. These subscriptions are distinct from ordinary channel
+messages delivered through the Discord Gateway. See the official
+[Discord webhook reference](https://docs.discord.com/developers/resources/webhook)
+and [Webhook Events setup](https://docs.discord.com/developers/events/webhook-events).
+
+For WhatsApp sending, supply your versioned Graph API messages endpoint, access
+token, and recipient. Incoming events require the Meta app secret and a
+verification token; REL handles callback verification and ignores delivery
+status receipts. Text messages require an open customer service window. For
+messages outside that window, callers can send an approved template using the
+RPC `payload` option. See Meta's
+[WhatsApp Cloud API reference](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
+
+## Proxy certificate trust
+
+In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certificates → Trust**:
+
+- **System trust** uses Chromium's ordinary certificate verification and macOS trust. Existing proxies retain this setting.
+- **Bright Data certificate** adds REL's bundled Bright Data root CA for `brd.superproxy.io:44445`. Creating a proxy with the Bright Data type preselects this option; an existing proxy requires an explicit change.
+- **Custom certificate** imports a PEM bundle or DER CRT file. REL saves the certificate contents with the proxy, so the original file is no longer needed. PEM bundles may contain 1–16 CA certificates, up to 64 KiB; private keys and website leaf certificates are rejected.
+
+Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change restarts affected browser views while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
+
+Proxy and profile transfers preserve certificate settings. The import sheet identifies transfers that add a trusted proxy CA. Older transfer versions import with system trust.
