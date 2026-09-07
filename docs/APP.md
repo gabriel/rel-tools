@@ -63,7 +63,7 @@ remain explicit destructive operations without an interactive confirmation.
 ## Database migration and recovery
 
 REL validates its local database before starting normal service. Supported
-schema versions 3 through 14 are upgraded to schema 14. Before any upgrade or
+schema versions 3 through 15 are supported, with older schemas upgraded to schema 15. Before any upgrade or
 repair, REL creates a consistent SQLite snapshot including committed WAL data
 under `Data/Recovery/<run-id>/original.sqlite3` in its Application Support
 folder. Debug builds use their isolated worktree Application Support folder.
@@ -468,6 +468,26 @@ argument set, REL removes browser tools for the rest of that response so the
 model answers from collected evidence or explains the limitation. When an
 exhaustive request exceeds a page or tool output bound, the response summarizes
 the available evidence and states what was omitted.
+
+## Chat restoration
+
+REL saves each Session's open Chat tabs, their order and selection, conversation
+messages, completed-work details, and unsent drafts in its local SQLite database.
+Quitting and reopening REL restores them. Completed question-and-answer exchanges
+are restored to the AI harness before you send a follow-up. An interrupted response
+is not resumed automatically; its submitted prompt remains visible in the chat.
+Database upgrades use transactional migrations. Existing workspace layout and token
+usage are imported once from the current runtime’s old workspace file. If restoration
+fails, REL reports the error and blocks replacement writes. A save failure preserves
+the current draft in memory and asks you to restart before saving again.
+
+Database recovery preserves healthy conversations and drafts. Damaged messages or
+chats belonging to an unrecoverable Session remain in the original recovery snapshot
+instead of the active workspace. Missing tab selections are cleared without discarding
+healthy chats. The recovery report identifies affected records.
+
+Closing a Chat tab removes its saved conversation and draft. Clearing a conversation
+removes its saved messages. Deleting a Session removes its saved chats.
 
 ## Reading chat history
 

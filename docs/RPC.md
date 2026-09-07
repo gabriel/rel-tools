@@ -1189,3 +1189,66 @@ the event DELETE endpoint to clear them. A model failure is recorded as a failed
 prompt run, without automatically replaying the event. A crash after
 acknowledgment can interrupt an event's run. Separate consumers should not
 acknowledge events intended for the app.
+
+
+## Workspace restoration
+
+`GET /v1/workspace` returns `data: {"revision": N, "state": ...}`. Revision zero
+with `state: null` means no workspace has been saved. The Rust agent owns this
+state in the current runtime's `Data/rel-data.sqlite3`; Release and each Debug
+worktree remain isolated. On first access, the agent imports the released
+layout/token-usage format from that runtime's `Data/workspace-state.json`, if
+present, and retains the source. Import failure leaves the database workspace
+uninitialized and prevents replacement writes through this endpoint.
+
+`PUT /v1/workspace` accepts `{"revision": N, "state": ...}` using the revision
+returned by GET or the previous successful PUT. It atomically saves the full
+workspace snapshot and returns `data: {"revision": N+1}`. A stale revision returns
+`CONFLICT` without changing stored data. An uncertain transport result must be
+resolved by reloading the snapshot before another write. The native app serializes
+writes and requires a restart after a save failure.
+
+The state uses these camelCase fields:
+
+| Field | Type / meaning |
+| --- | --- |
+| `schemaVersion` | Integer `1`, the workspace wire format, independent of the database migration version |
+| `selectedSessionID` | Session ID or null; must be in `tabOrder` |
+| `tabOrder` | Ordered unique session IDs present in `sessions` |
+| `closedSessionIDs` | Pending session-close markers, default `[]` |
+| `sessions` | Object keyed by existing session ID |
+
+Each session value contains:
+
+| Field | Type / meaning |
+| --- | --- |
+| `lastCommittedURL` | HTTP(S) URL without credentials, or null |
+| `isNetworkPaused` | Boolean, default false |
+| `workspace` | `{isBottomPanelPresented: Bool, isChatPresented: Bool, selectedTool: String}`; tool is `info`, `filters`, `logs`, or `terminal`; defaults are false, true, and `logs` |
+| `chatTokenUsageByModel` | Object of cumulative native Chat usage records keyed by model usage key; default `{}` |
+| `chats` | Conversation state described below; defaults to no conversations, null selection, and next sequence 2 |
+
+`chats` contains ordered `conversations`, nullable `selectedConversationID`, and
+`nextSequence` (integer at least 2). Each conversation has a stable UUID `id`,
+`title`, `draft`, and ordered `messages`. Selection references a conversation
+within that session. Each message has a stable UUID `id`, `role` (`user`,
+`assistant`, `error`, or `status`), `content`, and optional `completedWork`
+(`{activities: [...], elapsedTime: seconds}`). Activity records contain `id`,
+`title`, optional `detail`, and `status` (`running`, `completed`, or `failed`).
+
+Each token-usage record contains nonnegative integer `modelCalls`,
+`reportedModelCalls`, `knownTokens`, `inputTokens`, `outputTokens`,
+`providerReportedTotalTokens`, `cachedInputTokens`, `cacheCreationInputTokens`,
+`toolUsePromptTokens`, and `reasoningTokens`, plus optional nonnegative
+`providerReportedCostUSD`. Reported model calls cannot exceed total model calls.
+Unknown fields and malformed nested payloads are rejected without changing state.
+
+Conversation and message IDs must be unique across the workspace and cannot move
+between parents. Omitting a conversation or message removes its saved record.
+Draft-only edits do not rewrite message rows. Session deletion removes its saved
+workspace, conversations, and messages in the same database operation. Pending
+close markers survive layout reconciliation until session deletion completes.
+
+The standard 16 MiB request limit applies. Workspace request logs record the
+method and route, without transcript or draft bodies. Database schema upgrades
+are transactional, and newer unsupported database schemas are left untouched.
