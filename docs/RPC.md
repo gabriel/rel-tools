@@ -846,14 +846,13 @@ seed before the session's Chromium context is used. The built-in profiles use
 the compatibility template by default.
 
 Fingerprint profiles also accept an optional `overrides` array. Omit the field
-for the historical full-profile behavior, or provide an explicit list to leave
+to enable all supported overrides, or provide an explicit list to leave
 all unlisted controls native. An empty array applies no overrides. All existing
 profile value fields remain required and validated; inactive values are stored
 for later editing, but are not sent as browser overrides.
 
 | Override | Applied behavior |
 | --- | --- |
-| `identity` | User agent, platform, and matching client hints together |
 | `locale` | Language preferences and locale |
 | `timezone` | IANA timezone |
 | `hardware_concurrency` | Page CPU thread count; workers retain native values in this engine |
@@ -862,15 +861,16 @@ for later editing, but are not sent as browser overrides.
 | `graphics` | Linked Canvas/WebGL readbacks, WebGL identity/extensions, and unavailable WebGPU adapters |
 | `audio` | Audio readbacks using the profile's audio mode |
 
-For macOS identities, the high-entropy client hint `platformVersion` reports
-the host macOS version. The legacy User-Agent's frozen `10_15_7` token does not
-determine that hint. Configured browser versions and User-Agent strings remain
-unchanged.
+Browser identity overrides have been removed. Chromium supplies the native
+User-Agent, navigator platform, and client hints for every session, including
+legacy full profiles. The retired `identity` selection is accepted only to read
+old profiles and is removed during normalization. Stored browser identity fields
+remain required for the existing schema but do not override browser identity.
 
 For example, add `"overrides": ["timezone"]` to a valid profile with
 `"timezone": "Asia/Tokyo"` to change only timezone. Unknown override names and
 non-array values are rejected. Saving the profile preserves this list through
-export/import. Missing lists in older profiles retain their full behavior.
+export/import. Missing lists in older profiles enable the remaining supported overrides.
 
 In the macOS app, new untemplated sessions and new editor drafts start Native.
 Choose **Native + overrides** in **Session Identity**, enable only the desired
