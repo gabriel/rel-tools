@@ -425,28 +425,122 @@ that origin and Session. Decisions do not move to another Session. Before a
 microphone or camera allow decision, device enumeration hides device labels and
 stable IDs.
 
-## Profile and Proxy transfers
+## Settings configuration transfers
 
-Use **Import Profile…** and **Export Profile…** in that settings tab to move a
-template in a versioned `.relprofile` SQLite archive. An export can include the
-Profile's cookies, saved passwords, referenced Proxy configuration, and saved
-Proxy credentials. REL requires a transfer passphrase whenever any of those
-secrets are selected. On import, REL previews the included data and asks for
-the passphrase before creating the Profile and restoring its browser data.
+In **Settings → Profiles, Proxies, Schedules, or Providers**, the glass button
+group contains **Edit**, **Add (+)**, **Import (down arrow)**, and **Export (up
+arrow)**. Select a row to enable export. Import opens a text editor; export
+shows selectable text with a **Copy** button. No file picker is involved.
+Imports create new records and remain subject to the plan's creation limits.
+Existing records are not overwritten.
 
-Manage upstream connections in **REL → Settings… → Proxies**. **Import Proxy…**
-and **Export Proxy…** read and write versioned `.relproxy` SQLite archives. An
-export can omit credentials or include the saved username and password in
-passphrase-protected form. Choose the credential-free option when the file
-only needs to recreate routing settings.
+Profiles, schedules, and providers use a versioned JSON envelope:
+`{"format":"rel.<kind>","version":1,"configuration":{...}}`. The kind is
+`profile`, `schedule`, or `provider`. Export produces one line; pasted JSON may
+include whitespace. Paste the complete object, without Markdown fences. JSON
+input is limited to 1 MiB. Other versions, mismatched kinds, malformed JSON,
+and invalid configurations are rejected.
 
-Both file types use the same versioned SQLite schema: `metadata`, `proxies`,
-`profiles`, `cookies`, and `passwords`. A standalone Proxy archive and a Proxy
-embedded in a Profile archive use the identical `proxies` table. Secret values
-are stored only as encrypted BLOBs; the passphrase is not written into the
-file. Import creates a new Profile or Proxy and does not overwrite an existing
-name or alias. Version 1 imports accept only this SQLite format; legacy JSON
-transfers are not supported.
+### Profiles: single-line JSON
+
+```json
+{"configuration":{"adblock_enabled":true,"fingerprint_profile":null,"image_blocking_mode":"none","image_size_limit_kb":40,"includes_cookies":false,"includes_passwords":false,"name":"Research","proxy_alias":null},"format":"rel.profile","version":1}
+```
+
+The configuration uses the profile-creation fields documented in the
+[RPC guide](/rpc/). `name`, network filters, `fingerprint_profile`, and
+`proxy_alias` are copied. A null fingerprint selects Native Chromium. Keep an
+exported fingerprint object intact when preserving a configured identity.
+`image_blocking_mode` is `none`, `all`, or `over_limit`; `image_size_limit_kb`
+is an integer from 1 through 1048576.
+
+Cookies, passwords, browser storage, and referenced proxy definitions are not
+included. Both `includes_cookies` and `includes_passwords` must be false.
+A non-null proxy alias must already exist on the importing device; import the
+proxy first or set `proxy_alias` to null. The new profile receives a new ID.
+
+### Proxies: curl command
+
+```sh
+curl --proxy 'http://proxy.example.com:8080' --proxy-user 'username:[replace with password]' 'https://example.com'
+```
+
+Import reads `--proxy` (`-x`) and optional `--proxy-user` (`-U`), including
+quoted values and `--option=value` forms. The proxy must use HTTP with an
+explicit port from 1 through 65535; bracket IPv6 addresses. Commands are limited
+to 64 KiB. REL parses the command without executing it, expanding shell syntax,
+or requesting the target URL. The populated proxy editor opens for review and
+requires **Save** before creation.
+
+Export includes the endpoint and configured username. Bright Data geographic
+and ASN targeting and Oxylabs location targeting are encoded in the username.
+Session suffixes are parsed as session templates, not reused as persistent
+session IDs. Saved passwords are never retrieved for export. Replace
+`[replace with password]` before running a copied command yourself; REL treats
+that placeholder as an empty password on import. A pasted real password is
+placed in the editor's password field and saved through REL's secure proxy
+credential storage only when you save.
+
+A curl transfer does not include the alias, locale override, or custom TLS CA
+certificate. Review those fields in the editor. Recognized Bright Data endpoints
+select Bright Data trust; other endpoints start with system trust. Options such
+as `-k`, request headers, and the destination URL are not imported as proxy
+settings. Use the archive API below if you need to preserve the complete proxy
+configuration.
+
+### Schedules: single-line JSON
+
+```json
+{"configuration":{"completionAction":{"type":"none"},"destination":{"existingSession":{"sessionID":"session-1","sessionName":"Work"}},"hour":9,"minute":30,"name":"Morning","prompt":"Check the page and report changes.","usesTimer":true,"weekdays":[2,3,4,5,6]},"format":"rel.schedule","version":1}
+```
+
+`name`, `prompt`, `destination`, `completionAction`, `weekdays`, `hour`, `minute`,
+and `usesTimer` are required. Weekdays are 1 (Sunday) through 7 (Saturday), with
+at least one day; hours are 0–23 and minutes 0–59 in the importing device's local
+time zone. `usesTimer:false` creates a webhook-triggered schedule.
+
+The destination is one of:
+
+- `{"existingSession":{"sessionID":"...","sessionName":"..."}}`
+- `{"newSession":{"profileID":"...","profileName":"..."}}`
+- `{"configuredSession":{"settings":{...}}}`, preserving the exported custom
+  session settings, including filters, proxy alias, and fingerprint draft.
+
+Completion actions are `{"type":"none"}`, `{"type":"shortcut","name":"..."}`,
+or `{"type":"webhook","id":"<UUID>"}`. Destination and completion references
+are local to the importing device; their referenced sessions, profiles, proxies,
+webhooks, and Shortcuts are not bundled. Review and repair them in the editor.
+
+Every imported schedule receives a fresh ID and starts **disabled**, regardless
+of the source schedule's state. Run history, errors, and timestamps are omitted.
+Import never runs a prompt or completion action. Enable the schedule after
+reviewing its destination, prompt, completion action, and local execution time.
+
+### Providers: single-line JSON
+
+```json
+{"configuration":{"maxTurns":10,"name":"OpenAI","provider":"openai"},"format":"rel.provider","version":1}
+```
+
+Required fields are `name`, `provider`, and `maxTurns`; `baseURL` is optional
+except for services that require a custom URL. Provider values are `openai`,
+`openai-compatible`, `openrouter`, `anthropic`, `gemini`, and `ollama`. Provider
+names start with an ASCII letter, contain only letters, digits, hyphens, or
+underscores, and are at most 64 characters. Turn limits and URLs are validated
+using the same rules as the provider editor.
+
+Import opens a new provider draft for review. Enter the API key where required,
+then save. API keys, record IDs, model discovery results, and the default-provider
+preference are excluded. An existing default remains unchanged unless you choose
+**Make Default**; the first provider becomes the default normally.
+
+### CLI and RPC archive transfers
+
+CLI/RPC `.relprofile` and `.relproxy` SQLite archive transfers remain separate
+from Settings text transfers. See the [CLI](/cli/) and [RPC](/rpc/) guides for
+archive operations. Archives can preserve browser data, complete proxy settings,
+and passphrase-protected credentials. The new Settings JSON envelope is not an
+archive or a replacement input for the archive APIs.
 
 ## AI models
 
@@ -607,4 +701,4 @@ In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certifica
 
 Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change restarts affected browser views while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
 
-Proxy and profile transfers preserve certificate settings. The import sheet identifies transfers that add a trusted proxy CA. Older transfer versions import with system trust.
+CLI/RPC proxy and profile archives preserve certificate settings. Settings curl transfers omit custom certificates. The import sheet identifies transfers that add a trusted proxy CA. Older transfer versions import with system trust.
