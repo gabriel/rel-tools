@@ -77,7 +77,15 @@ the profile draft. Saving selects the new proxy automatically. Cancelling return
 to the draft without changing its proxy selection. A saved proxy remains available
 in Proxies even if you later cancel the profile.
 
-Create Session always starts with **Custom**. It shows the Profile picker only
+**Create Session**, **New Session** (Command-T), and the session tab bar’s plus
+button create a session immediately using the configured default Profile, or
+Custom defaults when none is set. You can change AdBlock, image blocking, Proxy,
+and Browser Identity afterward. Changing Browser Identity reopens the session.
+Browser data is copied or imported rather than switched as a setting.
+
+Use **File → Create Session from Profile** (Option-Command-T) to choose settings
+before creation or copy a saved Profile’s browser data. This form starts with
+**Custom** and shows the Profile picker only
 when saved Profiles exist. Selecting one loads its configuration into the form;
 all settings remain editable and changes apply only to the new Session. AdBlock,
 Browser Identity, Proxy, Image Blocking, and Browser Data share one section
@@ -90,8 +98,8 @@ uses the same dropdown style as the other settings.
 New Custom drafts start with **Allow all images**. **Proxy → New Proxy…** creates
 and selects a proxy without losing the draft. Cancelling keeps the current selection.
 
-**Settings → General → Default Profile** controls clients that omit a profile,
-including CLI, SDK, MCP, and Python. With no saved default, they use Custom:
+**Settings → General → Default Profile** controls immediate session creation
+in the app and clients that omit a profile, including CLI, SDK, MCP, and Python. With no saved default, they use Custom:
 direct networking, AdBlock on, all images allowed, and Private. The creation
 form uses its explicit settings and browser-data choice instead. **None** does
 not inherit another Profile’s browser data. Renaming a saved default preserves
