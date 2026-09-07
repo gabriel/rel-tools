@@ -640,3 +640,11 @@ the macOS user's preferred/default locale. A value matching native Chromium
 requires no override.
 
 Both `proxy create` and `proxy update` accept either `--tls system|bright-data` or `--ca-cert PATH`. These options are mutually exclusive. The CLI reads a PEM CA bundle locally and sends its contents, not its path. The agent validates CA certificates and limits bundles to 1–16 certificates and 64 KiB. Omission on create uses system trust; omission on update preserves the current setting. Additional roots apply only to sessions assigned to that proxy. A TLS setting change restarts affected browser views; storage and logins remain intact.
+
+### Database recovery reports
+
+`rel health` includes `data.database_recovery` when the agent has a committed
+upgrade or recovery report. Its local `report_path` identifies the detailed
+report and `backup_path` identifies the original SQLite snapshot. See
+[database recovery](APP.md#database-migration-and-recovery) before repairing
+quarantined data.

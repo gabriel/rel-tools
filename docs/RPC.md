@@ -213,7 +213,8 @@ HTTP 200 while the worker is ready or operating within its deadline:
       "commit": "deadbeef",
       "dirty": true
     },
-    "worker": { "state": "idle" }
+    "worker": { "state": "idle" },
+    "database_recovery": null
   }
 }
 ```
@@ -224,6 +225,20 @@ were not launched from a metadata-bearing app bundle. Worker state is
 violation or failed worker returns `AGENT_UNHEALTHY`, with the worker
 snapshot in `error.details.worker`. Health deadlines diagnose stalls; they do not
 cancel the active request.
+
+`database_recovery` is `null` when no committed database upgrade/recovery report
+exists. Otherwise it contains `schema_version` (integer), `backup_path` and
+`report_path` (local absolute paths), `issue_count` (number of reported repair or
+quarantine items, not necessarily distinct records), and `retained_sessions`
+(number of sessions retained at recovery time). The most recent report with
+issues remains visible across restarts and later successful upgrades; when
+there are no such reports, the latest upgrade report is returned. Paths point
+to the agent host, not to a remote client. See [database recovery](APP.md#database-migration-and-recovery)
+for backup, quarantine, and failure behavior.
+
+The health endpoint is not ready during startup migration. Successful health
+means schema and data validation completed; it does not mean every original
+record could be recovered.
 
 ### `GET /v1/status`
 
