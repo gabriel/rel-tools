@@ -24,6 +24,55 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## Database migration and recovery
+
+REL validates its local database before starting normal service. Supported
+schema versions 3 through 14 are upgraded to schema 14. Before any upgrade or
+repair, REL creates a consistent SQLite snapshot including committed WAL data
+under `Data/Recovery/<run-id>/original.sqlite3` in its Application Support
+folder. Debug builds use their isolated worktree Application Support folder.
+Legacy root-level databases and schemas older than version 3 are not imported.
+
+Migration runs against a separate candidate. If a supported migration or data
+validation fails, REL rebuilds the current schema and copies valid records.
+Invalid optional descriptive metadata can be cleared independently. Records
+that cannot be converted safely remain in the original snapshot and are omitted
+from the active database. Sessions and Profiles referencing an unrecoverable
+proxy are withheld as well; recovery never changes that assignment to a direct
+connection. Invalid fingerprint settings withhold the affected record rather
+than silently changing its browser identity. Valid sessions remain available.
+
+REL checks types, application decoding, schema structure, and references before
+committing the candidate. Activation is one SQLite transaction: interruption
+leaves the original database or the complete upgraded database. A concurrent
+writer causes recovery to stop so its changes are not overwritten. Restarting
+retries from the current data. A successful recovery is not repeated on every
+launch.
+
+When records or fields need review, REL displays a recovery notice. Choose
+**Show Report**, or **Settings → Service → Show Recovery Report**, to locate
+`report.json`. It lists retained counts and affected tables, record IDs, fields,
+and reasons. Original values remain in the snapshot. The database's recovery
+history identifies committed runs; a folder left by an interrupted attempt is
+not proof that its candidate was activated. Recovery does not access or export
+Keychain credentials.
+
+Chromium session folders, cookies, and saved logins are preserved. A durable
+`Data/Recovery/preserve-browser-storage` marker prevents automatic orphan-folder
+cleanup after recovery, including on subsequent launches. Existing session IDs
+are reserved so new sessions cannot inherit withheld sessions' storage. Keep the
+marker and original snapshot while reviewing recovery. Quarantined records are
+not automatically restored; use the original snapshot for diagnosis and careful
+repair. Recovery does not manufacture missing records or browser data.
+
+Storage, permission, locking, unreadable database pages, and backup failures
+stop recovery without resetting the database. A database from a newer REL build
+requires updating REL and is never downgraded. The app remains open with the
+service error and **Retry Local Service**. Correct the reported condition and
+retry. The service only becomes ready after validation; the supervisor allows
+startup backup and recovery to finish instead of restarting them after its
+normal health-poll threshold.
+
 ## Anonymous diagnostics
 
 On the first normal startup, REL asks whether to share anonymous app usage and
