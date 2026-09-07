@@ -86,6 +86,18 @@ Custom defaults when none is set. You can change AdBlock, image blocking, Proxy,
 and Browser Identity afterward. Changing Browser Identity reopens the session.
 Browser data is copied or imported rather than switched as a setting.
 
+Use the session toolbar's **Proxy** menu to select a saved proxy, or **None** for
+a direct connection. Saved proxies from earlier REL versions remain selectable
+without recreating them or enabling provider-specific sticky sessions.
+A proxy can enable either Oxylabs or Bright Data session handling. Changing
+its active provider renews the assigned sessions' sticky IDs; editing targeting
+within the same provider preserves them. Unrelated edits and transfers retain
+saved targeting settings for disabled providers.
+REL upgrades stored proxy settings automatically when the updated app starts.
+The upgrade preserves saved proxies, sessions, sticky IDs, and login data; it
+does not require recreating proxies or importing them again. Earlier app versions
+cannot open the upgraded database.
+
 The toolbar **(+) → New Session from Profile** submenu lists saved Profiles.
 Selecting a Profile creates a session immediately with its settings and browser
 data. The submenu appears only when saved Profiles exist.
