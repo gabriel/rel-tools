@@ -81,6 +81,9 @@ Create Session always starts with **Custom**. It shows the Profile picker only
 when saved Profiles exist. Selecting one loads its configuration into the form;
 all settings remain editable and changes apply only to the new Session. AdBlock,
 Browser Identity, Proxy, Image Blocking, and Browser Data share one section.
+**Show Config** below the section opens a read-only popover with the session
+settings and all browser privacy controls, including controls left native. Proxy
+uses the same dropdown style as the other settings.
 New Custom drafts start with **Allow all images**. **Proxy → New Proxy…** creates
 and selects a proxy without losing the draft. Cancelling keeps the current selection.
 
@@ -100,8 +103,9 @@ requiring a saved Profile.
 
 New Sessions use the form’s **Browser Identity**. New Custom configurations
 and Profile drafts use **Full Privacy**, which enables all
-seven supported privacy controls. **Show** to the left of its value opens a read-only popover without
-expanding the surrounding form. In Profile forms, Browser Identity is in the
+seven supported privacy controls. In Profile forms, **Show** to the left of its
+value opens a read-only popover without expanding the form. Create Session uses
+**Show Config** below the main section instead. In Profile forms, Browser Identity is in the
 main section. Choose **New Browser Identity…** in its dropdown to customize the
 current settings in a separate editor. **Use Identity** applies them to the draft
 as **Custom Privacy**; **Cancel** leaves the previous identity unchanged. These
