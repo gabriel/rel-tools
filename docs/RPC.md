@@ -160,7 +160,7 @@ previously stored resources remain available.
 | `GET` | `/v1/sessions` | List persistent browser sessions |
 | `POST` | `/v1/sessions` | Create a browser session |
 | `POST` | `/v1/sessions/close` | Close every browser session in a group |
-| `GET` | `/v1/profiles` | List built-in and custom session profiles |
+| `GET` | `/v1/profiles` | List saved session configurations |
 | `POST` | `/v1/profiles` | Create a custom session profile |
 | `PATCH` | `/v1/profiles/{id}` | Update custom-profile browser-data availability |
 | `DELETE` | `/v1/profiles/{id}` | Delete a custom session profile |
@@ -316,7 +316,7 @@ page and session IDs. Navigate it with `POST /v1/navigate`:
 ```
 
 Only `url` is required. The first request without `session_id` reuses the first
-persisted session, creating one from **Default** only when none exists. Later
+persisted session, creating one from the configured default (Custom when unset) only when none exists. Later
 requests without it reuse the current page and session. An explicit `profile`
 instead creates a new session from that named template; it cannot be combined
 with `session_id`. An explicit session selects that session as the new current
@@ -553,7 +553,7 @@ semantic content remains readable. The process-local registry retains at most
 | `wait` | Finite settling seconds after final main-frame readiness; default 1. Background loading does not restart it. |
 | `actions` | Optional array of canonical [action objects](ACTIONS.md). |
 | `session_id` | Optional existing canonical `Session<number>` ID. Omission creates a persistent session and returns its ID in capture events. |
-| `profile` | Optional built-in or custom profile name for the newly created session. It cannot be combined with `session_id`; omission uses **Default**. |
+| `profile` | Optional saved profile name for the newly created session. It cannot be combined with `session_id`; omission uses the configured default or Custom. |
 | `group` | Optional 1–128 character group for the newly created session. It cannot be combined with `session_id`; matching and bulk close are case-insensitive. |
 | `proxy` | Optional unique proxy alias string, assigned to the created session or applied to the existing session. |
 | `retry` | Integer 0 through 100; default 1. |
@@ -615,7 +615,7 @@ code 1; it is not an API error.
 ```
 
 Omitting `session_id` creates a session from the named `profile`, or from
-**Default** when it is absent, and navigates it to `url`. `profile` and `group`
+the configured default (Custom when unset) when it is absent, and navigates it to `url`. `profile` and `group`
 cannot be combined with `session_id`. Providing an
 existing session attaches its current page without navigating; its final
 normalized browser URL must equal the requested URL. Success data:
@@ -831,15 +831,12 @@ shared by any number of sessions.
 
 ## Profiles
 
-Profiles are named templates copied into future sessions. The four generated
-built-ins are **Private** (direct connection, filters off), **AdBlock**
-(AdBlock on), **BandwidthSaver** (AdBlock on and images larger than 10 kB
-blocked), and **Native Chromium** (direct connection, filters off, native
-identity). A profile resource is:
+Profiles are user-created session configurations. There are no generated
+built-ins, and the list is empty until a Profile is saved. A profile resource is:
 
 ```json
 {
-  "id": "builtin-bandwidth-saver",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "BandwidthSaver",
   "proxy_alias": null,
   "adblock_enabled": true,
@@ -871,13 +868,12 @@ identity). A profile resource is:
     "canvas_noise_mode": "deterministic",
     "audio_noise_mode": "deterministic"
   },
-  "is_builtin": true,
+  "is_builtin": false,
   "created_at": 0
 }
 ```
 
-- `GET /v1/profiles` returns built-ins first, then custom profiles, in
-  `data.profiles`.
+- `GET /v1/profiles` returns saved profiles sorted by name in `data.profiles`.
 - `POST /v1/profiles` requires a case-insensitively unique `name`; it accepts
   the proxy, filtering, browser-data inclusion, and `fingerprint_profile`
   fields above and returns `data.profile`. Omitting `fingerprint_profile` uses
@@ -910,21 +906,17 @@ the same five tables: `metadata`, `proxies`, `profiles`, `cookies`, and
 and Proxies embedded in Profile archives. Protected credential and browser
 payloads are encrypted BLOBs. Version 1 accepts no legacy JSON representation.
 
-The built-in **Direct** profile is now named **Private**, with the same stable
-ID. Upgrading updates existing session references without changing their data
-or identity. A custom profile already named Private is preserved as
-**Private (custom)**, using a numbered suffix if necessary. Its ID and data stay
-unchanged. New requests must use the current profile name.
-
-Adding the Native Chromium built-in preserves an existing custom profile with
-that name as **Native Chromium (custom)**, with a numbered suffix if needed.
-Its ID, copied session identities, and browser data are preserved.
+Existing Sessions retain their stored settings and browser data after built-in
+Profiles are removed. The old built-in names are no longer reserved: they can
+be used for new saved configurations. Historical schema migrations retain their
+original data-preserving rename behavior.
 
 Profile names contain 1–128 non-control characters after trimming and are the
 selector used during session creation. On `POST /v1/sessions`, omission selects
-the **Default Profile** configured in **Settings → General**, or **Private**
-when no preference is set. This applies to the macOS app, CLI, SDK, MCP, and
-other RPC clients. An explicit profile always takes precedence. The preference
+the **Default Profile** configured in **Settings → General**, or direct **Custom** settings
+when no preference is set (AdBlock on, all images allowed, Full Privacy). This applies to clients that omit the field. Create Session in the app
+starts with Custom and sends explicit settings. `profile:null` explicitly selects Custom without inheriting any saved profile
+or browser data. An explicit saved profile always takes precedence. The preference
 uses the stable profile ID, so renaming a custom profile preserves its selection.
 If that profile is deleted, creation without an explicit profile reports an error
 until another default is selected. Explicit session settings override the selected profile. A present
@@ -938,11 +930,11 @@ app-owned template without changing sessions already created from it.
 
 The fingerprint object is an identity template. Every session creation path
 copies the selected profile through the agent. It preserves the template settings and generates a fresh
-seed before the session's Chromium context is used. Private, AdBlock, and
-BandwidthSaver use the Full Privacy preset. Native Chromium has stable ID
-`builtin-native-chromium` and `fingerprint_profile: null`, so sessions created
-from it use native identity without a seed. New profiles use Full Privacy when
-`fingerprint_profile` is omitted; explicit null keeps native values.
+seed before the session's Chromium context is used. New profiles and Custom
+sessions use Full Privacy when `fingerprint_profile` is omitted; explicit null
+keeps native values. `POST /v1/sessions` also accepts `fingerprint_profile` as a
+direct override of the selected configuration.
+
 
 Fingerprint profiles also accept an optional `overrides` array. Omit the field
 to enable all supported overrides, or provide an explicit list to leave
@@ -985,7 +977,7 @@ For example, add `"overrides": ["timezone"]` to a valid profile with
 non-array values are rejected. Saving the profile preserves this list through
 export/import. Missing lists in older profiles enable the remaining supported overrides.
 
-New profile drafts and the three privacy built-ins use **Full Privacy**,
+New profile drafts and Custom session defaults use **Full Privacy**,
 with all seven supported controls enabled. Its read-only details are hidden
 by default in profiles, identity editors, and session information. Choose
 **Show** to the left of the mode value to open a popover without expanding the parent

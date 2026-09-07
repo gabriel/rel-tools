@@ -23,7 +23,7 @@ Related documents: [Actions](ACTIONS.md), [MCP](MCP.md), [SDK](SDK.md), and
 [RPC](RPC.md).
 
 When session creation omits a profile, REL uses **Settings → General → Default
-Profile**, or **Private** if the preference is unset. Explicit profile choices
+Profile**, or **Custom** if the preference is unset. Explicit profile choices
 always take precedence.
 
 ## Commands
@@ -371,7 +371,7 @@ actions, and writes the rendered HTML to stdout or an explicit output file.
 | `--action JSON` | `actions[]` | One canonical action object; repeat the option for multiple actions. |
 | `--actions JSON` | `actions` | A JSON array of canonical action objects, executed in order. |
 | `--session-id ID` | `session_id` | Reuse an existing immutable `Session<number>` ID. When omitted, use `REL_SESSION_ID` if set, then the newest existing session. Create a persistent session only when none exists. |
-| `--profile NAME` | `profile` | Create the session from this built-in or custom profile. Conflicts with `--session-id` and suppresses both implicit defaults. |
+| `--profile NAME` | `profile` | Create the session from this saved profile. Conflicts with `--session-id` and suppresses both implicit defaults. |
 | `--group GROUP` | `group` | Label a newly created URL-capture session. Conflicts with `--session-id` and suppresses both implicit defaults. |
 | `--proxy ALIAS` | `proxy` | Select a proxy by its unique alias for the created or reused session. |
 | `--retry COUNT` | `retry` | Retry count from 0 through 100; default `1`. |
@@ -395,8 +395,9 @@ Session<ID>
 For a new session, `--proxy oxylabs` is shorthand for creating a persistent
 session assigned to `oxylabs`, then capturing with it. Its canonical ID is
 returned as `data.session_id` in the NDJSON capture events. Omitting `--proxy`
-uses the selected profile, or the built-in **Default** profile when
-`--profile` is omitted.
+uses the selected profile, or the configured default when `--profile` is
+omitted. Without a saved default, Custom uses direct networking, AdBlock on,
+all images allowed, and Full Privacy.
 For an existing session, omission preserves its current assignment; an explicit
 proxy updates the assignment.
 
@@ -574,7 +575,7 @@ rel session create \
 ```
 
 Every create option is optional. `--profile` accepts the unique name shown in
-**REL → Settings… → Profiles**; omission uses **Default**. Omitted proxy and
+**REL → Settings… → Profiles**; omission uses the configured default (Custom when unset). Omitted proxy and
 filtering options use the selected profile. Use `--direct` to override it with
 a direct connection. `--image-blocking-mode` is `none`, `all`, or
 `over_limit`; `none` allows every image without changing AdBlock.

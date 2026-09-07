@@ -67,9 +67,8 @@ connection, network filters, and any browser data that should be copied when a
 Session is created. A **Session** is the persistent browser created from that
 template; later Profile changes do not modify existing Sessions.
 
-Manage templates in **REL → Settings… → Profiles**. The built-in Private,
-AdBlock, BandwidthSaver, and Native Chromium Profiles are always available.
-Custom Profiles can also use a configured proxy and imported cookies or passwords. The Profiles
+Manage saved configurations in **Profiles**. There are no built-in Profiles.
+Profiles can use a configured proxy and imported cookies or passwords. The Profiles
 list includes a **Browser Identity** column showing Full Privacy, Custom Privacy,
 or Native.
 
@@ -78,26 +77,29 @@ the profile draft. Saving selects the new proxy automatically. Cancelling return
 to the draft without changing its proxy selection. A saved proxy remains available
 in Proxies even if you later cancel the profile.
 
-Choose **Settings → General → Default Profile** to select the template used
-when a new Session does not specify one. The default is **Private** when no
-preference is set. The app, CLI, SDK, MCP, and Python clients all follow this
-preference. Explicit profile choices take precedence. Renaming a custom Profile
-keeps it selected; deleting it requires selecting another default. Changing
-the preference restarts the local agent and preserves existing Sessions.
-Choosing **Custom** in session creation uses the form’s explicit settings and
-browser-data selection; **None** does not inherit another Profile’s browser data.
-Create Session keeps Profile and an editable AdBlock toggle in the main section.
-AdBlock starts with the selected Profile’s value; changing it affects only the new
-Session, leaving the saved Profile unchanged. The **Advanced** section header
-expands Browser Identity, Proxy, Image Blocking, and Browser Data. It starts collapsed. Custom sessions start with **Allow all images**; selecting a
-saved Profile retains that Profile's image filter. For Custom sessions, expand Advanced and choose
-**Proxy → New Proxy…** to create and automatically select a proxy while preserving
-the session draft. Cancelling the proxy editor leaves the selection unchanged.
+Create Session always starts with **Custom**. It shows the Profile picker only
+when saved Profiles exist. Selecting one loads its configuration into the form;
+all settings remain editable and changes apply only to the new Session. AdBlock,
+Browser Identity, Proxy, Image Blocking, and Browser Data share one section.
+New Custom drafts start with **Allow all images**. **Proxy → New Proxy…** creates
+and selects a proxy without losing the draft. Cancelling keeps the current selection.
+
+**Settings → General → Default Profile** controls clients that omit a profile,
+including CLI, SDK, MCP, and Python. With no saved default, they use Custom:
+direct networking, AdBlock on, all images allowed, and Full Privacy. The creation
+form uses its explicit settings and browser-data choice instead. **None** does
+not inherit another Profile’s browser data. Renaming a saved default preserves
+its selection; deleting it requires choosing another default or Custom.
+Changing this preference restarts the local agent and preserves existing Sessions.
+
+Schedules that referenced former built-in Profiles keep their settings as explicit
+Custom session configurations. New schedules can create a Custom session without
+requiring a saved Profile.
 
 ## Browser identity
 
-New Sessions copy the selected Profile's **Browser Identity**. Private, AdBlock,
-BandwidthSaver, and new Profile drafts use **Full Privacy**, which enables all
+New Sessions use the form’s **Browser Identity**. New Custom configurations
+and Profile drafts use **Full Privacy**, which enables all
 seven supported privacy controls. **Show** to the left of its value opens a read-only popover without
 expanding the surrounding form. In Profile forms, Browser Identity is in the
 main section. Choose **New Browser Identity…** in its dropdown to customize the
@@ -105,10 +107,7 @@ current settings in a separate editor. **Use Identity** applies them to the draf
 as **Custom Privacy**; **Cancel** leaves the previous identity unchanged. These
 settings are saved with the Profile. Use **Edit** beside Custom Privacy to change
 them later. Starting from **Native** leaves every override off, so you can enable
-only the controls you need. **Native** uses Chromium's native values. The
-**Native Chromium** built-in
-selects Native identity, a direct connection, and no network filters. It can
-also be chosen as the Default Profile.
+only the controls you need. **Native** uses Chromium's native values.
 
 For identities with overrides, every creation path generates a fresh numeric
 readback seed for the Session, then keeps it stable for that Session. Profile edits apply to future Sessions.

@@ -386,8 +386,9 @@ update.
 ## Session profiles
 
 `SessionCreateRequest::default()` serializes to `{}`, so the agent copies the
-configured **Default Profile**, or **Private** when the preference is unset. Set `profile` to select **AdBlock**,
-**BandwidthSaver**, **Native Chromium**, or a case-insensitively unique custom name. Explicit proxy
+configured **Default Profile**, or **Custom** when the preference is unset.
+Custom uses direct networking, AdBlock on, all images allowed, and Full Privacy.
+Set `profile` to a case-insensitively unique saved configuration name. Explicit proxy
 and filtering fields override the selected profile; use
 `Change::Set("alias".into())` for a proxy or `Change::Clear` for direct
 networking:
@@ -397,7 +398,7 @@ use rel_client::{Change, RelClient, SessionCreateRequest};
 
 let request = SessionCreateRequest {
     group: Some("pgm".into()),
-    profile: Some("BandwidthSaver".into()),
+    adblock_enabled: Some(true),
     proxy_alias: Change::Clear,
     ..SessionCreateRequest::default()
 };
@@ -413,7 +414,7 @@ status, and creation time.
 itself remains app-owned. `ProfileDataUpdateRequest` updates the two inclusion
 flags after REL.app stages an import; no cookie or password values cross RPC.
 Re-importing a selected category replaces that category in the template.
-Built-ins cannot be modified or deleted. `ImageBlockingMode::None` allows every
+There are no built-in profiles. `ImageBlockingMode::None` allows every
 image without disabling AdBlock. Existing sessions retain copied settings and
 data after their source profile is changed or deleted. REL Free can create one
 persistent Session and one custom Profile; REL Pro removes those limits.
@@ -422,8 +423,7 @@ persistent Session and one custom Profile; REL Pro removes those limits.
 the default compatibility template, `Change::Clear` for native Chromium, and
 `Change::Set(profile)` for explicit identity settings. REL.app preserves those
 settings but generates a fresh seed whenever it creates a session from the
-profile. Private, AdBlock, and BandwidthSaver use Full Privacy. The Native Chromium
-built-in has no identity template and creates sessions with native values.
+profile. New configurations use Full Privacy; explicit native identity stays native.
 
 `Session::profile` exposes the source profile name and
 `Session::profile_data_id` identifies the custom browser-data template copied
