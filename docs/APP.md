@@ -17,6 +17,18 @@ removed, REL preserves existing Sessions and configuration instead of deleting
 them. Free prevents additional creation beyond its limits, and any stored proxy
 assignment runs as a direct connection until Pro access is restored.
 
+You can also enter a `REL-PRO-...` promo code in the same Plan field when one
+has been provided to you. Promo codes grant one, two, or three calendar months
+of REL Pro without a checkout or payment method. Each trial can be redeemed on
+one REL installation, and a campaign code stops working after its configured
+number of redemptions.
+
+REL displays the trial end date in Plan settings. It checks the grant with REL
+at most once per day and supports up to seven days offline, without extending
+access beyond that end date. At expiry, REL automatically returns to Free and
+keeps existing Sessions and configuration under the Free plan limits described
+above.
+
 ## Profiles and Sessions
 
 A **Profile** is a reusable template for a new Session. Profiles select the
