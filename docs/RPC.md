@@ -915,7 +915,51 @@ app-owned template without changing sessions already created from it.
 The fingerprint object is an identity template. When REL.app creates a session
 from a named profile, it preserves the template settings and generates a fresh
 seed before the session's Chromium context is used. The built-in profiles use
-the compatibility template by default.
+the Full Privacy preset by default. New profiles also use it when
+`fingerprint_profile` is omitted; explicit null keeps native values.
+
+Fingerprint profiles also accept an optional `overrides` array. Omit the field
+to enable all supported overrides, or provide an explicit list to leave
+all unlisted controls native. An empty array applies no overrides. All existing
+profile value fields remain required and validated; inactive values are stored
+for later editing, but are not sent as browser overrides.
+
+| Override | Applied behavior |
+| --- | --- |
+| `locale` | Language preferences and locale |
+| `timezone` | IANA timezone |
+| `hardware_concurrency` | Page CPU thread count; workers retain native values in this engine |
+| `network` | Network information profile |
+| `device_surfaces` | Linked memory, touch, screen/pixel ratio, PDF plugin fallback, and storage quota controls |
+| `graphics` | Linked Canvas/WebGL readbacks, WebGL identity/extensions, and unavailable WebGPU adapters |
+| `audio` | Audio readbacks using the profile's audio mode |
+
+Browser identity overrides have been removed. Chromium supplies the native
+User-Agent, navigator platform, and client hints for every session, including
+legacy full profiles. The retired `identity` selection is accepted only to read
+old profiles and is removed during normalization. Stored browser identity fields
+remain required for the existing schema but do not override browser identity.
+
+For example, add `"overrides": ["timezone"]` to a valid profile with
+`"timezone": "Asia/Tokyo"` to change only timezone. Unknown override names and
+non-array values are rejected. Saving the profile preserves this list through
+export/import. Missing lists in older profiles enable the remaining supported overrides.
+
+In the macOS app, new sessions and profile drafts default to **Full Privacy**,
+with all seven supported controls enabled. It presents a read-only summary.
+Choose **Custom Privacy** to edit individual values and toggles in compact rows.
+The shared device preset appears once, info buttons explain linked settings,
+and the readback seed is in an expandable section. **Native** turns off all
+controls. User-Agent and client hints remain native in every mode.
+
+Custom Privacy saves an explicit `overrides` list, including when all seven
+controls are enabled or all are disabled. It therefore reopens as Custom.
+Full Privacy uses the omitted-list representation; selecting it resets custom
+values to the standard full preset while retaining the session seed. Native
+saves a null fingerprint. Existing explicit choices and saved session-creation
+preferences are preserved. Saving recreates only the session's Chromium context.
+Device surfaces and graphics remain linked groups in the pinned engine.
+Individual fields within those groups cannot independently remain native.
 
 On the Chromium 152 upgrade, REL updates stored Chromium 151 fingerprint
 versions and their matching user agents in sessions and named profiles before
