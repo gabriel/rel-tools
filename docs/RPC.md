@@ -979,6 +979,15 @@ for later editing, but are not sent as browser overrides.
 | `graphics` | Linked Canvas/WebGL readbacks, WebGL identity/extensions, and unavailable WebGPU adapters |
 | `audio` | Audio readbacks using the profile's audio mode |
 
+With `device_surfaces` enabled, `device_memory_gib` supplies both JavaScript
+device memory and the `Device-Memory` / `Sec-CH-Device-Memory` HTTP hints.
+HTTP hints still require the site's client-hint opt-in and permissions policy.
+CSS device-width and device-height queries use the profile's screen dimensions;
+color queries report 8 bits per component, sRGB, and standard dynamic range,
+matching the profile's 24-bit screen surface. These settings do not resize the
+page viewport. Native sessions and profiles with `device_surfaces` disabled
+retain the engine's native values.
+
 `locale_mode` accepts `automatic` or `custom`. Private defaults to
 `automatic`. Resolution uses an explicit Custom `locale` first, then the
 assigned proxy's configured `locale`, then the macOS user's preferred/default
