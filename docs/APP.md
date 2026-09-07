@@ -397,6 +397,7 @@ notifications. Shared content is untrusted website data and never starts an agen
 
 The page refreshes automatically and shows up to 256 shared notifications, newest
 first, with each notification's origin, title, body, session ID, and display time.
+The Recent section appears only when shared notifications are available.
 Turning sharing off stops new entries; existing entries remain until the local
 agent restarts. The queue is not a permanent notification archive. Debug runtimes
 with website notifications disabled show that status on the page.
