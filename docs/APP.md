@@ -9,8 +9,17 @@ sets. The privacy layer removes built-in Google service integrations and
 blocks substituted background-service destinations. Websites you visit can
 still load Google resources, and you can open Google pages explicitly.
 
-Sessions keep cookies, site storage, and saved logins when REL quits. The
-privacy layer does not enable automatic clearing on exit.
+REL configures Sessions to retain cookies, site storage, and saved logins when
+it quits. The privacy layer does not enable automatic clearing on exit. This
+preserves website login state; it does not enable Chromium's password manager
+or guarantee that every sign-in flow is compatible.
+
+The patch sets also remove Safe Browsing malware/download reputation checks,
+automatic extension updates, browser Google account synchronization, and
+Google-backed Web Push. Third-party cookie restrictions and disabled FedCM can
+affect federated sign-in. The current ungoogled download patch also removes
+macOS quarantine metadata. These are retained source-policy tradeoffs, not
+just telemetry removal.
 
 ## Free and Pro
 
@@ -54,9 +63,10 @@ restricts non-proxied UDP connections.
 
 Compatibility profiles keep the selected browser, platform, locale, time zone,
 hardware, screen, graphics, storage, and network claims coherent. REL applies
-small deterministic changes to copied Canvas, WebGL, and Web Audio readbacks so
-two Sessions use different values while one Session stays stable. Text and
-element geometry remains native so clicks, accessibility bounds, and
+small deterministic changes to Canvas, WebGL, and Web Audio readbacks so two
+Sessions use different values while one Session stays stable. AudioBuffer
+exposes live sample arrays, so its small sample changes can also affect later
+playback. Text and element geometry remains native so clicks, accessibility bounds, and
 screenshots keep matching the page. A profiled Session reports WebGPU as
 unavailable rather than exposing native graphics details that contradict its
 profile. Font enumeration and other unlisted surfaces remain native.
