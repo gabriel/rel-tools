@@ -21,6 +21,29 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## AI provider presets
+
+In **Providers → Add Provider**, choose **Fireworks**, **Amazon Bedrock**,
+or **Baseten** to fill in an OpenAI-compatible endpoint. Enter that service's API
+key, then add the provider. Keys are stored in macOS Keychain. REL discovers the
+available models for the Chat picker.
+
+| Preset | Default endpoint |
+| --- | --- |
+| Fireworks | `https://api.fireworks.ai/inference/v1` |
+| Amazon Bedrock | `https://bedrock-mantle.us-east-1.api.aws/v1` |
+| Baseten | `https://inference.baseten.co/v1` |
+
+For Amazon Bedrock, change `us-east-1` to your AWS region as needed and use an
+Amazon Bedrock API key. AWS access key IDs and secret access keys are not accepted
+by this preset. Model availability depends on the endpoint, region, and account.
+All three presets use the existing `openai-compatible` provider kind and Chat
+Completions API. Endpoints remain editable for custom deployments.
+
+See the provider setup references for [Fireworks](https://docs.fireworks.ai/tools-sdks/openai-compatibility),
+[Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-chat-completions-mantle.html),
+and [Baseten](https://docs.baseten.co/reference/inference-api/overview).
+
 ## Session and workspace errors
 
 Click the warning icon in the main toolbar to open **Session and Workspace
