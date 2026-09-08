@@ -704,7 +704,7 @@ Passwords are accepted on writes but never returned.
 - `GET /v1/proxies/{alias}` returns `data.proxy`.
 - `POST /v1/proxies` requires `alias`, `upstream_host`, and `upstream_port`. Optional
   write fields are `username`, `password`, `oxylabs_enabled`,
-  `oxylabs_location_parameter`, `oxylabs_location_value`, `bright_data`, and `locale`.
+  `oxylabs_location_parameter`, `oxylabs_location_value`, `bright_data`, `locale`, and `detect_exit_locale`.
 - `PATCH /v1/proxies/{alias}` is a true partial update. Missing fields are retained.
   `username:null`, `password:null`, or `locale:null` clears that value.
 - `DELETE /v1/proxies/{alias}` detaches it from all sessions, then returns
@@ -712,13 +712,27 @@ Passwords are accepted on writes but never returned.
 - `POST /v1/proxies/{alias}/rotate-session` requires an Oxylabs- or Bright Data-enabled proxy and
   returns `data.proxy`.
 
-`locale` is an optional BCP-47 language/locale associated with the proxy, such as
-`fr-CA`. Whitespace is trimmed and underscores normalize to hyphens. Null or an
-empty string clears the preference; omission on update preserves it. Invalid
-values are rejected before mutation. Countries and provider location selectors
-never infer this value. Proxy responses include `locale`, and assigned session
-responses include `proxy_locale`. Proxy/Profile transfers preserve this setting
-in transfer version 5; older transfers have no proxy locale.
+`detect_exit_locale` is a boolean, off by default and preserved when omitted on
+update. Automatic language controls use the active provider's configured country
+(Bright Data country, Oxylabs country, or US state). When detection is enabled,
+they instead resolve the exit country through the session's agent-owned proxy
+using `https://ipwho.is/`. Country-to-language selection uses macOS locale data.
+No configured country means the user's preferred language when detection is off.
+Custom fingerprint locales take precedence and disabled language controls stay native.
+
+Proxy responses include `detect_exit_locale`; session responses include
+`proxy_country` (configured ISO country or null) and `proxy_detect_exit_locale`.
+`GET /v1/sessions/{id}/proxy-location` returns `data.country` (for example `DE`)
+when detection is enabled. It errors for a missing proxy, disabled detection,
+failed connection, or invalid lookup response. Successful results are cached for
+30 minutes per session and upstream route; provider session rotation changes the
+route. Lookups have a 10-second timeout and never retry through a direct connection.
+
+The legacy `locale` field remains validated and preserved in storage and transfers,
+but Automatic language selection now uses country targeting or exit detection.
+Proxy responses retain `locale`, and session responses retain `proxy_locale`.
+Version 6 proxy/profile transfers preserve detection; older transfers import with
+it disabled.
 
 Aliases are case-insensitively unique, immutable, and must start with a letter;
 they may contain only letters, numbers, hyphens, and underscores (maximum 64

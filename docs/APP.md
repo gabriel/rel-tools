@@ -256,18 +256,36 @@ readback seed for the Session, then keeps it stable for that Session. Profile ed
 Use a Session's tab menu to change its identity; saving recreates only that
 Session's Chromium context and returns it to the same page.
 
-**Private** uses **Automatic** for language and locale. REL resolves an
-explicit Custom locale first, then the locale configured on the session's proxy,
-then the macOS user's preferred/default locale. It applies a language/locale
-override only when the resolved value differs from native Chromium. An enabled
-language control can therefore leave native values untouched.
+**Private** uses **Automatic** for language and locale. REL selects the default
+language for the proxy's configured country using macOS locale data and keeps
+that country as the locale's region. Bright Data country targeting and Oxylabs
+country or US state targeting supply this location. For example, Germany uses
+`de-DE`, Canada uses `en-CA`, and Belgium uses `nl-BE`. Without a configured
+location, REL uses your macOS preferred language.
 
-Set **Language and Locale** in a proxy's editor to associate a BCP-47 locale such
-as `fr-CA` with that proxy. Leave it blank to use your user/default locale.
-A country selection alone never picks a language, including in multilingual
-countries. In Custom Privacy, choose **Automatic** or **Custom** in the Language
-row; Custom exposes the explicit locale field. Disabling that control keeps
-native language and locale regardless of proxy settings.
+The proxy editor's **Detect Exit Locale** option is off by default. Enable it
+to use the detected exit country instead of the configured target. For Automatic
+language controls, REL requests `https://ipwho.is/` through the browser session's
+agent-owned proxy before preparing the browser. IPWHOIS.io sees the proxy's exit
+IP. Successful results are cached for up to 30 minutes per session and upstream
+route; a provider session rotation changes that route. A failed lookup reports an
+error rather than using a different locale. The option is preserved in proxy and
+profile transfers; older transfers import with detection off.
+
+A country does not identify every resident's preferred language. In Custom
+Privacy, choose **Custom** in the Language row to set an explicit locale such as
+`fr-CA`. Custom takes precedence over automatic selection and does not trigger a
+lookup. Disabling the language control keeps native Chromium language and locale.
+The former proxy-level manual locale is retained in storage and API responses,
+but Automatic now uses country targeting or opt-in exit detection.
+
+For HTTP clients, proxy create/update accepts `detect_exit_locale` (boolean,
+default `false` on create and preserved when omitted on update). Proxy responses
+include that setting. Session responses include `proxy_country` (configured ISO
+country or null) and `proxy_detect_exit_locale`. With detection enabled,
+`GET /v1/sessions/{id}/proxy-location` returns `{ "country": "DE" }` in the
+standard response envelope, or an error if detection is disabled, the session has
+no proxy, or the lookup fails. This lookup does not write a language to the proxy.
 
 Privacy controls cover graphics, audio, device surfaces, language and locale,
 time zone, network information, and the CPU thread count reported to pages.
