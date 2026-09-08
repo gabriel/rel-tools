@@ -56,9 +56,11 @@ the default Profile. Refresh is available while the local agent is running and
 no session refresh or save is in progress.
 
 **Save Current Workspace** requests a save of the current tabs and layout for
-the next launch; it does not restore a previous layout. After a real workspace
-save failure, REL keeps the error visible and blocks further writes until you
-restart. The button cannot bypass that protection. **Report a Bug** opens the
+the next launch; it does not restore a previous layout. When the agent rejects a
+save as invalid, REL preserves the current draft and allows another save after
+the problem is corrected. If the save outcome is uncertain or the workspace
+revision has changed, REL blocks further writes until you restart. The button
+cannot bypass that protection. **Report a Bug** opens the
 report form for further help.
 
 In Debug builds, **Debug → Error Recovery** can trigger a session error, a
@@ -621,7 +623,8 @@ is not resumed automatically; its submitted prompt remains visible in the chat.
 Database upgrades use transactional migrations. Existing workspace layout and token
 usage are imported once from the current runtime’s old workspace file. If restoration
 fails, REL reports the error and blocks replacement writes. A save failure preserves
-the current draft in memory and asks you to restart before saving again.
+the current draft in memory. Validation rejections allow another save; uncertain
+save outcomes and revision conflicts require a restart before saving again.
 
 Database recovery preserves healthy conversations and drafts. Damaged messages or
 chats belonging to an unrecoverable Session remain in the original recovery snapshot
