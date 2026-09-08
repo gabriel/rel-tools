@@ -248,6 +248,13 @@ native language and locale regardless of proxy settings.
 
 Privacy controls cover graphics, audio, device surfaces, language and locale,
 time zone, network information, and the CPU thread count reported to pages.
+When Network Information protection is enabled, JavaScript RTT/downlink and
+opted-in HTTP RTT/Downlink hints use the same rounded session values.
+Network measurements are not exposed through those hints. Disabling the control
+retains native estimates. Sites must still opt in to receive the hints, and
+Permissions Policy can suppress them. These reported values do not change actual
+connection speed or route traffic through a proxy.
+
 Chromium generates the User-Agent in every mode with its product version reduced
 to `MAJOR.0.0.0` (for example, `Chrome/152.0.0.0`). The engine supplies its native
 brand list and client hints; these are not editable. High-entropy client hints
