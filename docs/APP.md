@@ -594,6 +594,18 @@ messages outside that window, callers can send an approved template using the
 RPC `payload` option. See Meta's
 [WhatsApp Cloud API reference](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
 
+## Editing an assigned proxy
+
+Saving a proxy's host, port, credentials, or provider settings keeps assigned
+sessions open without reloading their pages. New connections use the updated
+settings; existing connections continue until they close. Editing a proxy does
+not wake inactive sessions.
+
+An open session keeps its resolved browser identity when a proxy's location
+changes. The new location is resolved on the next app launch, or when you explicitly
+change its browser identity or proxy assignment. Certificate-trust
+changes still refresh affected browser contexts as described below.
+
 ## Proxy certificate trust
 
 In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certificates → Trust**:
