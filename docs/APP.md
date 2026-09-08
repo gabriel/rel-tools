@@ -193,7 +193,7 @@ in Proxies even if you later cancel the profile.
 **Create Session**, **New Session** (Command-T), and the session tab bar’s plus
 button create a session immediately using the configured default Profile, or
 Custom defaults when none is set. You can change AdBlock, image blocking, Proxy,
-and Browser Identity afterward. Changing Browser Identity reopens the session.
+and Browser Identity afterward. Changing Browser Identity shows a banner so you can reload when ready.
 Browser data is copied or imported rather than switched as a setting.
 
 Use the session toolbar's **Proxy** menu to select a saved proxy, or **None** for
@@ -739,6 +739,20 @@ messages outside that window, callers can send an approved template using the
 RPC `payload` option. See Meta's
 [WhatsApp Cloud API reference](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
 
+## Browser configuration changes
+
+Saving browser identity or proxy configuration leaves the current page running.
+If a change requires a new browser context, REL shows a banner above the page:
+**Browser configuration changed. Reload to apply.** Choose **Reload** when you
+are ready. Saving alone does not reload the page, so unsaved form input remains
+available until you reload. Reverting all pending context changes removes the
+banner.
+
+Changes to upstream routing apply to new connections; existing connections
+continue until they close. Browser identity, proxy assignment, and certificate
+trust changes that require a new context wait for Reload. Sessions that have
+not opened a browser yet start with their latest configuration.
+
 ## Proxy certificate trust
 
 In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certificates → Trust**:
@@ -747,6 +761,6 @@ In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certifica
 - **Bright Data certificate** adds REL's bundled Bright Data root CA for `brd.superproxy.io:44445`. Creating a proxy with the Bright Data type preselects this option; an existing proxy requires an explicit change.
 - **Custom certificate** imports a PEM bundle or DER CRT file. REL saves the certificate contents with the proxy, so the original file is no longer needed. PEM bundles may contain 1–16 CA certificates, up to 64 KiB; private keys and website leaf certificates are rejected.
 
-Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change restarts affected browser views while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
+Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change shows the configuration banner in affected open browsers. Reload applies the new trust settings while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
 
 CLI/RPC proxy and profile archives preserve certificate settings. Settings curl transfers omit custom certificates. The import sheet identifies transfers that add a trusted proxy CA. Older transfer versions import with system trust.
