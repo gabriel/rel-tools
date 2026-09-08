@@ -996,7 +996,8 @@ for later editing, but are not sent as browser overrides.
 With `device_surfaces` enabled, `device_memory_gib` supplies both JavaScript
 device memory and the `Device-Memory` / `Sec-CH-Device-Memory` HTTP hints.
 HTTP hints still require the site's client-hint opt-in and permissions policy.
-CSS device-width and device-height queries use the profile's screen dimensions;
+CSS device-width and device-height queries use the profile's screen dimensions,
+and resolution queries use its device scale factor;
 color queries report 8 bits per component, sRGB, and standard dynamic range,
 matching the profile's 24-bit screen surface. These settings do not resize the
 page viewport. Native sessions and profiles with `device_surfaces` disabled
