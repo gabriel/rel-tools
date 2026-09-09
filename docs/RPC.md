@@ -849,7 +849,7 @@ A session resource is:
 - `POST /v1/sessions` accepts optional `name`, `group`, `profile`, `proxy_alias`,
   `adblock_enabled`, `image_blocking_mode`, and `image_size_limit_kb`; returns
   `data.session`.
-- `PATCH /v1/sessions/{id}` is partial and returns `data.session`. Changes that require a new browser context are saved without reloading an open page; REL shows a banner for the user to choose Reload and apply them.
+- `PATCH /v1/sessions/{id}` is partial and returns `data.session`. Changes that require a new browser context are saved without reloading an open page; REL shows a banner for the user to choose Reload and apply them. Empty browsers with no active page, popup, or navigation history apply the changes automatically without a banner.
 - `POST /v1/sessions/{id}/pause` and `/play` take no body and idempotently
   return `data.session_id` and `data.network_paused`. Pause cancels active
   requests and blocks new network work. Play resumes network activity and
@@ -1072,7 +1072,7 @@ Proxy create/update requests accept a `tls` object, also returned on proxy resou
 
 Use `system` to clear additional roots. Omission on create selects system trust; omission on update preserves the existing setting. `bright_data` requires `brd.superproxy.io:44445`. `custom` requires a PEM bundle with 1–16 CA certificates and a maximum size of 64 KiB. Unknown modes/fields, malformed certificates, private keys, leaf certificates and inconsistent provider endpoints are rejected before updating the proxy. Normal hostname, validity and chain verification stays enabled.
 
-Session resources additionally contain `proxy_ca_certificates`, a derived array of base64 DER CA certificates from the assigned proxy. Direct sessions return an empty array. This is read-only session metadata; configure trust on the proxy. Updating proxy certificates synchronizes affected open sessions and shows a configuration banner. Browser views are recreated only when the user chooses Reload. Proxy/profile transfer format version 3 stores the TLS configuration; versions 1 and 2 remain readable and default to system trust.
+Session resources additionally contain `proxy_ca_certificates`, a derived array of base64 DER CA certificates from the assigned proxy. Direct sessions return an empty array. This is read-only session metadata; configure trust on the proxy. Updating proxy certificates synchronizes affected open sessions. Empty browsers apply the changes automatically; browsers with page state show a configuration banner and recreate their browser views when the user chooses Reload. Proxy/profile transfer format version 3 stores the TLS configuration; versions 1 and 2 remain readable and default to system trust.
 
 ## Webhooks
 

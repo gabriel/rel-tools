@@ -639,7 +639,7 @@ Automatic: an explicit Custom identity locale wins, then the proxy locale, then
 the macOS user's preferred/default locale. A value matching native Chromium
 requires no override.
 
-Both `proxy create` and `proxy update` accept either `--tls system|bright-data` or `--ca-cert PATH`. These options are mutually exclusive. The CLI reads a PEM CA bundle locally and sends its contents, not its path. The agent validates CA certificates and limits bundles to 1–16 certificates and 64 KiB. Omission on create uses system trust; omission on update preserves the current setting. Additional roots apply only to sessions assigned to that proxy. A TLS setting change shows a banner in affected open browsers. The user chooses Reload to apply it; storage and logins remain intact.
+Both `proxy create` and `proxy update` accept either `--tls system|bright-data` or `--ca-cert PATH`. These options are mutually exclusive. The CLI reads a PEM CA bundle locally and sends its contents, not its path. The agent validates CA certificates and limits bundles to 1–16 certificates and 64 KiB. Omission on create uses system trust; omission on update preserves the current setting. Additional roots apply only to sessions assigned to that proxy. A TLS setting change applies automatically in empty browsers; affected browsers with page state show a banner. The user chooses Reload to apply it; storage and logins remain intact.
 
 ### Database recovery reports
 

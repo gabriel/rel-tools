@@ -750,8 +750,10 @@ banner.
 
 Changes to upstream routing apply to new connections; existing connections
 continue until they close. Browser identity, proxy assignment, and certificate
-trust changes that require a new context wait for Reload. Sessions that have
-not opened a browser yet start with their latest configuration.
+trust changes that require a new context wait for Reload when there is page
+state to preserve. An empty browser with no active page, popup, or navigation
+history applies these changes automatically without a reload banner. Sessions
+that have not opened a browser yet start with their latest configuration.
 
 ## Proxy certificate trust
 
