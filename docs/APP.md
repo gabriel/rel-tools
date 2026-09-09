@@ -674,8 +674,11 @@ Right-click an Action to edit, run, or delete it. Each Action belongs to one ses
 
 Start with **What do you want to happen?** and use **Add Step** for additional
 prompts. Steps run in order in the same session. Set the **Name** and **Enabled**
-state, then choose **When → Schedule** for weekdays and a local time, or
-**When → Event** for browser events.
+state. **When** defaults to **Manual**, with no additional settings. A Manual
+Action runs only when you choose **Run Now** from its right-click menu; timers,
+browser events, and incoming webhooks do not start it. Choose **Schedule** for
+weekdays and a local time, or **Event** for browser events. Existing Actions
+keep their saved trigger when reopened.
 
 Under **When finished**, select **Shortcut**, **Webhook**, both, or neither.
 Choose a destination for each selected option. Both receive the final step's
@@ -693,7 +696,8 @@ Disabling an Action pauses its automatic triggers; it can still be run manually.
 ### Built-in events
 
 In the Action editor, choose **When → Event** and enable **Page Changed** or
-**Notification Received**. Page Changed is selected for new Actions. Events use
+**Notification Received**. Switching a new Action from Manual to Event initially
+selects Page Changed. Events use
 the Action's session. Page Changed fires when the session's URL changes, including
 same-document URL changes. It does
 not watch arbitrary DOM mutations or compare page contents. Notification
