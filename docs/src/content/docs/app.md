@@ -616,13 +616,17 @@ then answers. Restoring the default prompt returns to this behavior.
 
 ## Actions
 
-Create reusable work in **REL → Settings… → Actions**. Each Action has a name,
+Open a Session’s bottom panel, select **Actions**, and choose **Add Action**.
+Choose **New Action** to create work here. Each Action has a name,
 ordered prompt steps, an error policy, completion behavior, and an enabled state.
 Use **Add Step** and the up/down controls to build a sequence. Disabling an
 Action pauses every timer, event, and incoming webhook that uses it.
 
-Open a Session's bottom panel, select **Actions**, and choose **Add Action**.
-Select the reusable Action and choose **On a schedule** or **On a browser event**.
+Select an existing Action or create one, then choose **On a schedule** or
+**On a browser event**. Use **Edit Steps** to change the selected Action.
+Saving commits the Action and its assignment together; cancelling discards
+unsaved changes. Actions are managed only inside Sessions, with no standalone
+Actions window, Settings page, or global New Action command.
 A Session can have multiple Action assignments, including the same Action with
 different triggers. There is no separate Schedules section or schedule library.
 Editing a reusable Action changes its steps everywhere; editing a Session's
@@ -656,11 +660,9 @@ time, including manual, timer, browser-event, and incoming webhook runs.
 
 **Run Now** in the Session panel uses that Session without changing the next
 timer. Disabling an assignment pauses only that assignment; removing it keeps
-the reusable Action. Remove Session assignments and incoming webhook references
-before deleting a reusable Action.
+the reusable Action available to add again from a Session.
 
-Manual Action runs from Settings and incoming webhook runs create a custom
-Session. After a successful step, subsequent steps use that Session. Existing
+Incoming webhook runs create a custom Session. After a successful step, subsequent steps use that Session. Existing
 single-prompt Actions become one-step Actions. Existing assigned schedules and
 event source selections become Session Action assignments. Old unassigned
 schedule definitions are retired; their reusable Actions remain available.
@@ -672,8 +674,7 @@ Open **REL → Settings… → Notifications** in the Browser section to control
 **Send notifications to the agent** and inspect recent shared website notifications.
 Sharing is off by default. Websites must first receive permission to send
 notifications. Sharing adds untrusted website data to the feed. To start a turn automatically,
-enable **Notification Received** for an Action and choose its source session in
-**Settings → Actions**.
+add an Action with **Notification Received** in that Session’s **Actions** panel.
 
 The page refreshes automatically and shows up to 256 shared notifications, newest
 first, with each notification's origin, title, body, session ID, and display time.
