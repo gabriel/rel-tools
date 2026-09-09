@@ -548,7 +548,9 @@ The destination is one of:
   session settings, including filters, proxy alias, and fingerprint draft.
 
 Completion actions are `{"type":"none"}`, `{"type":"shortcut","name":"..."}`,
-or `{"type":"webhook","id":"<UUID>"}`. Destination and completion references
+`{"type":"webhook","id":"<UUID>"}`, or
+`{"type":"shortcutAndWebhook","name":"...","id":"<UUID>"}` to deliver to both.
+Destination and completion references
 are local to the importing device; their referenced sessions, profiles, proxies,
 webhooks, and Shortcuts are not bundled. Review and repair them in the editor.
 
@@ -648,27 +650,39 @@ then answers. Restoring the default prompt returns to this behavior.
 
 ## Actions
 
-Open **Actions** from the toolbar or **Settings → Actions** to create reusable
-work. Each Action owns its name, prompt, destination Session or Profile,
-optional Shortcut or webhook completion behavior, and enabled state. Select
-an Action to edit, run, or delete it. The list shows its status for the current
-app launch. Disabling an Action pauses every trigger that uses it.
+Select a session and open its **Actions** panel to view saved work. Use
+**(+) → Add Action…** to create an Action for that session. The command is disabled
+when no session is selected. You can also use **Add** in the list footer.
+Right-click an Action to edit, run, or delete it. Each Action belongs to one session.
 
-Schedules, incoming webhooks, and built-in browser events execute the same saved
-Action. Editing an Action updates the work performed by all its triggers. REL
-runs at most one execution per Action at a time, including manual runs.
+Start with **What do you want to happen?** and use **Add Step** for additional
+prompts. Steps run in order in the same session. Set the **Name** and **Enabled**
+state. **When** defaults to **Manual**, with no additional settings. A Manual
+Action runs only when you choose **Run Now** from its right-click menu; timers,
+browser events, and incoming webhooks do not start it. Choose **Schedule** for
+weekdays and a local time, or **Event** for browser events. Existing Actions
+keep their saved trigger when reopened.
 
-Existing saved prompts become Actions with their original IDs, destinations,
-and completion settings. Existing timers still reference those Actions;
-webhook-only prompts appear in Actions without a schedule row. Existing webhook
-routing IDs remain valid. Remove schedules and incoming webhooks referencing an
-Action before deleting it.
+Under **When finished**, select **Shortcut**, **Webhook**, both, or neither.
+Choose a destination for each selected option. Both receive the final step's
+response. REL runs the shortcut first and then attempts webhook delivery even
+if the shortcut fails. Delivery failures remain visible and mark the run as
+failed. Cancelling the run stops any remaining delivery.
+
+**Advanced** starts collapsed. Its **On Error** setting defaults to **Stop**,
+which skips remaining steps after a failure. **Ignore** continues with later
+steps while keeping errors visible and marking the run as failed.
+
+REL runs at most one execution per Action at a time, including manual runs.
+Disabling an Action pauses its automatic triggers; it can still be run manually.
 
 ### Built-in events
 
-In the Action editor, enable **Page Changed** or **Notification Received** and
-choose a **Source Session**. Both are off by default. Page Changed fires when
-the source session's URL changes, including same-document URL changes. It does
+In the Action editor, choose **When → Event** and enable **Page Changed** or
+**Notification Received**. Switching a new Action from Manual to Event initially
+selects Page Changed. Events use
+the Action's session. Page Changed fires when the session's URL changes, including
+same-document URL changes. It does
 not watch arbitrary DOM mutations or compare page contents. Notification
 Received fires when that session displays an allowed website notification.
 Website notification permissions still apply. Notification Actions are separate
@@ -725,8 +739,8 @@ variant's Keychain, separately from browser sessions. Settings can send an
 explicit test message and delete a destination.
 
 To deliver an Action's final response, edit it in **Actions** and choose
-**Send Result to Webhook**. A completion action can use either a webhook or a
-macOS Shortcut. Keep Discord results within 2,000 characters and WhatsApp text
+**When finished → Webhook**, then select a destination. You can also select a
+macOS Shortcut to receive the same response. Keep Discord results within 2,000 characters and WhatsApp text
 results within 4,096 characters. Delivery errors mark the prompt run as failed;
 REL does not automatically resend messages.
 
