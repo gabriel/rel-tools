@@ -617,56 +617,49 @@ then answers. Restoring the default prompt returns to this behavior.
 ## Actions
 
 Open a Session’s bottom panel, select **Actions**, and choose **Add Action**.
-Choose **New Action** to create work here. Each Action has a name,
-ordered prompt steps, an error policy, completion behavior, and an enabled state.
-Use **Add Step** and the up/down controls to build a sequence. Disabling an
-Action pauses every timer, event, and incoming webhook that uses it.
+Enter the name, prompt steps, timing or browser event, error policy, and completion
+behavior in one panel, then **Save**. Cancelling discards the draft.
 
-Select an existing Action or create one, then choose **On a schedule** or
-**On a browser event**. Use **Edit Steps** to change the selected Action.
-Saving commits the Action and its assignment together; cancelling discards
-unsaved changes. Actions are managed only inside Sessions, with no standalone
-Actions window, Settings page, or global New Action command.
-A Session can have multiple Action assignments, including the same Action with
-different triggers. There is no separate Schedules section or schedule library.
-Editing a reusable Action changes its steps everywhere; editing a Session's
-assignment changes only that Session's trigger or timing.
+Each Action belongs to one Session. A Session can have many Actions, and each
+Action is a complete record with its own steps, trigger, enabled state, and run
+status. There is no reusable Action library or separate assignment to manage.
+Editing or removing an Action affects only that Action. Actions are managed
+inside Sessions, with no standalone Actions or Schedules window or Settings page.
 
-For a scheduled Action, select weekdays and a local time. REL Free supports one
-scheduled assignment; REL Pro supports multiple scheduled assignments. Browser
-event assignments do not consume the scheduled-assignment limit. Times follow
-the Mac's time zone. REL must be running when a timer is due.
+Choose **On a schedule** to select weekdays and a local time. REL Free supports
+one scheduled Action; REL Pro supports multiple scheduled Actions. Browser-event
+Actions do not consume this limit. Times follow the Mac’s time zone, and REL must
+be running when a timer is due.
 
-For a triggered Action, select **Page Changed**, **Notification Received**, or
-both. Page Changed fires on URL changes, including same-document navigation;
-it does not monitor arbitrary DOM changes. Notification Received fires when an
-allowed website notification is displayed. Website notification permissions
-still apply. Events only come from the assigned Session, are passed as untrusted
-context, and cannot choose the saved Action or completion behavior. Events
-received while the Action is running are skipped; each assignment is limited to
-one event run every 30 seconds. Events are not replayed after restarting REL.
+Choose **On a browser event**, then select **Page Changed**, **Notification
+Received**, or both. Page Changed fires on URL changes, including same-document
+navigation. Notification Received fires when an allowed website notification is
+displayed. Events come only from the Action’s Session and are passed as untrusted
+context. Events during a run are skipped; each Action is limited to one event run
+every 30 seconds. Events are not replayed after restarting REL.
 
-Steps run sequentially in the assigned Session, using the default AI model.
-**Stop on error** is the default and skips remaining steps after a failure.
-**Continue after errors** attempts the remaining steps, while still recording
-the failure. Cancellation always stops the run. The completion Shortcut or
-outgoing webhook receives the last step's response if that step succeeds.
+Use **Add Step** and the up/down controls to build a sequence. Steps run in order
+in the Action’s Session, using the default AI model. **Stop on error** skips
+remaining steps after a failure. **Continue after errors** attempts remaining
+steps while still recording the failure. Cancellation always stops the run. The
+completion Shortcut or outgoing webhook receives the final step’s response if
+that step succeeds.
 
-The Session's Actions tab shows run status. Select **Failed** to view and copy
-error details, including the failed step and any skipped steps. Continuing after
-an error does not turn the run into a success. Missing or disabled Actions and
-busy Actions report failures. REL runs at most one execution per Action at a
-time, including manual, timer, browser-event, and incoming webhook runs.
+Select **Failed** in the Actions panel to view and copy error details, including
+the failed step and skipped-step count. Continuing after an error does not turn
+the run into a success. **Run Now** uses the Action’s Session without changing
+its next scheduled time. Disable an Action to pause its automatic runs.
 
-**Run Now** in the Session panel uses that Session without changing the next
-timer. Disabling an assignment pauses only that assignment; removing it keeps
-the reusable Action available to add again from a Session.
+Incoming webhooks target a saved Session Action and run in its Session. Manual,
+timer, browser-event, and incoming-webhook runs cannot overlap for that Action.
+If a webhook targets an unavailable Action, its events remain queued; edit the
+webhook to select an existing Session Action.
 
-Incoming webhook runs create a custom Session. After a successful step, subsequent steps use that Session. Existing
-single-prompt Actions become one-step Actions. Existing assigned schedules and
-event source selections become Session Action assignments. Old unassigned
-schedule definitions are retired; their reusable Actions remain available.
-Historical schedule storage identifiers remain internal implementation details.
+Existing shared Actions are copied into independent records for the Sessions
+that use them, preserving their steps and error policy. Old unassigned reusable
+Actions are retired. Incoming webhooks that referenced a former shared Action
+may need to be updated to select a Session Action. Historical schedule storage
+identifiers remain internal implementation details.
 
 ## Notifications
 
