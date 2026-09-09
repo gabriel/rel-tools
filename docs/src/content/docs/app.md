@@ -646,42 +646,68 @@ Session. The default system prompt uses that context for requests such as
 identifies the requested links in page order, reads their destinations, and
 then answers. Restoring the default prompt returns to this behavior.
 
+## Actions
+
+Open **Actions** from the toolbar or **Settings → Actions** to create reusable
+work. Each Action owns its name, prompt, destination Session or Profile,
+optional Shortcut or webhook completion behavior, and enabled state. Select
+an Action to edit, run, or delete it. The list shows its status for the current
+app launch. Disabling an Action pauses every trigger that uses it.
+
+Schedules, incoming webhooks, and built-in browser events execute the same saved
+Action. Editing an Action updates the work performed by all its triggers. REL
+runs at most one execution per Action at a time, including manual runs.
+
+Existing saved prompts become Actions with their original IDs, destinations,
+and completion settings. Existing timers still reference those Actions;
+webhook-only prompts appear in Actions without a schedule row. Existing webhook
+routing IDs remain valid. Remove schedules and incoming webhooks referencing an
+Action before deleting it.
+
+### Built-in events
+
+In the Action editor, enable **Page Changed** or **Notification Received** and
+choose a **Source Session**. Both are off by default. Page Changed fires when
+the source session's URL changes, including same-document URL changes. It does
+not watch arbitrary DOM mutations or compare page contents. Notification
+Received fires when that session displays an allowed website notification.
+Website notification permissions still apply. Notification Actions are separate
+from sharing notifications with the agent's recent-notifications feed.
+
+Events pass the source session and URL or notification details as untrusted
+data after the saved prompt. Event content cannot select the Action or its
+completion destination. Events for other sessions are ignored. Events received
+while the Action is running are skipped, and automatic events are limited to
+one run per Action every 30 seconds to bound cascades. These events are live
+and are not replayed after restarting REL.
+
 ## Scheduled prompts
 
-Open **Schedules** and click **Add Schedule** in the bottom action bar to create
-a saved prompt, even if no Sessions or Profiles exist yet. The action bar also
-provides **Edit Schedule**, **Delete Schedule**, and **Run Now** for a selected
-schedule. Each schedule contains:
+Open **Schedules** and choose **Add Schedule**. Give it a name, select an Action,
+and choose weekdays and a local time. Create the Action first in **Actions**.
+Multiple schedules can select the same Action to run it at different times.
+REL Free supports one schedule; REL Pro supports multiple schedules.
 
-- a name;
-- the Profile used to create a fresh Session;
-- the prompt that runs in that Session;
-- an optional repeating timer with weekdays and local time;
-- an optional Shortcut or webhook completion action; and
-- an enabled or disabled state.
+REL must be running when a schedule is due. It executes the selected Action
+using the default AI model. Depending on the Action's destination, it uses an
+existing Session or creates a persistent Session. The table shows the next run
+and the outcome of the most recent scheduled or manual schedule run. Sessions
+remain available for inspection after a failure.
 
-REL Free supports one saved schedule; REL Pro supports multiple schedules.
-
-Create separate schedule rows when the same prompt should run at multiple times
-on the selected days. Times follow the Mac's current time zone.
-
-REL must be running when a schedule is due. At that time REL creates a new
-persistent Session from the selected Profile, starts chat with the default AI
-model, submits the prompt, and waits for the assistant response. The Scheduled
-table shows the next run and whether the last run completed or failed. A failed
-run leaves its new Session available for inspection.
-
-Use **Run Now** to execute a schedule immediately without changing its next
-repeating run. Disable a row to pause it without deleting its configuration.
-If its Profile is later deleted, REL marks the Profile as missing and the
-schedule cannot run until it is edited to select an available Profile.
+Use **Run Now** to execute a schedule without changing its next repeating run.
+Disable a schedule to pause its timer. A disabled or missing Action causes the
+schedule run to fail clearly. If the Action is already running, the schedule
+records that outcome and waits for its next normal time; it does not queue an
+overlapping run. Times follow the Mac's current time zone.
 
 ## Notifications
 
 Open **REL → Settings… → Notifications** in the Browser section to control
 **Send notifications to the agent** and inspect recent shared website notifications.
 Sharing is off by default. Websites must first receive permission to send
-notifications. Shared content is untrusted website data and never starts an agent turn.
+notifications. Sharing adds untrusted website data to the feed. To start a turn automatically,
+enable **Notification Received** for an Action and choose its source session in
+**Settings → Actions**.
 
 The page refreshes automatically and shows up to 256 shared notifications, newest
 first, with each notification's origin, title, body, session ID, and display time.
@@ -698,18 +724,18 @@ events, or do both. Its URL and credentials are stored in the current REL app
 variant's Keychain, separately from browser sessions. Settings can send an
 explicit test message and delete a destination.
 
-To deliver a prompt's final response, edit it in **Schedules** and choose
+To deliver an Action's final response, edit it in **Actions** and choose
 **Send Result to Webhook**. A completion action can use either a webhook or a
 macOS Shortcut. Keep Discord results within 2,000 characters and WhatsApp text
 results within 4,096 characters. Delivery errors mark the prompt run as failed;
 REL does not automatically resend messages.
 
-To run a prompt from an event, create the prompt first, then select it under
-**Run a prompt on incoming events** when adding the webhook. Turn off **Run on a
-schedule** in the prompt editor for webhook-only operation. Keep **Enabled** on.
-Incoming data is appended to the run as untrusted JSON; write the saved prompt
-to describe which fields it should process. REL runs one event at a time per
-prompt and keeps events queued while the prompt is busy or disabled.
+To execute an Action from an incoming event, create the Action first, then
+select it under **Run an Action on incoming events** when adding the webhook.
+No schedule is required. Keep the Action enabled. Incoming data is appended
+as untrusted JSON; write the Action prompt to describe which fields to process.
+REL runs one event at a time per Action and keeps events queued while the
+Action is busy, disabled, or missing.
 
 **Copy Local Callback** copies the loopback receive URL. External services need
 a public HTTPS relay forwarding only that path. The [RPC webhook guide](/rpc/#webhooks)
@@ -732,6 +758,20 @@ messages outside that window, callers can send an approved template using the
 RPC `payload` option. See Meta's
 [WhatsApp Cloud API reference](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
 
+## Browser configuration changes
+
+Saving browser identity or proxy configuration leaves the current page running.
+If a change requires a new browser context, REL shows a banner above the page:
+**Browser configuration changed. Reload to apply.** Choose **Reload** when you
+are ready. Saving alone does not reload the page, so unsaved form input remains
+available until you reload. Reverting all pending context changes removes the
+banner.
+
+Changes to upstream routing apply to new connections; existing connections
+continue until they close. Browser identity, proxy assignment, and certificate
+trust changes that require a new context wait for Reload. Sessions that have
+not opened a browser yet start with their latest configuration.
+
 ## Proxy certificate trust
 
 In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certificates → Trust**:
@@ -740,6 +780,6 @@ In **Settings → Proxies**, create or edit a proxy and choose **HTTPS Certifica
 - **Bright Data certificate** adds REL's bundled Bright Data root CA for `brd.superproxy.io:44445`. Creating a proxy with the Bright Data type preselects this option; an existing proxy requires an explicit change.
 - **Custom certificate** imports a PEM bundle or DER CRT file. REL saves the certificate contents with the proxy, so the original file is no longer needed. PEM bundles may contain 1–16 CA certificates, up to 64 KiB; private keys and website leaf certificates are rejected.
 
-Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change restarts affected browser views while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
+Additional CAs are trusted only in REL sessions using that proxy. They permit the proxy provider to inspect those sessions' HTTPS traffic. Hostnames, expiry dates, and certificate chains remain checked for pages and subresources. REL never installs these roots in Keychain or disables TLS verification. Saving a certificate change shows the configuration banner in affected open browsers. Reload applies the new trust settings while preserving session storage. Switching to another proxy or a direct connection replaces or clears the additional roots.
 
 CLI/RPC proxy and profile archives preserve certificate settings. Settings curl transfers omit custom certificates. The import sheet identifies transfers that add a trusted proxy CA. Older transfer versions import with system trust.
