@@ -652,8 +652,8 @@ then answers. Restoring the default prompt returns to this behavior.
 
 Select a session and open its **Actions** panel to view saved work. Use
 **(+) → Add Action…** to create an Action for that session. The command is disabled
-when no session is selected. Select a row to edit, run, or remove it, or double-click
-to edit. Each Action belongs to one session.
+when no session is selected. You can also use **Add** in the list footer.
+Right-click an Action to edit, run, or delete it. Each Action belongs to one session.
 
 Start with **What do you want to happen?** and use **Add Step** for additional
 prompts. Steps run in order in the same session. Set the **Name** and **Enabled**
