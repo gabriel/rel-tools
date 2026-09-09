@@ -236,10 +236,6 @@ not inherit another Profile’s browser data. Renaming a saved default preserves
 its selection; deleting it requires choosing another default or Custom.
 Changing this preference restarts the local agent and preserves existing Sessions.
 
-Schedules that referenced former built-in Profiles keep their settings as explicit
-Custom session configurations. New schedules can create a Custom session without
-requiring a saved Profile.
-
 ## Browser identity
 
 New Sessions use the form’s **Browser Identity**. New Custom configurations
@@ -468,16 +464,16 @@ stable IDs.
 
 ## Settings configuration transfers
 
-In **Settings → Profiles, Proxies, Schedules, or Providers**, the glass button
+In **Settings → Profiles, Proxies, or Providers**, the glass button
 group contains **Add (+)**, **Edit**, a divider, **Import (down arrow)**, and
 **Export (up arrow)**. Select a row to enable export. Import opens a text editor with a **Paste** button to insert the clipboard
 contents; export shows selectable text with a **Copy** button. No file picker is involved.
 Imports create new records and remain subject to the plan's creation limits.
 Existing records are not overwritten.
 
-Profiles, schedules, and providers use a versioned JSON envelope:
+Profiles and providers use a versioned JSON envelope:
 `{"format":"rel.<kind>","version":1,"configuration":{...}}`. The kind is
-`profile`, `schedule`, or `provider`. Export produces one line; pasted JSON may
+`profile` or `provider`. Export produces one line; pasted JSON may
 include whitespace. Paste the complete object, without Markdown fences. JSON
 input is limited to 1 MiB. Other versions, mismatched kinds, malformed JSON,
 and invalid configurations are rejected.
@@ -528,34 +524,6 @@ select Bright Data trust; other endpoints start with system trust. Options such
 as `-k`, request headers, and the destination URL are not imported as proxy
 settings. Use the archive API below if you need to preserve the complete proxy
 configuration.
-
-### Schedules: single-line JSON
-
-```json
-{"configuration":{"completionAction":{"type":"none"},"destination":{"existingSession":{"sessionID":"session-1","sessionName":"Work"}},"hour":9,"minute":30,"name":"Morning","prompt":"Check the page and report changes.","usesTimer":true,"weekdays":[2,3,4,5,6]},"format":"rel.schedule","version":1}
-```
-
-`name`, `prompt`, `destination`, `completionAction`, `weekdays`, `hour`, `minute`,
-and `usesTimer` are required. Weekdays are 1 (Sunday) through 7 (Saturday), with
-at least one day; hours are 0–23 and minutes 0–59 in the importing device's local
-time zone. `usesTimer:false` creates a webhook-triggered schedule.
-
-The destination is one of:
-
-- `{"existingSession":{"sessionID":"...","sessionName":"..."}}`
-- `{"newSession":{"profileID":"...","profileName":"..."}}`
-- `{"configuredSession":{"settings":{...}}}`, preserving the exported custom
-  session settings, including filters, proxy alias, and fingerprint draft.
-
-Completion actions are `{"type":"none"}`, `{"type":"shortcut","name":"..."}`,
-or `{"type":"webhook","id":"<UUID>"}`. Destination and completion references
-are local to the importing device; their referenced sessions, profiles, proxies,
-webhooks, and Shortcuts are not bundled. Review and repair them in the editor.
-
-Every imported schedule receives a fresh ID and starts **disabled**, regardless
-of the source schedule's state. Run history, errors, and timestamps are omitted.
-Import never runs a prompt or completion action. Enable the schedule after
-reviewing its destination, prompt, completion action, and local execution time.
 
 ### Providers: single-line JSON
 
@@ -646,48 +614,57 @@ Session. The default system prompt uses that context for requests such as
 identifies the requested links in page order, reads their destinations, and
 then answers. Restoring the default prompt returns to this behavior.
 
-## Actions and schedules
+## Actions
 
-Create reusable work in **REL → Settings… → Actions**. An Action contains its
-prompt, completion behavior, enabled state, and optional browser events. Actions
-do not select a Session. Manual runs from Settings and incoming webhook runs
-create a custom Session; scheduled and browser-event runs use the Session that
-selected them.
+Create reusable work in **REL → Settings… → Actions**. Each Action has a name,
+ordered prompt steps, an error policy, completion behavior, and an enabled state.
+Use **Add Step** and the up/down controls to build a sequence. Disabling an
+Action pauses every timer, event, and incoming webhook that uses it.
 
-Create a reusable schedule in **Settings → Schedules** by choosing an Action,
-weekdays, and a local time. Then open a Session's bottom panel, select
-**Schedules**, and choose **Add Schedule**. The same schedule can be added to
-multiple Sessions. Editing its Action or timing updates the shared definition.
-A schedule with no Session selections has no next run.
+Open a Session's bottom panel, select **Actions**, and choose **Add Action**.
+Select the reusable Action and choose **On a schedule** or **On a browser event**.
+A Session can have multiple Action assignments, including the same Action with
+different triggers. There is no separate Schedules section or schedule library.
+Editing a reusable Action changes its steps everywhere; editing a Session's
+assignment changes only that Session's trigger or timing.
 
-REL Free supports one saved schedule; REL Pro supports multiple schedules.
-Create separate schedules for multiple run times. Times follow the Mac's
-current time zone, and REL must be running when a schedule is due.
+For a scheduled Action, select weekdays and a local time. REL Free supports one
+scheduled assignment; REL Pro supports multiple scheduled assignments. Browser
+event assignments do not consume the scheduled-assignment limit. Times follow
+the Mac's time zone. REL must be running when a timer is due.
 
-When due, REL runs the Action in each selected Session, using the default AI
-model. Sessions run sequentially. A failure in one Session does not skip the
-remaining Sessions; the schedule's last-run status reports any failures. A
-missing or disabled Action cannot run. Runs of the same Action cannot overlap.
+For a triggered Action, select **Page Changed**, **Notification Received**, or
+both. Page Changed fires on URL changes, including same-document navigation;
+it does not monitor arbitrary DOM changes. Notification Received fires when an
+allowed website notification is displayed. Website notification permissions
+still apply. Events only come from the assigned Session, are passed as untrusted
+context, and cannot choose the saved Action or completion behavior. Events
+received while the Action is running are skipped; each assignment is limited to
+one event run every 30 seconds. Events are not replayed after restarting REL.
 
-**Run Now** in a Session's Schedules tab runs only in that Session. **Run Now**
-in Settings runs in all Sessions that selected the schedule. Neither changes
-the next repeating run. Removing a schedule from a Session leaves the shared
-schedule available elsewhere. Disabling or deleting it in Settings affects all
-Sessions that use it. If a selected Session is deleted, runs report that Session
-as unavailable.
+Steps run sequentially in the assigned Session, using the default AI model.
+**Stop on error** is the default and skips remaining steps after a failure.
+**Continue after errors** attempts the remaining steps, while still recording
+the failure. Cancellation always stops the run. The completion Shortcut or
+outgoing webhook receives the last step's response if that step succeeds.
 
-For browser events, enable **Page Changed** or **Notification Received** in the
-Action editor, then choose **Add Event Action** in a Session's Schedules tab.
-Only events from Sessions that selected the Action can trigger it, and the Action
-runs in the triggering Session. Events run at most once per Action every 30
-seconds; events received while that Action is running are skipped.
+The Session's Actions tab shows run status. Select **Failed** to view and copy
+error details, including the failed step and any skipped steps. Continuing after
+an error does not turn the run into a success. Missing or disabled Actions and
+busy Actions report failures. REL runs at most one execution per Action at a
+time, including manual, timer, browser-event, and incoming webhook runs.
 
-Existing saved-session schedule destinations and event source selections in the
-current settings document become Session selections on load. Schedules previously
-configured to create a new Session must be added to a Session before they run.
-Schedule imports are added disabled and must also be added to a Session. The
-schedule transfer format retains its historical destination fields; those fields
-do not assign a Session.
+**Run Now** in the Session panel uses that Session without changing the next
+timer. Disabling an assignment pauses only that assignment; removing it keeps
+the reusable Action. Remove Session assignments and incoming webhook references
+before deleting a reusable Action.
+
+Manual Action runs from Settings and incoming webhook runs create a custom
+Session. After a successful step, subsequent steps use that Session. Existing
+single-prompt Actions become one-step Actions. Existing assigned schedules and
+event source selections become Session Action assignments. Old unassigned
+schedule definitions are retired; their reusable Actions remain available.
+Historical schedule storage identifiers remain internal implementation details.
 
 ## Notifications
 
