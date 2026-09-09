@@ -24,6 +24,16 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## Start on Login
+
+Enable **Settings → General → Startup → Start on Login** to open REL
+automatically when you log in to your Mac. REL uses the native macOS login item
+registration for the app. Turn the setting off to remove that registration.
+
+If macOS requires approval, click **Open Login Items Settings…** and allow REL.
+The setting refreshes from macOS when you return to REL, including changes made
+in System Settings. Registration errors appear below the Startup controls.
+
 ## AI provider presets
 
 In **Providers → Add Provider**, choose **Fireworks**, **Amazon Bedrock**,
@@ -59,9 +69,11 @@ the default Profile. Refresh is available while the local agent is running and
 no session refresh or save is in progress.
 
 **Save Current Workspace** requests a save of the current tabs and layout for
-the next launch; it does not restore a previous layout. After a real workspace
-save failure, REL keeps the error visible and blocks further writes until you
-restart. The button cannot bypass that protection. **Report a Bug** opens the
+the next launch; it does not restore a previous layout. When the agent rejects a
+save as invalid, REL preserves the current draft and allows another save after
+the problem is corrected. If the save outcome is uncertain or the workspace
+revision has changed, REL blocks further writes until you restart. The button
+cannot bypass that protection. **Report a Bug** opens the
 report form for further help.
 
 In Debug builds, **Debug → Error Recovery** can trigger a session error, a
@@ -194,7 +206,7 @@ in Proxies even if you later cancel the profile.
 **Create Session**, **New Session** (Command-T), and the session tab bar’s plus
 button create a session immediately using the configured default Profile, or
 Custom defaults when none is set. You can change AdBlock, image blocking, Proxy,
-and Browser Identity afterward. Changing Browser Identity reopens the session.
+and Browser Identity afterward. Changing Browser Identity shows a banner so you can reload when ready.
 Browser data is copied or imported rather than switched as a setting.
 
 Use the session toolbar's **Proxy** menu to select a saved proxy, or **None** for
@@ -292,6 +304,13 @@ no proxy, or the lookup fails. This lookup does not write a language to the prox
 
 Privacy controls cover graphics, audio, device surfaces, language and locale,
 time zone, network information, and the CPU thread count reported to pages.
+When Network Information protection is enabled, JavaScript RTT/downlink and
+opted-in HTTP RTT/Downlink hints use the same rounded session values.
+Network measurements are not exposed through those hints. Disabling the control
+retains native estimates. Sites must still opt in to receive the hints, and
+Permissions Policy can suppress them. These reported values do not change actual
+connection speed or route traffic through a proxy.
+
 Chromium generates the User-Agent in every mode with its product version reduced
 to `MAJOR.0.0.0` (for example, `Chrome/152.0.0.0`). The engine supplies its native
 brand list and client hints; these are not editable. High-entropy client hints
@@ -617,7 +636,8 @@ is not resumed automatically; its submitted prompt remains visible in the chat.
 Database upgrades use transactional migrations. Existing workspace layout and token
 usage are imported once from the current runtime’s old workspace file. If restoration
 fails, REL reports the error and blocks replacement writes. A save failure preserves
-the current draft in memory and asks you to restart before saving again.
+the current draft in memory. Validation rejections allow another save; uncertain
+save outcomes and revision conflicts require a restart before saving again.
 
 Database recovery preserves healthy conversations and drafts. Damaged messages or
 chats belonging to an unrecoverable Session remain in the original recovery snapshot
@@ -646,59 +666,48 @@ Session. The default system prompt uses that context for requests such as
 identifies the requested links in page order, reads their destinations, and
 then answers. Restoring the default prompt returns to this behavior.
 
-## Actions
+## Actions and schedules
 
-Open **Actions** from the toolbar or **Settings → Actions** to create reusable
-work. Each Action owns its name, prompt, destination Session or Profile,
-optional Shortcut or webhook completion behavior, and enabled state. Select
-an Action to edit, run, or delete it. The list shows its status for the current
-app launch. Disabling an Action pauses every trigger that uses it.
+Create reusable work in **REL → Settings… → Actions**. An Action contains its
+prompt, completion behavior, enabled state, and optional browser events. Actions
+do not select a Session. Manual runs from Settings and incoming webhook runs
+create a custom Session; scheduled and browser-event runs use the Session that
+selected them.
 
-Schedules, incoming webhooks, and built-in browser events execute the same saved
-Action. Editing an Action updates the work performed by all its triggers. REL
-runs at most one execution per Action at a time, including manual runs.
+Create a reusable schedule in **Settings → Schedules** by choosing an Action,
+weekdays, and a local time. Then open a Session's bottom panel, select
+**Schedules**, and choose **Add Schedule**. The same schedule can be added to
+multiple Sessions. Editing its Action or timing updates the shared definition.
+A schedule with no Session selections has no next run.
 
-Existing saved prompts become Actions with their original IDs, destinations,
-and completion settings. Existing timers still reference those Actions;
-webhook-only prompts appear in Actions without a schedule row. Existing webhook
-routing IDs remain valid. Remove schedules and incoming webhooks referencing an
-Action before deleting it.
+REL Free supports one saved schedule; REL Pro supports multiple schedules.
+Create separate schedules for multiple run times. Times follow the Mac's
+current time zone, and REL must be running when a schedule is due.
 
-### Built-in events
+When due, REL runs the Action in each selected Session, using the default AI
+model. Sessions run sequentially. A failure in one Session does not skip the
+remaining Sessions; the schedule's last-run status reports any failures. A
+missing or disabled Action cannot run. Runs of the same Action cannot overlap.
 
-In the Action editor, enable **Page Changed** or **Notification Received** and
-choose a **Source Session**. Both are off by default. Page Changed fires when
-the source session's URL changes, including same-document URL changes. It does
-not watch arbitrary DOM mutations or compare page contents. Notification
-Received fires when that session displays an allowed website notification.
-Website notification permissions still apply. Notification Actions are separate
-from sharing notifications with the agent's recent-notifications feed.
+**Run Now** in a Session's Schedules tab runs only in that Session. **Run Now**
+in Settings runs in all Sessions that selected the schedule. Neither changes
+the next repeating run. Removing a schedule from a Session leaves the shared
+schedule available elsewhere. Disabling or deleting it in Settings affects all
+Sessions that use it. If a selected Session is deleted, runs report that Session
+as unavailable.
 
-Events pass the source session and URL or notification details as untrusted
-data after the saved prompt. Event content cannot select the Action or its
-completion destination. Events for other sessions are ignored. Events received
-while the Action is running are skipped, and automatic events are limited to
-one run per Action every 30 seconds to bound cascades. These events are live
-and are not replayed after restarting REL.
+For browser events, enable **Page Changed** or **Notification Received** in the
+Action editor, then choose **Add Event Action** in a Session's Schedules tab.
+Only events from Sessions that selected the Action can trigger it, and the Action
+runs in the triggering Session. Events run at most once per Action every 30
+seconds; events received while that Action is running are skipped.
 
-## Scheduled prompts
-
-Open **Schedules** and choose **Add Schedule**. Give it a name, select an Action,
-and choose weekdays and a local time. Create the Action first in **Actions**.
-Multiple schedules can select the same Action to run it at different times.
-REL Free supports one schedule; REL Pro supports multiple schedules.
-
-REL must be running when a schedule is due. It executes the selected Action
-using the default AI model. Depending on the Action's destination, it uses an
-existing Session or creates a persistent Session. The table shows the next run
-and the outcome of the most recent scheduled or manual schedule run. Sessions
-remain available for inspection after a failure.
-
-Use **Run Now** to execute a schedule without changing its next repeating run.
-Disable a schedule to pause its timer. A disabled or missing Action causes the
-schedule run to fail clearly. If the Action is already running, the schedule
-records that outcome and waits for its next normal time; it does not queue an
-overlapping run. Times follow the Mac's current time zone.
+Existing saved-session schedule destinations and event source selections in the
+current settings document become Session selections on load. Schedules previously
+configured to create a new Session must be added to a Session before they run.
+Schedule imports are added disabled and must also be added to a Session. The
+schedule transfer format retains its historical destination fields; those fields
+do not assign a Session.
 
 ## Notifications
 
@@ -769,8 +778,10 @@ banner.
 
 Changes to upstream routing apply to new connections; existing connections
 continue until they close. Browser identity, proxy assignment, and certificate
-trust changes that require a new context wait for Reload. Sessions that have
-not opened a browser yet start with their latest configuration.
+trust changes that require a new context wait for Reload when there is page
+state to preserve. An empty browser with no active page, popup, or navigation
+history applies these changes automatically without a reload banner. Sessions
+that have not opened a browser yet start with their latest configuration.
 
 ## Proxy certificate trust
 
