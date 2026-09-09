@@ -236,10 +236,6 @@ not inherit another Profile’s browser data. Renaming a saved default preserves
 its selection; deleting it requires choosing another default or Custom.
 Changing this preference restarts the local agent and preserves existing Sessions.
 
-Schedules that referenced former built-in Profiles keep their settings as explicit
-Custom session configurations. New schedules can create a Custom session without
-requiring a saved Profile.
-
 ## Browser identity
 
 New Sessions use the form’s **Browser Identity**. New Custom configurations
@@ -468,16 +464,16 @@ stable IDs.
 
 ## Settings configuration transfers
 
-In **Settings → Profiles, Proxies, Schedules, or Providers**, the glass button
+In **Settings → Profiles, Proxies, or Providers**, the glass button
 group contains **Add (+)**, **Edit**, a divider, **Import (down arrow)**, and
 **Export (up arrow)**. Select a row to enable export. Import opens a text editor with a **Paste** button to insert the clipboard
 contents; export shows selectable text with a **Copy** button. No file picker is involved.
 Imports create new records and remain subject to the plan's creation limits.
 Existing records are not overwritten.
 
-Profiles, schedules, and providers use a versioned JSON envelope:
+Profiles and providers use a versioned JSON envelope:
 `{"format":"rel.<kind>","version":1,"configuration":{...}}`. The kind is
-`profile`, `schedule`, or `provider`. Export produces one line; pasted JSON may
+`profile` or `provider`. Export produces one line; pasted JSON may
 include whitespace. Paste the complete object, without Markdown fences. JSON
 input is limited to 1 MiB. Other versions, mismatched kinds, malformed JSON,
 and invalid configurations are rejected.
@@ -528,34 +524,6 @@ select Bright Data trust; other endpoints start with system trust. Options such
 as `-k`, request headers, and the destination URL are not imported as proxy
 settings. Use the archive API below if you need to preserve the complete proxy
 configuration.
-
-### Schedules: single-line JSON
-
-```json
-{"configuration":{"completionAction":{"type":"none"},"destination":{"existingSession":{"sessionID":"session-1","sessionName":"Work"}},"hour":9,"minute":30,"name":"Morning","prompt":"Check the page and report changes.","usesTimer":true,"weekdays":[2,3,4,5,6]},"format":"rel.schedule","version":1}
-```
-
-`name`, `prompt`, `destination`, `completionAction`, `weekdays`, `hour`, `minute`,
-and `usesTimer` are required. Weekdays are 1 (Sunday) through 7 (Saturday), with
-at least one day; hours are 0–23 and minutes 0–59 in the importing device's local
-time zone. `usesTimer:false` creates a webhook-triggered schedule.
-
-The destination is one of:
-
-- `{"existingSession":{"sessionID":"...","sessionName":"..."}}`
-- `{"newSession":{"profileID":"...","profileName":"..."}}`
-- `{"configuredSession":{"settings":{...}}}`, preserving the exported custom
-  session settings, including filters, proxy alias, and fingerprint draft.
-
-Completion actions are `{"type":"none"}`, `{"type":"shortcut","name":"..."}`,
-or `{"type":"webhook","id":"<UUID>"}`. Destination and completion references
-are local to the importing device; their referenced sessions, profiles, proxies,
-webhooks, and Shortcuts are not bundled. Review and repair them in the editor.
-
-Every imported schedule receives a fresh ID and starts **disabled**, regardless
-of the source schedule's state. Run history, errors, and timestamps are omitted.
-Import never runs a prompt or completion action. Enable the schedule after
-reviewing its destination, prompt, completion action, and local execution time.
 
 ### Providers: single-line JSON
 
@@ -648,57 +616,50 @@ then answers. Restoring the default prompt returns to this behavior.
 
 ## Actions
 
-Open **Actions** from the toolbar or **Settings → Actions** to create reusable
-work. Each Action owns its name, prompt, destination Session or Profile,
-optional Shortcut or webhook completion behavior, and enabled state. Select
-an Action to edit, run, or delete it. The list shows its status for the current
-app launch. Disabling an Action pauses every trigger that uses it.
+Open a Session’s bottom panel, select **Actions**, and choose **Add Action**.
+Enter the name, prompt steps, timing or browser event, error policy, and completion
+behavior in one panel, then **Save**. Cancelling discards the draft.
 
-Schedules, incoming webhooks, and built-in browser events execute the same saved
-Action. Editing an Action updates the work performed by all its triggers. REL
-runs at most one execution per Action at a time, including manual runs.
+Each Action belongs to one Session. A Session can have many Actions, and each
+Action is a complete record with its own steps, trigger, enabled state, and run
+status. There is no reusable Action library or separate assignment to manage.
+Editing or removing an Action affects only that Action. Actions are managed
+inside Sessions, with no standalone Actions or Schedules window or Settings page.
 
-Existing saved prompts become Actions with their original IDs, destinations,
-and completion settings. Existing timers still reference those Actions;
-webhook-only prompts appear in Actions without a schedule row. Existing webhook
-routing IDs remain valid. Remove schedules and incoming webhooks referencing an
-Action before deleting it.
+Choose **On a schedule** to select weekdays and a local time. REL Free supports
+one scheduled Action; REL Pro supports multiple scheduled Actions. Browser-event
+Actions do not consume this limit. Times follow the Mac’s time zone, and REL must
+be running when a timer is due.
 
-### Built-in events
+Choose **On a browser event**, then select **Page Changed**, **Notification
+Received**, or both. Page Changed fires on URL changes, including same-document
+navigation. Notification Received fires when an allowed website notification is
+displayed. Events come only from the Action’s Session and are passed as untrusted
+context. Events during a run are skipped; each Action is limited to one event run
+every 30 seconds. Events are not replayed after restarting REL.
 
-In the Action editor, enable **Page Changed** or **Notification Received** and
-choose a **Source Session**. Both are off by default. Page Changed fires when
-the source session's URL changes, including same-document URL changes. It does
-not watch arbitrary DOM mutations or compare page contents. Notification
-Received fires when that session displays an allowed website notification.
-Website notification permissions still apply. Notification Actions are separate
-from sharing notifications with the agent's recent-notifications feed.
+Use **Add Step** and the up/down controls to build a sequence. Steps run in order
+in the Action’s Session, using the default AI model. **Stop on error** skips
+remaining steps after a failure. **Continue after errors** attempts remaining
+steps while still recording the failure. Cancellation always stops the run. The
+completion Shortcut or outgoing webhook receives the final step’s response if
+that step succeeds.
 
-Events pass the source session and URL or notification details as untrusted
-data after the saved prompt. Event content cannot select the Action or its
-completion destination. Events for other sessions are ignored. Events received
-while the Action is running are skipped, and automatic events are limited to
-one run per Action every 30 seconds to bound cascades. These events are live
-and are not replayed after restarting REL.
+Select **Failed** in the Actions panel to view and copy error details, including
+the failed step and skipped-step count. Continuing after an error does not turn
+the run into a success. **Run Now** uses the Action’s Session without changing
+its next scheduled time. Disable an Action to pause its automatic runs.
 
-## Scheduled prompts
+Incoming webhooks target a saved Session Action and run in its Session. Manual,
+timer, browser-event, and incoming-webhook runs cannot overlap for that Action.
+If a webhook targets an unavailable Action, its events remain queued; edit the
+webhook to select an existing Session Action.
 
-Open **Schedules** and choose **Add Schedule**. Give it a name, select an Action,
-and choose weekdays and a local time. Create the Action first in **Actions**.
-Multiple schedules can select the same Action to run it at different times.
-REL Free supports one schedule; REL Pro supports multiple schedules.
-
-REL must be running when a schedule is due. It executes the selected Action
-using the default AI model. Depending on the Action's destination, it uses an
-existing Session or creates a persistent Session. The table shows the next run
-and the outcome of the most recent scheduled or manual schedule run. Sessions
-remain available for inspection after a failure.
-
-Use **Run Now** to execute a schedule without changing its next repeating run.
-Disable a schedule to pause its timer. A disabled or missing Action causes the
-schedule run to fail clearly. If the Action is already running, the schedule
-records that outcome and waits for its next normal time; it does not queue an
-overlapping run. Times follow the Mac's current time zone.
+Existing shared Actions are copied into independent records for the Sessions
+that use them, preserving their steps and error policy. Old unassigned reusable
+Actions are retired. Incoming webhooks that referenced a former shared Action
+may need to be updated to select a Session Action. Historical schedule storage
+identifiers remain internal implementation details.
 
 ## Notifications
 
@@ -706,8 +667,7 @@ Open **REL → Settings… → Notifications** in the Browser section to control
 **Send notifications to the agent** and inspect recent shared website notifications.
 Sharing is off by default. Websites must first receive permission to send
 notifications. Sharing adds untrusted website data to the feed. To start a turn automatically,
-enable **Notification Received** for an Action and choose its source session in
-**Settings → Actions**.
+add an Action with **Notification Received** in that Session’s **Actions** panel.
 
 The page refreshes automatically and shows up to 256 shared notifications, newest
 first, with each notification's origin, title, body, session ID, and display time.
