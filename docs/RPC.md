@@ -1122,15 +1122,17 @@ For incoming events, add:
 ```json
 {
   "receive": {
-    "schedule_id": "UUID-OF-A-SAVED-PROMPT",
+    "schedule_id": "UUID-OF-A-SAVED-ACTION",
     "secret": "PROVIDER-SIGNING-SECRET-OR-DISCORD-PUBLIC-KEY",
     "verify_token": "WHATSAPP-VERIFICATION-TOKEN"
   }
 }
 ```
 
-`receive.schedule_id` is the UUID of a prompt saved in REL. Settings offers a
-picker. `secret` must be 32 to 4096 bytes. For Discord it is the application's
+`receive.schedule_id` is the UUID of an Action saved in REL. The historical
+wire and Keychain field name is retained; it targets an Action, not a timer.
+Existing saved prompts become Actions with the same UUID. Settings offers an
+Action picker. `secret` must be 32 to 4096 bytes. For Discord it is the application's
 64-digit hexadecimal Ed25519 public key. For WhatsApp it is the Meta app secret;
 `verify_token` must contain at least 16 characters. JSON webhooks use an HMAC
 signing secret and do not need `verify_token`.
@@ -1204,11 +1206,11 @@ even after acknowledgment. The inbox and duplicate history are in memory and
 reset when the agent exits. This is not a durable queue or an exactly-once
 processing guarantee.
 
-The app polls every two seconds, waits for the selected prompt to be enabled
-and idle, acknowledges the event, and runs that saved prompt with the body
+The app polls every two seconds, waits for the selected Action to be enabled
+and idle, acknowledges the event, and runs that saved Action with the body
 explicitly labeled as untrusted data. The original saved prompt is unchanged.
 Incoming data cannot select another prompt or completion destination. Missing,
-disabled, and busy prompts leave events pending; remove their webhook or use
+disabled, and busy Actions leave events pending; remove their webhook or use
 the event DELETE endpoint to clear them. A model failure is recorded as a failed
 prompt run, without automatically replaying the event. A crash after
 acknowledgment can interrupt an event's run. Separate consumers should not
