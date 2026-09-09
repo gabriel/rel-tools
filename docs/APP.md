@@ -21,6 +21,16 @@ affect federated sign-in. The current ungoogled download patch also removes
 macOS quarantine metadata. These are retained source-policy tradeoffs, not
 just telemetry removal.
 
+## Start on Login
+
+Enable **Settings → General → Startup → Start on Login** to open REL
+automatically when you log in to your Mac. REL uses the native macOS login item
+registration for the app. Turn the setting off to remove that registration.
+
+If macOS requires approval, click **Open Login Items Settings…** and allow REL.
+The setting refreshes from macOS when you return to REL, including changes made
+in System Settings. Registration errors appear below the Startup controls.
+
 ## AI provider presets
 
 In **Providers → Add Provider**, choose **Fireworks**, **Amazon Bedrock**,
