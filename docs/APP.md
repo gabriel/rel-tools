@@ -386,7 +386,7 @@ automatically; new provider domains need to be added to that list.
 
 ## Session logs
 
-Use the native segmented selector in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Application uses a floating settings menu for Site Data and clearing statistics, cache, or session data. Select **Logs** to follow the Session's activity. Logging runs
+Use the native Liquid Glass button group in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Application uses a settings menu in the panel header for Site Data and clearing statistics, cache, or session data. Select **Logs** to follow the Session's activity. Logging runs
 while the Session is active, even when the panel is closed, and works with both
 direct and proxied connections.
 
@@ -411,7 +411,7 @@ Use the category menu to filter the stream. **Clear Logs** clears only the
 selected Session and live logging continues. Logs remain local to this app's
 data directory.
 
-Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries. Log columns fit the available width, and a single Log Options settings menu in the lower-right corner contains category filters, Refresh Logs, and Clear Logs. A separate Snap to Bottom control appears only while you are reading earlier entries.
+Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries. Log columns fit the available width, and a single Log Options settings menu in the panel header contains category filters, Refresh Logs, and Clear Logs. A separate Snap to Bottom control appears only while you are reading earlier entries.
 
 ### Log record schema
 
