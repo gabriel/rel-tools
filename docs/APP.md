@@ -662,7 +662,7 @@ The right chat panel has two scopes:
 
 Switching scope opens the corresponding history; it never converts a conversation from one scope to the other. Use **Chat history** to reopen a conversation and **New Chat** to start one in the current scope. Histories, drafts, and the selected scope are saved in REL's local workspace database. Global chat is stored independently of browser Sessions.
 
-Tab close buttons appear when you hover over a tab. With the native left sidebar open, its Session list replaces the horizontal Session tabs. The browser keeps a compact Session header aligned with the chat scope header. With the sidebar hidden, Session tabs return above the browser; the chat panel stays beside that column.
+Tab close buttons appear when you hover over a tab. With the native left sidebar open, its Session list replaces the horizontal Session tabs. The browser toolbar moves to the top without a duplicate Session header. With the sidebar hidden, Session tabs return above the browser; the chat panel stays beside that column.
 
 ## Agent instructions and current-page context
 
