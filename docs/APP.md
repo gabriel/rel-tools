@@ -386,7 +386,7 @@ automatically; new provider domains need to be added to that list.
 
 ## Session logs
 
-Open **Logs** in a Session's bottom panel to follow its activity. Logging runs
+Use the native segmented selector in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Select **Logs** to follow the Session's activity. Logging runs
 while the Session is active, even when the panel is closed, and works with both
 direct and proxied connections.
 
