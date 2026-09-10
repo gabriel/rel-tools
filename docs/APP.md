@@ -98,7 +98,7 @@ remain explicit destructive operations without an interactive confirmation.
 ## Database migration and recovery
 
 REL validates its local database before starting normal service. Supported
-schema versions 3 through 15 are supported, with older schemas upgraded to schema 15. Before any upgrade or
+schema versions 3 through 18 are supported, with older schemas upgraded to schema 18. Before any upgrade or
 repair, REL creates a consistent SQLite snapshot including committed WAL data
 under `Data/Recovery/<run-id>/original.sqlite3` in its Application Support
 folder. Debug builds use their isolated worktree Application Support folder.
@@ -651,14 +651,25 @@ to read earlier messages without being pulled back down. Choose **Jump to latest
 to return to the newest content and resume following, or scroll back near the
 bottom yourself.
 
+## Global and Session chat
+
+The right chat panel has two scopes:
+
+- **Global** keeps a workspace conversation while you switch browser Sessions. It has separate history and drafts, and it can target any available Session. The header identifies it as **All sessions**. Name the intended Session when a request could apply to more than one.
+- **Session** follows the selected browser Session. Its header shows that Session's name, and its browser tools remain pinned to that Session.
+
+Switching scope opens the corresponding history; it never converts a conversation from one scope to the other. Use **Chat history** to reopen a conversation and **New Chat** to start one in the current scope. Histories, drafts, and the selected scope are saved in REL's local workspace database. Global chat is stored independently of browser Sessions.
+
+With the native left sidebar open, its Session list replaces the horizontal Session tabs. The browser keeps a compact Session header aligned with the chat scope header. With the sidebar hidden, Session tabs return above the browser; the chat panel stays beside that column.
+
 ## Agent instructions and current-page context
 
 Open **REL → Settings… → Agent** to edit the system prompt used by native Chat.
 REL adds these instructions after its protected browser and tool rules, and
 changes apply to the next message in existing chats.
 
-Every native Chat turn also includes the current page URL from its attached
-Session. The default system prompt uses that context for requests such as
+Each **Session** chat turn also includes the current page URL from its attached
+Session. Global chat receives the available Session names and IDs instead; switching the selected Session does not silently retarget it. The default system prompt uses that context for requests such as
 “summarize this page” or “summarize the top 3 links”: it reads the current page,
 identifies the requested links in page order, reads their destinations, and
 then answers. Restoring the default prompt returns to this behavior.
