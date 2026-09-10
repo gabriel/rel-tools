@@ -411,6 +411,8 @@ Use the category menu to filter the stream. **Clear Logs** clears only the
 selected Session and live logging continues. Logs remain local to this app's
 data directory.
 
+Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries.
+
 ### Log record schema
 
 The log inspector, copied records, and local NDJSON logs use the same flat JSON
@@ -660,7 +662,7 @@ The right chat panel has two scopes:
 
 Switching scope opens the corresponding history; it never converts a conversation from one scope to the other. Use **Chat history** to reopen a conversation and **New Chat** to start one in the current scope. Histories, drafts, and the selected scope are saved in REL's local workspace database. Global chat is stored independently of browser Sessions.
 
-With the native left sidebar open, its Session list replaces the horizontal Session tabs. The browser keeps a compact Session header aligned with the chat scope header. With the sidebar hidden, Session tabs return above the browser; the chat panel stays beside that column.
+Tab close buttons appear when you hover over a tab. With the native left sidebar open, its Session list replaces the horizontal Session tabs. The browser keeps a compact Session header aligned with the chat scope header. With the sidebar hidden, Session tabs return above the browser; the chat panel stays beside that column.
 
 ## Agent instructions and current-page context
 
