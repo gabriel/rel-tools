@@ -411,7 +411,7 @@ Use the category menu to filter the stream. **Clear Logs** clears only the
 selected Session and live logging continues. Logs remain local to this app's
 data directory.
 
-Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries. Log columns fit the available width, and the log controls float over the lower-right corner of the table.
+Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries. Log columns fit the available width, and a single Log Options menu in the lower-right corner contains category filters, Refresh Logs, and Clear Logs. A separate Snap to Bottom control appears only while you are reading earlier entries.
 
 ### Log record schema
 
