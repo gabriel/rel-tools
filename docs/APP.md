@@ -386,7 +386,7 @@ automatically; new provider domains need to be added to that list.
 
 ## Session logs
 
-Use the native segmented selector in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Select **Logs** to follow the Session's activity. Logging runs
+Use the native segmented selector in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Application uses a floating settings menu for Site Data and clearing statistics, cache, or session data. Select **Logs** to follow the Session's activity. Logging runs
 while the Session is active, even when the panel is closed, and works with both
 direct and proxied connections.
 
@@ -411,7 +411,7 @@ Use the category menu to filter the stream. **Clear Logs** clears only the
 selected Session and live logging continues. Logs remain local to this app's
 data directory.
 
-Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries. Log columns fit the available width, and a single Log Options menu in the lower-right corner contains category filters, Refresh Logs, and Clear Logs. A separate Snap to Bottom control appears only while you are reading earlier entries.
+Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries. Log columns fit the available width, and a single Log Options settings menu in the lower-right corner contains category filters, Refresh Logs, and Clear Logs. A separate Snap to Bottom control appears only while you are reading earlier entries.
 
 ### Log record schema
 
@@ -657,8 +657,8 @@ bottom yourself.
 
 The right chat panel has two scopes:
 
-- **Global** keeps a workspace conversation while you switch browser Sessions. It has separate history and drafts, and it can target any available Session. The header identifies it as **All sessions**. Name the intended Session when a request could apply to more than one.
-- **Session** follows the selected browser Session. Its header shows that Session's name, and its browser tools remain pinned to that Session.
+- **Global** keeps a workspace conversation while you switch browser Sessions. It has separate history and drafts, and it can target any available Session. Name the intended Session when a request could apply to more than one.
+- **Session** follows the selected browser Session. Its browser tools remain pinned to that Session.
 
 Switching scope opens the corresponding history; it never converts a conversation from one scope to the other. Use **Chat history** to reopen a conversation and **New Chat** to start one in the current scope. Histories, drafts, and the selected scope are saved in REL's local workspace database. Global chat is stored independently of browser Sessions.
 
