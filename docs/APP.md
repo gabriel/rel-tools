@@ -390,7 +390,7 @@ automatically; new provider domains need to be added to that list.
 
 ## Session logs
 
-Use the native grouped tool selector in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Actions has an Add Action button in the panel header. Application uses a settings menu in the panel header for Site Data and clearing statistics, cache, or session data. Select **Logs** to follow the Session's activity. Logging runs
+Use the native grouped tool selector in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Use the close button at the right of the header to hide the bottom panel. Actions has an Add Action button in the panel header. Application uses a settings menu in the panel header for Site Data and clearing statistics, cache, or session data. Select **Logs** to follow the Session's activity. Logging runs
 while the Session is active, even when the panel is closed, and works with both
 direct and proxied connections.
 
