@@ -664,7 +664,7 @@ The right chat panel has two scopes:
 - **Global** keeps a workspace conversation while you switch browser Sessions. It has separate history and drafts, and it can target any available Session. Name the intended Session when a request could apply to more than one.
 - **Session** follows the selected browser Session. Its browser tools remain pinned to that Session.
 
-Switching scope opens the corresponding history; it never converts a conversation from one scope to the other. Use **Chat history** to reopen a conversation and **New Chat** to start one in the current scope. Histories, drafts, and the selected scope are saved in REL's local workspace database. Global chat is stored independently of browser Sessions.
+The chat header contains only **Global** and **Session**. Session always follows the currently selected browser Session. Switching scope opens its conversation without converting it to another scope. Histories, drafts, and the selected scope are saved in REL's local workspace database. Global chat is stored independently of browser Sessions.
 
 Tab close buttons appear when you hover over a tab. With the native left sidebar open, its Session list replaces the horizontal Session tabs. The browser toolbar moves to the top without a duplicate Session header. With the sidebar hidden, Session tabs return above the browser; the chat panel stays beside that column.
 
