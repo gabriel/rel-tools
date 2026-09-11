@@ -190,6 +190,10 @@ connection, network filters, and any browser data that should be copied when a
 Session is created. A **Session** is the persistent browser created from that
 template; later Profile changes do not modify existing Sessions.
 
+After restarting REL, a saved page waits for you to load it. Use **Reload** in
+the address bar or in the page to reopen it. The address-bar Reload button also
+resumes network activity if the Session was paused.
+
 Manage saved configurations in **Profiles**. There are no built-in Profiles.
 Profiles can use a configured proxy and imported cookies or passwords. The Profiles
 list includes a **Browser Identity** column showing Private, Custom Privacy,
