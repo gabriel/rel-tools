@@ -98,7 +98,7 @@ remain explicit destructive operations without an interactive confirmation.
 ## Database migration and recovery
 
 REL validates its local database before starting normal service. Supported
-schema versions 3 through 15 are supported, with older schemas upgraded to schema 15. Before any upgrade or
+schema versions 3 through 18 are supported, with older schemas upgraded to schema 18. Before any upgrade or
 repair, REL creates a consistent SQLite snapshot including committed WAL data
 under `Data/Recovery/<run-id>/original.sqlite3` in its Application Support
 folder. Debug builds use their isolated worktree Application Support folder.
@@ -189,6 +189,10 @@ A **Profile** is a reusable template for a new Session. Profiles select the
 connection, network filters, and any browser data that should be copied when a
 Session is created. A **Session** is the persistent browser created from that
 template; later Profile changes do not modify existing Sessions.
+
+After restarting REL, a saved page waits for you to load it. Use **Reload** in
+the address bar or in the page to reopen it. The address-bar Reload button also
+resumes network activity if the Session was paused.
 
 Manage saved configurations in **Profiles**. There are no built-in Profiles.
 Profiles can use a configured proxy and imported cookies or passwords. The Profiles
@@ -386,7 +390,7 @@ automatically; new provider domains need to be added to that list.
 
 ## Session logs
 
-Open **Logs** in a Session's bottom panel to follow its activity. Logging runs
+Use the native grouped tool selector in a Session's bottom panel to switch between Application, Filters, Actions, Logs, and Terminal. Use the close button at the right of the header to hide the bottom panel. Actions has an Add Action button in the panel header. Application uses a settings menu in the panel header for Site Data and clearing statistics, cache, or session data. Select **Logs** to follow the Session's activity. Logging runs
 while the Session is active, even when the panel is closed, and works with both
 direct and proxied connections.
 
@@ -410,6 +414,8 @@ both a transport entry and a browser result.
 Use the category menu to filter the stream. **Clear Logs** clears only the
 selected Session and live logging continues. Logs remain local to this app's
 data directory.
+
+Empty log views keep their table headers and show no placeholder, including when the category filter hides all entries. Log columns fit the available width, and a single Log Options settings menu in the panel header contains category filters, Refresh Logs, and Clear Logs. A separate Snap to Bottom control appears only while you are reading earlier entries.
 
 ### Log record schema
 
@@ -651,14 +657,25 @@ to read earlier messages without being pulled back down. Choose **Jump to latest
 to return to the newest content and resume following, or scroll back near the
 bottom yourself.
 
+## Global and Session chat
+
+The right chat panel has two scopes:
+
+- **Global** keeps a workspace conversation while you switch browser Sessions. It has separate history and drafts, and it can target any available Session. Name the intended Session when a request could apply to more than one.
+- **Session** follows the selected browser Session. Its browser tools remain pinned to that Session.
+
+The chat header contains only **Global** and **Session**. Session always follows the currently selected browser Session. Switching scope opens its conversation without converting it to another scope. Histories, drafts, and the selected scope are saved in REL's local workspace database. Global chat is stored independently of browser Sessions.
+
+Tab close buttons appear when you hover over a tab. With the native left sidebar open, its Session list replaces the horizontal Session tabs. The browser toolbar moves to the top without a duplicate Session header. With the sidebar hidden, Session tabs return above the browser; the chat panel stays beside that column.
+
 ## Agent instructions and current-page context
 
 Open **REL → Settings… → Agent** to edit the system prompt used by native Chat.
 REL adds these instructions after its protected browser and tool rules, and
 changes apply to the next message in existing chats.
 
-Every native Chat turn also includes the current page URL from its attached
-Session. The default system prompt uses that context for requests such as
+Each **Session** chat turn also includes the current page URL from its attached
+Session. Global chat receives the available Session names and IDs instead; switching the selected Session does not silently retarget it. The default system prompt uses that context for requests such as
 “summarize this page” or “summarize the top 3 links”: it reads the current page,
 identifies the requested links in page order, reads their destinations, and
 then answers. Restoring the default prompt returns to this behavior.
