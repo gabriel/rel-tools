@@ -73,7 +73,7 @@ revision has changed, REL blocks further writes until you restart. The button
 cannot bypass that protection. **Report a Bug** opens the
 report form for further help.
 
-In Debug builds, **Debug → Error Recovery** can trigger a session error, a
+With **Show Debug menu** enabled, **Debug → Error Recovery** can trigger a session error, a
 workspace error, or both. These simulated errors appear in the same toolbar
 warning and details sheet without changing sessions, files, or permissions.
 Use **Refresh Sessions** and **Save Current Workspace** to exercise recovery.
