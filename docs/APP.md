@@ -73,7 +73,7 @@ revision has changed, REL blocks further writes until you restart. The button
 cannot bypass that protection. **Report a Bug** opens the
 report form for further help.
 
-In Debug builds, **Debug → Error Recovery** can trigger a session error, a
+With **Show Debug menu** enabled, **Debug → Error Recovery** can trigger a session error, a
 workspace error, or both. These simulated errors appear in the same toolbar
 warning and details sheet without changing sessions, files, or permissions.
 Use **Refresh Sessions** and **Save Current Workspace** to exercise recovery.
@@ -182,6 +182,20 @@ at most once per day and supports up to seven days offline, without extending
 access beyond that end date. At expiry, REL automatically returns to Free and
 keeps existing Sessions and configuration under the Free plan limits described
 above.
+
+## Debug and beta settings
+
+Open **REL → Settings… → Debug** for **Show Debug menu**, **Show token usage**,
+and the **Global chat** beta feature. All three are off by default; existing
+saved choices are preserved.
+
+**Show Debug menu** immediately shows or hides the Debug menu in both Release
+and Debug builds. It provides chat debug-log viewing, replay and export, error
+recovery checks, and Turnstile test pages. The design gallery and source-based
+integration test launcher are available only in Debug builds.
+
+**Show token usage** displays response usage above the chat input. **Global
+chat** enables workspace-wide conversations and the Global/Session selector.
 
 ## Profiles and Sessions
 
